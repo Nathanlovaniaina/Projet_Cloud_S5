@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:13-3.3
+    container_name: signalement_db
+    environment:
+      POSTGRES_DB: signalement_db
+      POSTGRES_USER: signalement_user
+      POSTGRES_PASSWORD: signalement_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./base_de_donnee/script.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - signalement_network
+
+  backend:
+    build: ./back_end
+    container_name: signalement_backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/signalement_db
+      - SPRING_DATASOURCE_USERNAME=signalement_user
+      - SPRING_DATASOURCE_PASSWORD=signalement_password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    networks:
+      - signalement_network
+
+  frontend_web:
+    build: ./front_end_web
+    container_name: signalement_frontend_web
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - signalement_network
+
+  maps_server:
+    image: openmaptiles/openmaptiles-tools:latest
+    container_name: signalement_maps
+    ports:
+      - "8081:80"
+    volumes:
+      - ./maps_data:/data
+    networks:
+      - signalement_network
+    # Note: This is a placeholder. Actual configuration will be done in later tasks.
+
+volumes:
+  db_data:
+
+networks:
+  signalement_network:
+    driver: bridge
