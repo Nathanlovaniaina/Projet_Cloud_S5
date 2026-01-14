@@ -1,3 +1,6 @@
+-- Activer l'extension PostGIS
+CREATE EXTENSION IF NOT EXISTS postgis;
+
 CREATE TABLE etat_signalement(
    Id_etat_signalement SERIAL,
    libelle VARCHAR(50) NOT NULL,
@@ -9,6 +12,20 @@ CREATE TABLE type_utilisateur(
    Id_type_utilisateur SERIAL,
    libelle VARCHAR(50) NOT NULL,
    PRIMARY KEY(Id_type_utilisateur),
+   UNIQUE(libelle)
+);
+
+CREATE TABLE type_travail(
+   Id_type_travail SERIAL,
+   libelle VARCHAR(50) NOT NULL,
+   PRIMARY KEY(Id_type_travail),
+   UNIQUE(libelle)
+);
+
+CREATE TABLE statut_assignation(
+   Id_statut_assignation SERIAL,
+   libelle VARCHAR(20) NOT NULL,
+   PRIMARY KEY(Id_statut_assignation),
    UNIQUE(libelle)
 );
 
@@ -25,6 +42,9 @@ CREATE TABLE utilisateur(
    prenom VARCHAR(50) NOT NULL,
    email VARCHAR(50) NOT NULL,
    mot_de_passe VARCHAR(50) NOT NULL,
+   is_blocked BOOLEAN DEFAULT FALSE,
+   last_sync TIMESTAMP,
+   synced BOOLEAN DEFAULT FALSE,
    Id_type_utilisateur INTEGER NOT NULL,
    PRIMARY KEY(Id_utilisateur),
    UNIQUE(email),
@@ -33,22 +53,48 @@ CREATE TABLE utilisateur(
 
 CREATE TABLE signalement(
    Id_signalement SERIAL,
-   latidute NUMERIC(15,10) NOT NULL,
+   titre VARCHAR(100) NOT NULL,
+   description TEXT,
+   latitude NUMERIC(15,10) NOT NULL,
    longitude NUMERIC(15,10) NOT NULL,
+   date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   etat_actuel INTEGER NOT NULL DEFAULT 1,
+   Id_type_travail INTEGER,
+   url_photo VARCHAR(255),
+   last_sync TIMESTAMP,
+   synced BOOLEAN DEFAULT FALSE,
    Id_utilisateur INTEGER NOT NULL,
+   geom GEOGRAPHY(POINT, 4326),
    PRIMARY KEY(Id_signalement),
-   FOREIGN KEY(Id_utilisateur) REFERENCES utilisateur(Id_utilisateur)
+   FOREIGN KEY(Id_utilisateur) REFERENCES utilisateur(Id_utilisateur),
+   FOREIGN KEY(etat_actuel) REFERENCES etat_signalement(Id_etat_signalement),
+   FOREIGN KEY(Id_type_travail) REFERENCES type_travail(Id_type_travail)
 );
+
+-- Index spatial pour les performances
+CREATE INDEX idx_signalement_geom ON signalement USING GIST (geom);
 
 CREATE TABLE entreprise_concerner(
    Id_entreprise_concerner SERIAL,
-   date_creation DATE,
+   date_creation DATE DEFAULT CURRENT_DATE,
    montant NUMERIC(15,2),
+   Id_statut_assignation INTEGER DEFAULT 1,
    Id_signalement INTEGER NOT NULL,
    Id_entreprise INTEGER NOT NULL,
    PRIMARY KEY(Id_entreprise_concerner),
    FOREIGN KEY(Id_signalement) REFERENCES signalement(Id_signalement),
-   FOREIGN KEY(Id_entreprise) REFERENCES entreprise(Id_entreprise)
+   FOREIGN KEY(Id_entreprise) REFERENCES entreprise(Id_entreprise),
+   FOREIGN KEY(Id_statut_assignation) REFERENCES statut_assignation(Id_statut_assignation)
+);
+
+CREATE TABLE historique_statut_assignation(
+   Id_historique SERIAL,
+   Id_entreprise_concerner INTEGER NOT NULL,
+   Id_statut_assignation INTEGER NOT NULL,
+   date_changement TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   PRIMARY KEY(Id_historique),
+   FOREIGN KEY(Id_entreprise_concerner) REFERENCES entreprise_concerner(Id_entreprise_concerner),
+   FOREIGN KEY(Id_statut_assignation) REFERENCES statut_assignation(Id_statut_assignation)
 );
 
 CREATE TABLE session(
@@ -70,13 +116,18 @@ CREATE TABLE tentative_connexion(
    FOREIGN KEY(Id_utilisateur) REFERENCES utilisateur(Id_utilisateur)
 );
 
-
-CREATE TABLE avancement_signalement(
-   Id_signalement INTEGER,
-   Id_etat_signalement INTEGER,
-   date_changement_etat VARCHAR(50) NOT NULL,
-   pourcentage NUMERIC(15,2),
-   PRIMARY KEY(Id_signalement, Id_etat_signalement),
+CREATE TABLE historique_etat_signalement(
+   Id_historique SERIAL,
+   Id_signalement INTEGER NOT NULL,
+   Id_etat_signalement INTEGER NOT NULL,
+   date_changement_etat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   PRIMARY KEY(Id_historique),
    FOREIGN KEY(Id_signalement) REFERENCES signalement(Id_signalement),
    FOREIGN KEY(Id_etat_signalement) REFERENCES etat_signalement(Id_etat_signalement)
 );
+
+-- Données initiales
+INSERT INTO etat_signalement (libelle) VALUES ('En attente'), ('En cours'), ('Terminé'), ('Annulé');
+INSERT INTO type_utilisateur (libelle) VALUES ('Visiteur'), ('Manager');
+INSERT INTO type_travail (libelle) VALUES ('Réparation de chaussée'), ('Construction de route'), ('Signalisation'), ('Éclairage public'), ('Maintenance');
+INSERT INTO statut_assignation (libelle) VALUES ('En attente'), ('Accepté'), ('Refusé'), ('En cours');
