@@ -51,6 +51,26 @@ CREATE TABLE entreprise_concerner(
    FOREIGN KEY(Id_entreprise) REFERENCES entreprise(Id_entreprise)
 );
 
+CREATE TABLE session(
+   Id_session SERIAL,
+   token VARCHAR(100) NOT NULL,
+   date_debut TIMESTAMP NOT NULL,
+   date_fin TIMESTAMP NOT NULL,
+   Id_utilisateur INTEGER NOT NULL,
+   PRIMARY KEY(Id_session),
+   FOREIGN KEY(Id_utilisateur) REFERENCES utilisateur(Id_utilisateur)
+);
+
+CREATE TABLE tentative_connexion(
+   Id_tentative SERIAL,
+   date_tentative TIMESTAMP NOT NULL,
+   success BOOLEAN NOT NULL,
+   Id_utilisateur INTEGER NOT NULL,
+   PRIMARY KEY(Id_tentative),
+   FOREIGN KEY(Id_utilisateur) REFERENCES utilisateur(Id_utilisateur)
+);
+
+
 CREATE TABLE avancement_signalement(
    Id_signalement INTEGER,
    Id_etat_signalement INTEGER,
