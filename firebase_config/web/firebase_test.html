@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Test connexion Firebase</title>
+  <style>body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;background:#f7f7f8;padding:20px}pre{background:#fff;border:1px solid #e2e2e4;padding:12px;overflow:auto}</style>
+</head>
+<body>
+  <h2>Test connexion Firebase</h2>
+  <p>Cliquer sur <em>Tester la connexion</em> pour tenter un sign-in avec l'email et le mot de passe fournis.</p>
+  <button id="testBtn">Tester la connexion</button>
+  <h3>Résultat</h3>
+  <pre id="result">(aucune action)</pre>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
+
+    // Configuration copiée depuis firebase_config/web/config.js
+    const firebaseConfig = {
+      apiKey: "AIzaSyB-bnLys5qhH2dgrLJw6wkpQ2uetHni1Iw",
+      authDomain: "road-report-auth-projets5.firebaseapp.com",
+      projectId: "road-report-auth-projets5",
+      storageBucket: "road-report-auth-projets5.firebasestorage.app",
+      messagingSenderId: "301784125105",
+      appId: "1:301784125105:web:d0e2da62f2353da9f11c90"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const email = 'admin@gmail.com';
+    const password = 'test1234';
+
+    const resultEl = document.getElementById('result');
+    document.getElementById('testBtn').addEventListener('click', async () => {
+      resultEl.textContent = 'En cours...';
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        const user = cred.user;
+        resultEl.textContent = JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          emailVerified: user.emailVerified,
+          metadata: user.metadata
+        }, null, 2);
+      } catch (err) {
+        resultEl.textContent = 'Erreur: ' + (err && err.message ? err.message : String(err));
+      }
+    });
+  </script>
+</body>
+</html>
