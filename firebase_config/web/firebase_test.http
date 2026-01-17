@@ -1,0 +1,25 @@
+### Test: Firebase Auth - signInWithPassword
+# Requête POST pour se connecter avec email/mot de passe via l'API REST de Firebase Authentication.
+# Exécutez cette requête dans VS Code avec l'extension REST Client.
+
+POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyB-bnLys5qhH2dgrLJw6wkpQ2uetHni1Iw
+Content-Type: application/json
+
+{
+  "email": "admin@gmail.com",
+  "password": "test1234",
+  "returnSecureToken": true
+}
+
+# Réponse attendue: JSON contenant `idToken`, `refreshToken`, `localId` (uid), etc.
+# Copiez la valeur `idToken` si vous voulez interroger ensuite l'endpoint `accounts:lookup`.
+
+### (Optionnel) Récupérer les informations utilisateur avec `idToken`
+# Remplacez <ID_TOKEN> par la valeur `idToken` renvoyée par la requête précédente.
+
+POST https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyB-bnLys5qhH2dgrLJw6wkpQ2uetHni1Iw
+Content-Type: application/json
+
+{
+  "idToken": "<ID_TOKEN>"
+}
