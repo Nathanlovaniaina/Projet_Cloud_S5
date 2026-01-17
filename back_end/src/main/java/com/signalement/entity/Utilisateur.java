@@ -1,0 +1,45 @@
+package com.signalement.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "utilisateur")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Utilisateur {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_utilisateur")
+    private Integer idUtilisateur;
+
+    @Column(name = "nom", nullable = false, length = 50)
+    private String nom;
+
+    @Column(name = "prenom", nullable = false, length = 50)
+    private String prenom;
+
+    @Column(name = "email", nullable = false, unique = true, length = 50)
+    private String email;
+
+    @Column(name = "mot_de_passe", nullable = false, length = 50)
+    private String motDePasse;
+
+    @Column(name = "is_blocked")
+    private Boolean isBlocked = false;
+
+    @Column(name = "last_sync")
+    private LocalDateTime lastSync;
+
+    @Column(name = "synced")
+    private Boolean synced = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_type_utilisateur", nullable = false)
+    private TypeUtilisateur typeUtilisateur;
+}
