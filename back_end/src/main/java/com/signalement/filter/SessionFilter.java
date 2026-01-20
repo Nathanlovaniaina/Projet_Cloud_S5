@@ -29,9 +29,8 @@ public class SessionFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
         // Allow unauthenticated endpoints (login, public resources) and API/docs
-        if (path.startsWith("/auth")
-            || path.startsWith("/login")
-            || path.startsWith("/public")
+        if (path.contains("/api/auth/")
+            || path.startsWith("/api/public")
             || path.startsWith("/v3/api-docs")
             || path.startsWith("/swagger")
             || path.startsWith("/swagger-ui")

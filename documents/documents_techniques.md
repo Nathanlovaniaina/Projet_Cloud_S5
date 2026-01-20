@@ -36,14 +36,14 @@ Les tâches 1-18 couvrent:
 
 #### Tâche 1: Configuration Repository Git
 - **Responsable:** ETU003241
-- **Type:** Configuration (30h)
+- **Type:** Configuration
 - Initialisation du repository GitHub public
 - Setup des branches principales (main, develop)
 - Définition des règles de contribution
 
 #### Tâche 2: Structure Docker
 - **Responsable:** ETU003241  
-- **Type:** Configuration (60h)
+- **Type:** Configuration
 - Création du `docker-compose.yml`
 - Configuration des services:
   - **PostgreSQL**: Base de données principale
@@ -84,52 +84,14 @@ services:
 
 #### Tâche 3: Container PostgreSQL
 - **Responsable:** ETU003346
-- **Type:** Configuration (45h)
+- **Type:** Configuration
 - Configuration du container PostGIS (PostgreSQL + extensions géospatiales)
 - Setup des volumes de persistence
 - Initialisation avec les scripts SQL
 
 #### Tâche 4: Modèle Conceptuel de Données (MCD)
 - **Responsable:** ETU003346
-- **Type:** Conception (120h)
-
-**Entités principales:**
-
-```
-Utilisateur
-├── id (PK)
-├── email (UNIQUE)
-├── mot_de_passe (hashé)
-├── nom
-├── prenom
-├── type_utilisateur (VISITOR/MANAGER)
-├── est_bloque
-├── date_creation
-└── date_modification
-
-Session
-├── id (PK)
-├── utilisateur_id (FK)
-├── token
-├── date_creation
-├── date_expiration (24h)
-└── est_active
-
-TentativeConnexion
-├── id (PK)
-├── utilisateur_id (FK)
-├── date_tentative
-└── est_reussie
-
-Signalement
-├── id (PK)
-├── utilisateur_id (FK)
-├── titre
-├── description
-├── localisation (geometry)
-├── date_creation
-└── etat_id (FK)
-```
+- **Type:** Conception
 
 **Screenshot du MCD:**
 ```
@@ -140,60 +102,15 @@ Signalement
 
 #### Tâche 5: Tables Utilisateurs
 - **Responsable:** ETU003358
-- **Type:** Développement (90h)
-
-```sql
-CREATE TABLE type_utilisateur (
-  id SERIAL PRIMARY KEY,
-  libelle VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE utilisateur (
-  id SERIAL PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  mot_de_passe VARCHAR(255) NOT NULL,
-  nom VARCHAR(100) NOT NULL,
-  prenom VARCHAR(100) NOT NULL,
-  type_utilisateur_id INT REFERENCES type_utilisateur(id),
-  est_bloque BOOLEAN DEFAULT FALSE,
-  date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
+- **Type:** Développement
 
 #### Tâche 6: Tables Signalements
 - **Responsable:** ETU003358
-- **Type:** Développement (90h)
-
-```sql
-CREATE TABLE etat_signalement (
-  id SERIAL PRIMARY KEY,
-  libelle VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE signalement (
-  id SERIAL PRIMARY KEY,
-  utilisateur_id INT REFERENCES utilisateur(id),
-  titre VARCHAR(255) NOT NULL,
-  description TEXT,
-  localisation GEOMETRY(Point, 4326),
-  etat_id INT REFERENCES etat_signalement(id),
-  date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
+- **Type:** Développement
 
 #### Tâche 7: Tables Tentatives Connexion
 - **Responsable:** ETU003358
-- **Type:** Développement (60h)
-
-```sql
-CREATE TABLE tentative_connexion (
-  id SERIAL PRIMARY KEY,
-  utilisateur_id INT REFERENCES utilisateur(id),
-  date_tentative TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  est_reussie BOOLEAN
-);
-```
+- **Type:** Développement
 
 ---
 
@@ -203,7 +120,7 @@ CREATE TABLE tentative_connexion (
 
 #### Tâche 8: Setup Spring Boot
 - **Responsable:** ETU003337
-- **Type:** Configuration (60h)
+- **Type:** Configuration
 - Framework: Spring Boot 3.2.1
 - Dépendances principales:
   - Spring Data JPA
@@ -213,25 +130,16 @@ CREATE TABLE tentative_connexion (
 
 #### Tâche 9: Configuration Firebase
 - **Responsable:** ETU003337
-- **Type:** Configuration (90h)
+- **Type:** Configuration
 - Configuration Firebase pour authentification optionnelle
 - Setup des clés API
 
 #### Tâche 10: Connexion PostgreSQL
 - **Responsable:** ETU003337
-- **Type:** Développement (120h)
+- **Type:** Développement
 
 **Configuration application.properties:**
-
-```properties
-spring.datasource.url=jdbc:postgresql://db:5432/signalement
-spring.datasource.username=admin
-spring.datasource.password=password
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.properties.hibernate.dialect=org.hibernate.spatial.dialect.postgis.PostgisPG15Dialect
-```
-
----
+screen
 
 ### Tâches 11-18: Développement des APIs d'Authentification
 
@@ -250,13 +158,6 @@ Repositories (accès DB)
     ↓
 Response JSON
 ```
-
-**Screenshot de l'architecture:**
-```
-[Insérer screenshot de l'architecture ici]
-```
-
----
 
 #### Tâche 11 & 12: API d'Inscription et Authentification
 
@@ -333,7 +234,7 @@ Content-Type: application/json
 
 **Screenshot du login réussi:**
 ```
-[Insérer screenshot de la réponse HTTP ici]
+[Insérer screenshot ici]
 ```
 
 ---
@@ -341,33 +242,7 @@ Content-Type: application/json
 #### Tâche 13: Gestion des Sessions
 
 **Responsable:** ETU003241  
-**Type:** Développement (180h)
-
-**Entité Session:**
-```java
-@Entity
-@Table(name = "session")
-public class Session {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @ManyToOne
-    private Utilisateur utilisateur;
-    
-    @Column(unique = true)
-    private String token;
-    
-    @Column(name = "date_creation")
-    private LocalDateTime dateCreation;
-    
-    @Column(name = "date_expiration")
-    private LocalDateTime dateExpiration; // +24h
-    
-    @Column(name = "est_active")
-    private Boolean estActive;
-}
-```
+**Type:** Développement
 
 **Logique de Session:**
 - Création d'une session lors du login réussi
@@ -381,7 +256,7 @@ public class Session {
 #### Tâche 14: Modification des Informations Utilisateur
 
 **Responsable:** ETU003337  
-**Type:** Développement (120h)
+**Type:** Développement
 
 ##### Endpoint 3: PUT /api/auth/utilisateur/{id}
 
@@ -421,7 +296,7 @@ Content-Type: application/json
 #### Tâche 15: Limite de Tentatives de Connexion
 
 **Responsable:** ETU003241  
-**Type:** Développement (150h)
+**Type:** Développement
 
 **Logique de Protection:**
 
@@ -436,15 +311,9 @@ Blocked User:
 - Attendre déblocage par un Manager
 ```
 
-**Enregistrement des Tentatives:**
-```sql
-INSERT INTO tentative_connexion (utilisateur_id, date_tentative, est_reussie)
-VALUES (1, NOW(), FALSE);
-```
-
 **Screenshot du compte bloqué:**
 ```
-[Insérer screenshot du message de blocage ici]
+[Insérer screenshot ici]
 ```
 
 ---
@@ -452,7 +321,7 @@ VALUES (1, NOW(), FALSE);
 #### Tâche 16: Déblocage d'Utilisateur
 
 **Responsable:** ETU003346  
-**Type:** Développement (90h)
+**Type:** Développement
 
 ##### Endpoint 4: POST /api/auth/debloquer/{userId}
 
@@ -483,23 +352,7 @@ Authorization: Bearer [token_manager]
 #### Tâche 17 & 18: Documentation Swagger
 
 **Responsables:** ETU003346  
-**Type:** Configuration (60h) + Documentation (120h)
-
-**Configuration Swagger:**
-
-```java
-@Configuration
-public class SwaggerConfig {
-    @Bean
-    public OpenAPI customOpenAPI() {
-        return new OpenAPI()
-            .info(new Info()
-                .title("API Signalement Travaux Routiers")
-                .version("1.0.0")
-                .description("Documentation complète des APIs"));
-    }
-}
-```
+**Type:** Configuration et Documentation
 
 **Accès Swagger:**
 ```
@@ -508,7 +361,7 @@ URL: http://localhost:8080/swagger-ui.html
 
 **Screenshot de Swagger UI:**
 ```
-[Insérer screenshot de Swagger ici]
+[Insérer screenshot ici]
 ```
 
 ---
@@ -637,46 +490,6 @@ mvn spring-boot:run
 
 ---
 
-## Tests des APIs
-
-### Avec Postman ou curl
-
-**Test 1: Inscription**
-```bash
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "motDePasse": "Password123",
-    "nom": "Test",
-    "prenom": "User",
-    "typeUtilisateur": "VISITOR"
-  }'
-```
-
-**Test 2: Connexion**
-```bash
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "motDePasse": "Password123"
-  }'
-```
-
-**Test 3: Utiliser le Token**
-```bash
-curl -X GET http://localhost:8080/api/auth/utilisateur/1 \
-  -H "Authorization: Bearer [TOKEN_RECU]"
-```
-
-**Screenshot des tests Postman:**
-```
-[Insérer screenshot des résultats de test ici]
-```
-
----
-
 ## Problèmes Rencontrés et Solutions
 
 ### 1. Erreur de Serialization Hibernate
@@ -695,12 +508,12 @@ curl -X GET http://localhost:8080/api/auth/utilisateur/1 \
 
 ## Statistiques du Travail Réalisé
 
-| Catégorie | Tâches | Heures | Statut |
-|-----------|--------|--------|--------|
-| Infrastructure | 1-2 | 90h | ✅ Complété |
-| Base de Données | 3-7 | 405h | ✅ Complété |
-| Backend Auth | 8-18 | 1260h | ✅ Complété |
-| **TOTAL** | **18** | **1755h** | **✅ COMPLÉTÉ** |
+| Catégorie | Tâches | Minutes passées | Heures passées | Statut |
+|-----------|--------|----------------|----------------|--------|
+| Infrastructure | 1-2 | 90 min | 1.5h | ✅ Complété |
+| Base de Données | 3-7 | 405 min | 6.75h | ✅ Complété |
+| Backend Auth | 8-18 | 1290 min | 21.5h | ✅ Complété |
+| **TOTAL** | **18** | **1785 min** | **29.75h** | **✅ COMPLÉTÉ** |
 
 ---
 
@@ -718,9 +531,9 @@ Les tâches 19-26 couvriront:
 Pour toute question concernant les tâches 1-18:
 - Backend: ETU003241, ETU003337, ETU003346, ETU003358
 - Documentation: Voir ce document
-- Repository: GitHub (lien public)
+- Repository: GitHub 
 
 ---
 
-**Dernière mise à jour:** Janvier 2026  
+**Dernière mise à jour:** 20 Janvier 2026  
 **Status:** En production pour tâches 1-18
