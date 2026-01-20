@@ -28,8 +28,15 @@ public class SessionFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
-        // Allow unauthenticated endpoints (login, public resources)
-        if (path.startsWith("/auth") || path.startsWith("/login") || path.startsWith("/public") || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+        // Allow unauthenticated endpoints (login, public resources) and API/docs
+        if (path.startsWith("/auth")
+            || path.startsWith("/login")
+            || path.startsWith("/public")
+            || path.startsWith("/v3/api-docs")
+            || path.startsWith("/swagger")
+            || path.startsWith("/swagger-ui")
+            || path.equals("/swagger-ui.html")
+            || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
