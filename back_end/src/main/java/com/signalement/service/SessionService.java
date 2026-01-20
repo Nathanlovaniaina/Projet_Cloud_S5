@@ -42,4 +42,28 @@ public class SessionService {
     public void deleteSession(Integer id) {
         sessionRepository.deleteById(id);
     }
+
+    @Transactional(readOnly = true)
+    public Optional<Utilisateur> getUtilisateurByToken(String token) {
+        return sessionRepository.findByToken(token)
+                .filter(session -> session.getDateFin().isAfter(LocalDateTime.now()))
+                .map(Session::getUtilisateur);
+    }
+
+    @Transactional
+    public boolean refreshSession(String token, int additionalHours) {
+        Optional<Session> opt = sessionRepository.findByToken(token);
+        if (opt.isPresent()) {
+            Session session = opt.get();
+            session.setDateFin(session.getDateFin().plusHours(additionalHours));
+            sessionRepository.save(session);
+            return true;
+        }
+        return false;
+    }
+
+    @Transactional
+    public void invalidateSession(String token) {
+        sessionRepository.findByToken(token).ifPresent(sessionRepository::delete);
+    }
 }
