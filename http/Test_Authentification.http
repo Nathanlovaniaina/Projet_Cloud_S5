@@ -1,0 +1,353 @@
+### ============================================================
+### Tests des APIs d'Authentification - Projet Signalement
+### ============================================================
+### Variables globales
+@baseUrl = http://localhost:8080/api/auth
+@token = 
+@userId = 
+
+### ============================================================
+### TÂCHE 11: INSCRIPTION (email/pwd)
+### ============================================================
+
+### Test 1.1: Inscription d'un nouveau visiteur
+POST {{baseUrl}}/inscription
+Content-Type: application/json
+
+{
+  "nom": "Rakotondrabe",
+  "prenom": "Miora",
+  "email": "miora.rakotondrabe@gmail.com",
+  "motDePasse": "miora2025",
+  "idTypeUtilisateur": 1
+}
+
+### Test 1.2: Inscription d'un nouveau manager
+POST {{baseUrl}}/inscription
+Content-Type: application/json
+
+{
+  "nom": "Andrianasolo",
+  "prenom": "Feno",
+  "email": "feno.andrianasolo@signalement.mg",
+  "motDePasse": "feno2025",
+  "idTypeUtilisateur": 2
+}
+
+### Test 1.3: Inscription avec un email déjà existant (doit échouer)
+POST {{baseUrl}}/inscription
+Content-Type: application/json
+
+{
+  "nom": "Rakoto",
+  "prenom": "Jean",
+  "email": "jean.rakoto@signalement.mg",
+  "motDePasse": "password123",
+  "idTypeUtilisateur": 1
+}
+
+### Test 1.4: Inscription avec un type d'utilisateur invalide (doit échouer)
+POST {{baseUrl}}/inscription
+Content-Type: application/json
+
+{
+  "nom": "Test",
+  "prenom": "User",
+  "email": "test.user@test.com",
+  "motDePasse": "test123",
+  "idTypeUtilisateur": 999
+}
+
+### ============================================================
+### TÂCHE 12: AUTHENTIFICATION (email/pwd)
+### Inclut TÂCHE 13 (sessions) et TÂCHE 15 (limite tentatives)
+### ============================================================
+
+### Test 2.1: Connexion réussie avec un manager
+# @name loginManager
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "jean.rakoto@signalement.mg",
+  "motDePasse": "manager123"
+}
+
+### Test 2.2: Connexion réussie avec un visiteur
+# @name loginVisiteur
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "hery.andria@gmail.com",
+  "motDePasse": "visiteur123"
+}
+
+### Test 2.3: Connexion avec mot de passe incorrect (1ère tentative)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "nadia.razaf@gmail.com",
+  "motDePasse": "mauvais_password"
+}
+
+### Test 2.4: Connexion avec mot de passe incorrect (2ème tentative)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "nadia.razaf@gmail.com",
+  "motDePasse": "encore_faux"
+}
+
+### Test 2.5: Connexion avec mot de passe incorrect (3ème tentative - devrait bloquer)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "nadia.razaf@gmail.com",
+  "motDePasse": "toujours_faux"
+}
+
+### Test 2.6: Tentative de connexion avec un compte bloqué
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "koto.bloque@gmail.com",
+  "motDePasse": "bloque123"
+}
+
+### Test 2.7: Connexion avec email inexistant
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "inexistant@test.com",
+  "motDePasse": "password123"
+}
+
+### ============================================================
+### TÂCHE 14: MODIFICATION DES INFOS UTILISATEURS
+### ============================================================
+
+### Test 3.1: Récupérer le token du manager (pour les tests suivants)
+# @name getManagerToken
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "jean.rakoto@signalement.mg",
+  "motDePasse": "manager123"
+}
+
+### Extraire le token de la réponse (copiez le token manuellement ou utilisez une extension)
+### Remplacez YOUR_TOKEN_HERE par le token obtenu ci-dessus
+
+### Test 3.2: Modification de son propre profil (nom et prénom)
+PUT {{baseUrl}}/utilisateur/1
+Content-Type: application/json
+Authorization: 550e8400-e29b-41d4-a716-446655440000
+
+{
+  "nom": "Rakoto-Modifié",
+  "prenom": "Jean-Baptiste"
+}
+
+### Test 3.3: Modification de l'email
+PUT {{baseUrl}}/utilisateur/1
+Content-Type: application/json
+Authorization: 550e8400-e29b-41d4-a716-446655440000
+
+{
+  "email": "jean.nouveau@signalement.mg"
+}
+
+### Test 3.4: Modification du mot de passe
+PUT {{baseUrl}}/utilisateur/1
+Content-Type: application/json
+Authorization: 550e8400-e29b-41d4-a716-446655440000
+
+{
+  "motDePasse": "nouveau_password_2025"
+}
+
+### Test 3.5: Modification complète du profil
+PUT {{baseUrl}}/utilisateur/1
+Content-Type: application/json
+Authorization: 550e8400-e29b-41d4-a716-446655440000
+
+{
+  "nom": "Rakoto",
+  "prenom": "Jean-Claude",
+  "email": "jc.rakoto@signalement.mg",
+  "motDePasse": "jc2025"
+}
+
+### Test 3.6: Tentative de modification avec un email déjà existant (doit échouer)
+PUT {{baseUrl}}/utilisateur/1
+Content-Type: application/json
+Authorization: 550e8400-e29b-41d4-a716-446655440000
+
+{
+  "email": "marie.ravelo@signalement.mg"
+}
+
+### Test 3.7: Tentative de modification d'un autre utilisateur (visiteur tente de modifier)
+PUT {{baseUrl}}/utilisateur/2
+Content-Type: application/json
+Authorization: 650e8400-e29b-41d4-a716-446655440001
+
+{
+  "nom": "Tentative Piratage"
+}
+
+### Test 3.8: Manager modifie un autre utilisateur (devrait réussir)
+PUT {{baseUrl}}/utilisateur/4
+Content-Type: application/json
+Authorization: 550e8400-e29b-41d4-a716-446655440000
+
+{
+  "nom": "Andriamampianina-Updated"
+}
+
+### Test 3.9: Modification avec un token invalide (doit échouer)
+PUT {{baseUrl}}/utilisateur/1
+Content-Type: application/json
+Authorization: token-invalide-12345
+
+{
+  "nom": "Test"
+}
+
+### ============================================================
+### TÂCHE 16: DÉBLOCAGE D'UTILISATEUR
+### ============================================================
+
+### Test 4.1: Lister les utilisateurs bloqués (en tant que Manager)
+GET {{baseUrl}}/bloques
+Authorization: 550e8400-e29b-41d4-a716-446655440000
+
+### Test 4.2: Débloquer un utilisateur (en tant que Manager)
+POST {{baseUrl}}/debloquer/9
+Authorization: 550e8400-e29b-41d4-a716-446655440000
+
+### Test 4.3: Vérifier que l'utilisateur peut maintenant se connecter
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "koto.bloque@gmail.com",
+  "motDePasse": "bloque123"
+}
+
+### Test 4.4: Tentative de déblocage par un visiteur (doit échouer)
+POST {{baseUrl}}/debloquer/9
+Authorization: 650e8400-e29b-41d4-a716-446655440001
+
+### Test 4.5: Tentative de déblocage avec un token invalide (doit échouer)
+POST {{baseUrl}}/debloquer/9
+Authorization: token-invalide-xyz
+
+### Test 4.6: Tentative de déblocage d'un utilisateur inexistant (doit échouer)
+POST {{baseUrl}}/debloquer/9999
+Authorization: 550e8400-e29b-41d4-a716-446655440000
+
+### ============================================================
+### TESTS SUPPLÉMENTAIRES - GESTION DES SESSIONS
+### ============================================================
+
+### Test 5.1: Déconnexion (invalidation de session)
+POST {{baseUrl}}/logout
+Authorization: 550e8400-e29b-41d4-a716-446655440000
+
+### Test 5.2: Tentative d'accès après déconnexion (doit échouer)
+GET {{baseUrl}}/bloques
+Authorization: 550e8400-e29b-41d4-a716-446655440000
+
+### ============================================================
+### SCÉNARIOS DE TEST COMPLETS
+### ============================================================
+
+### Scénario 1: Inscription + Connexion d'un nouvel utilisateur
+# 1. Inscription
+POST {{baseUrl}}/inscription
+Content-Type: application/json
+
+{
+  "nom": "Scenario",
+  "prenom": "Test",
+  "email": "scenario.test@test.mg",
+  "motDePasse": "scenario123",
+  "idTypeUtilisateur": 1
+}
+
+###
+# 2. Connexion avec le nouveau compte
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "scenario.test@test.mg",
+  "motDePasse": "scenario123"
+}
+
+### Scénario 2: Blocage après 3 tentatives + Déblocage
+# 1. Première tentative échouée
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "scenario.test@test.mg",
+  "motDePasse": "faux1"
+}
+
+###
+# 2. Deuxième tentative échouée
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "scenario.test@test.mg",
+  "motDePasse": "faux2"
+}
+
+###
+# 3. Troisième tentative échouée (devrait bloquer)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "scenario.test@test.mg",
+  "motDePasse": "faux3"
+}
+
+###
+# 4. Vérification que le compte est bloqué
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "scenario.test@test.mg",
+  "motDePasse": "scenario123"
+}
+
+###
+# 5. Déblocage par le manager (récupérer l'ID utilisateur d'abord)
+POST {{baseUrl}}/debloquer/10
+Authorization: 550e8400-e29b-41d4-a716-446655440000
+
+###
+# 6. Connexion après déblocage (devrait réussir)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "scenario.test@test.mg",
+  "motDePasse": "scenario123"
+}
+
+### ============================================================
+### FIN DES TESTS
+### ============================================================

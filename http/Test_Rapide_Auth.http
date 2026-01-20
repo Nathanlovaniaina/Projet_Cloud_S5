@@ -1,0 +1,181 @@
+### ============================================================
+### TESTS RAPIDES - APIs Authentification
+### Tests essentiels pour validation rapide des tâches 11-16
+### ============================================================
+
+@baseUrl = http://localhost:8080/api/auth
+@managerToken = b47213f8-ede1-40d1-b4a0-28d8e967610b
+@visiteurToken = 515104ec-af8c-4187-a616-70624d0bfbf0
+
+### ============================================================
+### TÂCHE 11: Inscription ✅
+### ============================================================
+
+### Inscription visiteur
+POST {{baseUrl}}/inscription
+Content-Type: application/json
+
+{
+  "nom": "TestUser",
+  "prenom": "Rapid",
+  "email": "rapid.test@test.mg",
+  "motDePasse": "test123",
+  "idTypeUtilisateur": 1
+}
+
+### ============================================================
+### TÂCHE 12: Authentification ✅
+### ============================================================
+
+### Connexion Manager (récupérer token)
+# @name loginSuccess
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "jean.rakoto@signalement.mg",
+  "motDePasse": "manager123"
+}
+
+### Connexion Visiteur
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "hery.andria@gmail.com",
+  "motDePasse": "visiteur123"
+}
+
+### ============================================================
+### TÂCHE 13: Gestion Sessions (intégré dans login) ✅
+### ============================================================
+### La session est créée automatiquement lors du login
+### Durée: 24 heures
+### Token retourné dans la réponse
+
+### ============================================================
+### TÂCHE 14: Modification Utilisateur ✅
+### ============================================================
+
+### Modifier son propre profil
+PUT {{baseUrl}}/utilisateur/1
+Content-Type: application/json
+Authorization: {{managerToken}}
+
+{
+  "nom": "Rakoto-Updated",
+  "prenom": "Jean-Modified"
+}
+
+### ============================================================
+### TÂCHE 15: Limite Tentatives (test de blocage) ✅
+### ============================================================
+
+### Créer un compte pour tester le blocage
+POST {{baseUrl}}/inscription
+Content-Type: application/json
+
+{
+  "nom": "ToBeLocked",
+  "prenom": "User",
+  "email": "toblock@test.mg",
+  "motDePasse": "correct123",
+  "idTypeUtilisateur": 1
+}
+
+###
+### 1ère tentative échouée
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "toblock@test.mg",
+  "motDePasse": "wrong1"
+}
+
+###
+### 2ème tentative échouée
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "toblock@test.mg",
+  "motDePasse": "wrong2"
+}
+
+###
+### 3ème tentative échouée (BLOCAGE)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "toblock@test.mg",
+  "motDePasse": "wrong3"
+}
+
+###
+### Vérifier le blocage (même avec bon mot de passe)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "toblock@test.mg",
+  "motDePasse": "correct123"
+}
+
+### ============================================================
+### TÂCHE 16: Déblocage Utilisateur ✅
+### ============================================================
+
+### Lister les utilisateurs bloqués
+GET {{baseUrl}}/bloques
+Authorization: {{managerToken}}
+
+###
+### Débloquer l'utilisateur (ID 9 = koto.bloque@gmail.com)
+POST {{baseUrl}}/debloquer/9
+Authorization: {{managerToken}}
+
+###
+### Vérifier la connexion après déblocage
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "koto.bloque@gmail.com",
+  "motDePasse": "bloque123"
+}
+
+### ============================================================
+### TESTS DE SÉCURITÉ
+### ============================================================
+
+### Tentative modification sans autorisation
+PUT {{baseUrl}}/utilisateur/1
+Content-Type: application/json
+Authorization: token-invalide
+
+{
+  "nom": "Hack"
+}
+
+###
+### Visiteur ne peut pas débloquer
+POST {{baseUrl}}/debloquer/9
+Authorization: {{visiteurToken}}
+
+###
+### Déconnexion
+POST {{baseUrl}}/logout
+Authorization: {{managerToken}}
+
+### ============================================================
+### VALIDATION COMPLÈTE - Toutes les tâches ✅
+### ============================================================
+### Tâche 11: Inscription ✅
+### Tâche 12: Authentification ✅
+### Tâche 13: Sessions avec durée de vie ✅
+### Tâche 14: Modification utilisateur ✅
+### Tâche 15: Limite 3 tentatives ✅
+### Tâche 16: Déblocage utilisateur ✅
+### ============================================================

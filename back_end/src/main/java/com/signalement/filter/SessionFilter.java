@@ -28,19 +28,27 @@ public class SessionFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
-        // Allow unauthenticated endpoints (login, public resources)
-        if (path.startsWith("/auth") || path.startsWith("/login") || path.startsWith("/public") || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+        
+        // Routes publiques qui ne nécessitent pas d'authentification
+        if (path.startsWith("/api/auth/login") || 
+            path.startsWith("/api/auth/inscription") || 
+            path.startsWith("/public") || 
+            path.startsWith("/error") ||
+            "OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        // Vérifier le header Authorization pour les autres routes
         String header = request.getHeader("Authorization");
-        if (header == null || !header.startsWith("Bearer ")) {
+        if (header == null || header.isEmpty()) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
             return;
         }
 
-        String token = header.substring(7);
+        // Le token peut être avec ou sans "Bearer "
+        String token = header.startsWith("Bearer ") ? header.substring(7) : header;
+        
         if (!sessionService.isSessionValid(token)) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session invalid or expired");
             return;
