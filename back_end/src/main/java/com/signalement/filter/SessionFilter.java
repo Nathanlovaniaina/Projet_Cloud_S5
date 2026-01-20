@@ -28,13 +28,15 @@ public class SessionFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
-        
-        // Routes publiques qui ne nécessitent pas d'authentification
-        if (path.startsWith("/api/auth/login") || 
-            path.startsWith("/api/auth/inscription") || 
-            path.startsWith("/public") || 
-            path.startsWith("/error") ||
-            "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+        // Allow unauthenticated endpoints (login, public resources) and API/docs
+        if (path.startsWith("/auth")
+            || path.startsWith("/login")
+            || path.startsWith("/public")
+            || path.startsWith("/v3/api-docs")
+            || path.startsWith("/swagger")
+            || path.startsWith("/swagger-ui")
+            || path.equals("/swagger-ui.html")
+            || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
