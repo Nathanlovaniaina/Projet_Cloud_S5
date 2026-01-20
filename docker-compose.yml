@@ -50,7 +50,6 @@ services:
       - ./maps_data:/data
     networks:
       - signalement_network
-    # Note: This is a placeholder. Actual configuration will be done in later tasks.
 
 volumes:
   db_data:
