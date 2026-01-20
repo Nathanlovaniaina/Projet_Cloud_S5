@@ -31,6 +31,31 @@ public class SignalementService {
     }
 
     @Transactional(readOnly = true)
+    public List<com.signalement.dto.SignalementDTO> getSignalementsDtoByUtilisateur(Utilisateur utilisateur) {
+        return signalementRepository.findByUtilisateur(utilisateur)
+                .stream()
+                .map(s -> {
+                    Integer etatId = null;
+                    try {
+                        if (s.getEtatActuel() != null) etatId = s.getEtatActuel().getIdEtatSignalement();
+                    } catch (Exception ignored) {}
+                    return new com.signalement.dto.SignalementDTO(
+                            s.getIdSignalement(),
+                            s.getTitre(),
+                            s.getDescription(),
+                            s.getLatitude(),
+                            s.getLongitude(),
+                            s.getDateCreation(),
+                            s.getUrlPhoto(),
+                            s.getSynced(),
+                            s.getLastSync(),
+                            etatId
+                    );
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<Signalement> getSignalementsByEtat(Integer etatId) {
         return signalementRepository.findByEtatActuel(etatId);
     }
