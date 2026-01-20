@@ -41,13 +41,16 @@ public class SessionFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Vérifier le header Authorization pour les autres routes
         String header = request.getHeader("Authorization");
-        if (header == null || !header.startsWith("Bearer ")) {
+        if (header == null || header.isEmpty()) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
             return;
         }
 
-        String token = header.substring(7);
+        // Le token peut être avec ou sans "Bearer "
+        String token = header.startsWith("Bearer ") ? header.substring(7) : header;
+        
         if (!sessionService.isSessionValid(token)) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session invalid or expired");
             return;

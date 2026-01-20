@@ -1,5 +1,7 @@
 # Répartition des Tâches - Projet Signalement Travaux Routiers
 
+## Scénario 1: Infrastructure et Setup Initial
+
 ## Tâche 1
 **Catégorie** : Infrastructure  
 **Module** : Setup  
@@ -13,8 +15,10 @@
 **Module** : Setup  
 **Tâches** : Mise en place de la structure Docker pour le projet  
 **Type** : Configuration  
-**Qui** : ETU003337  
+**Qui** : ETU003241  
 **Estimation** : 60   
+
+## Scénario 2: Infrastructure - Base de Données
 
 ## Tâche 3
 **Catégorie** : Infrastructure  
@@ -29,7 +33,7 @@
 **Module** : Base de données  
 **Tâches** : Création du MCD (Modèle Conceptuel de Données)  
 **Type** : Conception  
-**Qui** : ETU003358  
+**Qui** : ETU003346  
 **Estimation** : 120   
 
 ## Tâche 5
@@ -37,7 +41,7 @@
 **Module** : Base de données  
 **Tâches** : Création des tables pour les utilisateurs  
 **Type** : Développement  
-**Qui** : ETU003241  
+**Qui** : ETU003358  
 **Estimation** : 90   
 
 ## Tâche 6
@@ -45,7 +49,7 @@
 **Module** : Base de données  
 **Tâches** : Création des tables pour les signalements  
 **Type** : Développement  
-**Qui** : ETU003337  
+**Qui** : ETU003358  
 **Estimation** : 90   
 
 ## Tâche 7
@@ -53,15 +57,17 @@
 **Module** : Base de données  
 **Tâches** : Création des tables pour le suivi des tentatives de connexion  
 **Type** : Développement  
-**Qui** : ETU003346  
+**Qui** : ETU003358  
 **Estimation** : 60   
+
+## Scénario 3: Backend - Authentification
 
 ## Tâche 8
 **Catégorie** : Backend  
 **Module** : Authentification  
 **Tâches** : Setup du projet Java Spring Boot  
 **Type** : Configuration  
-**Qui** : ETU003358  
+**Qui** : ETU003337  
 **Estimation** : 60   
 
 ## Tâche 9
@@ -69,7 +75,7 @@
 **Module** : Authentification  
 **Tâches** : Configuration de Firebase pour l'authentification en ligne  
 **Type** : Configuration  
-**Qui** : ETU003241  
+**Qui** : ETU003337  
 **Estimation** : 90   
 
 ## Tâche 10
@@ -85,7 +91,7 @@
 **Module** : Authentification  
 **Tâches** : Développement de l'API REST - Inscription (email/pwd)  
 **Type** : Développement  
-**Qui** : ETU003346  
+**Qui** : ETU003241  
 **Estimation** : 150   
 
 ## Tâche 12
@@ -93,7 +99,7 @@
 **Module** : Authentification  
 **Tâches** : Développement de l'API REST - Authentification (email/pwd)  
 **Type** : Développement  
-**Qui** : ETU003358  
+**Qui** : ETU003241  
 **Estimation** : 150   
 
 ## Tâche 13
@@ -117,7 +123,7 @@
 **Module** : Authentification  
 **Tâches** : Implémentation du système de limite de tentatives de connexion (3 par défaut)  
 **Type** : Développement  
-**Qui** : ETU003346  
+**Qui** : ETU003241  
 **Estimation** : 150   
 
 ## Tâche 16
@@ -125,7 +131,7 @@
 **Module** : Authentification  
 **Tâches** : Développement de l'API REST - Déblocage d'utilisateur  
 **Type** : Développement  
-**Qui** : ETU003358  
+**Qui** : ETU003346  
 **Estimation** : 90   
 
 ## Tâche 17
@@ -133,7 +139,7 @@
 **Module** : Authentification  
 **Tâches** : Configuration de Swagger pour la documentation API  
 **Type** : Configuration  
-**Qui** : ETU003241  
+**Qui** : ETU003346  
 **Estimation** : 60   
 
 ## Tâche 18
@@ -141,15 +147,17 @@
 **Module** : Authentification  
 **Tâches** : Rédaction de la documentation Swagger pour toutes les routes  
 **Type** : Documentation  
-**Qui** : ETU003337  
+**Qui** : ETU003346  
 **Estimation** : 120   
+
+## Scénario 4: Backend - Signalements et Synchronisation
 
 ## Tâche 19
 **Catégorie** : Backend  
 **Module** : Signalements  
 **Tâches** : Création de l'API REST - Créer un signalement  
 **Type** : Développement  
-**Qui** : ETU003346  
+**Qui** : ETU003358  
 **Estimation** : 120   
 
 ## Tâche 20
@@ -165,7 +173,7 @@
 **Module** : Signalements  
 **Tâches** : Création de l'API REST - Récupérer mes signalements  
 **Type** : Développement  
-**Qui** : ETU003241  
+**Qui** : ETU003358  
 **Estimation** : 90   
 
 ## Tâche 22
@@ -181,7 +189,7 @@
 **Module** : Signalements  
 **Tâches** : Création de l'API REST - Modifier le statut d'un signalement  
 **Type** : Développement  
-**Qui** : ETU003346  
+**Qui** : ETU003337  
 **Estimation** : 90   
 
 ## Tâche 24
@@ -189,7 +197,7 @@
 **Module** : Synchronisation  
 **Tâches** : Développement de l'API - Synchronisation avec Firebase (récupération)  
 **Type** : Développement  
-**Qui** : ETU003358  
+**Qui** : ETU003241  
 **Estimation** : 180   
 
 ## Tâche 25
@@ -208,6 +216,8 @@
 **Qui** : ETU003337  
 **Estimation** : 150   
 
+## Scénario 5: Infrastructure - Cartes
+
 ## Tâche 27
 **Catégorie** : Infrastructure  
 **Module** : Cartes  
@@ -221,7 +231,7 @@
 **Module** : Cartes  
 **Tâches** : Téléchargement des données cartographiques d'Antananarivo  
 **Type** : Configuration  
-**Qui** : ETU003358  
+**Qui** : ETU003346  
 **Estimation** : 45   
 
 ## Tâche 29
@@ -229,8 +239,10 @@
 **Module** : Cartes  
 **Tâches** : Configuration du serveur de tiles pour OpenStreetMap  
 **Type** : Configuration  
-**Qui** : ETU003241  
+**Qui** : ETU003346  
 **Estimation** : 90   
+
+## Scénario 6: Frontend Web
 
 ## Tâche 30
 **Catégorie** : Frontend Web  
@@ -245,7 +257,7 @@
 **Module** : Setup  
 **Tâches** : Installation et configuration de Leaflet pour React  
 **Type** : Configuration  
-**Qui** : ETU003346  
+**Qui** : ETU003337  
 **Estimation** : 60   
 
 ## Tâche 32
@@ -253,7 +265,7 @@
 **Module** : Authentification  
 **Tâches** : Création du composant de connexion  
 **Type** : Développement  
-**Qui** : ETU003358  
+**Qui** : ETU003337  
 **Estimation** : 120   
 
 ## Tâche 33
@@ -269,7 +281,7 @@
 **Module** : Authentification  
 **Tâches** : Implémentation de la gestion des sessions côté client  
 **Type** : Développement  
-**Qui** : ETU003337  
+**Qui** : ETU003241  
 **Estimation** : 90   
 
 ## Tâche 35
@@ -277,7 +289,7 @@
 **Module** : Authentification  
 **Tâches** : Création du composant de modification de profil utilisateur  
 **Type** : Développement  
-**Qui** : ETU003346  
+**Qui** : ETU003241  
 **Estimation** : 90   
 
 ## Tâche 36
@@ -293,7 +305,7 @@
 **Module** : Carte  
 **Tâches** : Affichage des marqueurs de signalements sur la carte  
 **Type** : Développement  
-**Qui** : ETU003241  
+**Qui** : ETU003358  
 **Estimation** : 120   
 
 ## Tâche 38
@@ -301,7 +313,7 @@
 **Module** : Carte  
 **Tâches** : Implémentation du survol de marqueurs
 **Type** : Développement  
-**Qui** : ETU003337  
+**Qui** : ETU003358  
 **Estimation** : 90   
 
 ## Tâche 39
@@ -317,7 +329,7 @@
 **Module** : Visiteur  
 **Tâches** : Affichage du tableau de récapitulation 
 **Type** : Développement  
-**Qui** : ETU003358  
+**Qui** : ETU003346  
 **Estimation** : 120   
 
 ## Tâche 41
@@ -357,7 +369,7 @@
 **Module** : Manager  
 **Tâches** : Implémentation de la modification du statut des signalements  
 **Type** : Développement  
-**Qui** : ETU003241  
+**Qui** : ETU003337  
 **Estimation** : 90   
 
 ## Tâche 46
@@ -376,6 +388,8 @@
 **Qui** : ETU003346  
 **Estimation** : 90   
 
+## Scénario 7: Frontend Mobile
+
 ## Tâche 48
 **Catégorie** : Frontend Mobile  
 **Module** : Setup  
@@ -389,7 +403,7 @@
 **Module** : Setup  
 **Tâches** : Configuration de Firebase SDK pour mobile  
 **Type** : Configuration  
-**Qui** : ETU003241  
+**Qui** : ETU003358  
 **Estimation** : 90   
 
 ## Tâche 50
@@ -429,7 +443,7 @@
 **Module** : Signalement  
 **Tâches** : Interface de création de signalement sur la carte  
 **Type** : Développement  
-**Qui** : ETU003337  
+**Qui** : ETU003241  
 **Estimation** : 150   
 
 ## Tâche 55
@@ -453,7 +467,7 @@
 **Module** : Build  
 **Tâches** : Configuration pour la génération de l'APK Android  
 **Type** : Configuration  
-**Qui** : ETU003241  
+**Qui** : ETU003337  
 **Estimation** : 60   
 
 ## Tâche 58
@@ -463,6 +477,8 @@
 **Type** : Build  
 **Qui** : ETU003337  
 **Estimation** : 90   
+
+## Scénario 8: Documentation et Gestion
 
 ## Tâche 59
 **Catégorie** : Documentation  
