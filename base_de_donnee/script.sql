@@ -131,3 +131,4 @@ INSERT INTO etat_signalement (libelle) VALUES ('En attente'), ('En cours'), ('Te
 INSERT INTO type_utilisateur (libelle) VALUES ('Visiteur'), ('Manager');
 INSERT INTO type_travail (libelle) VALUES ('Réparation de chaussée'), ('Construction de route'), ('Signalisation'), ('Éclairage public'), ('Maintenance');
 INSERT INTO statut_assignation (libelle) VALUES ('En attente'), ('Accepté'), ('Refusé'), ('En cours');
+
