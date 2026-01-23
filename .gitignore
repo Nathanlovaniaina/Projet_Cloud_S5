@@ -37,3 +37,6 @@ target/
 # Environment files
 .env
 .env.local
+
+# Firebase credentials
+**/firebase-service-account.json

@@ -330,4 +330,27 @@ public class SignalementController {
             .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new com.signalement.dto.ApiResponse(false, "Token invalide")));
     }
+
+    @Operation(
+        summary = "Récupérer toutes les assignations d'un signalement (Tâche 30)",
+        description = "Retourne la liste de toutes les entreprises assignées à un signalement avec leur statut actuel."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Liste des assignations récupérée avec succès",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = com.signalement.dto.ApiResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Signalement non trouvé")
+    })
+    @GetMapping("/signalements/{id}/assignations")
+    public ResponseEntity<com.signalement.dto.ApiResponse> getAssignationsBySignalement(
+            @PathVariable Integer id) {
+        
+        try {
+            List<EntrepriseConcernerDTO> assignations = signalementService.getAssignationsBySignalement(id);
+            return ResponseEntity.ok(
+                new com.signalement.dto.ApiResponse(true, "Liste des assignations récupérée", assignations));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+        }
+    }
 }

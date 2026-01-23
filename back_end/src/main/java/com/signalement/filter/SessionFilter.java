@@ -48,6 +48,12 @@ public class SessionFilter extends OncePerRequestFilter {
             return;
         }
 
+        // GET /api/signalements/{id}/assignations is public (no auth required)
+        if ("GET".equalsIgnoreCase(method) && path.contains("/assignations")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // Vérifier le header Authorization pour les autres routes
         String header = request.getHeader("Authorization");
         if (header == null || header.isEmpty()) {

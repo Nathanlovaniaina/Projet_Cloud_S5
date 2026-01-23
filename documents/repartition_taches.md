@@ -234,13 +234,29 @@
 
 ## Tâche 29
 **Catégorie** : Backend  
+**Module** : Signalements  
+**Tâches** : Implémentation des règles métier - Liaison état signalement et assignations entreprises  
+**Type** : Développement  
+**Qui** : ETU003358 
+**Estimation** : 120   
+
+## Tâche 30
+**Catégorie** : Backend  
+**Module** : Signalements  
+**Tâches** : Création de l'API REST - Récupérer les assignations d'un signalement  
+**Type** : Développement  
+**Qui** : ETU003358
+**Estimation** : 90   
+
+## Tâche 31
+**Catégorie** : Backend  
 **Module** : Synchronisation  
 **Tâches** : Développement de l'API - Synchronisation avec Firebase (récupération)  
 **Type** : Développement  
 **Qui** : ETU003241  
 **Estimation** : 180   
 
-## Tâche 30
+## Tâche 32
 **Catégorie** : Backend  
 **Module** : Synchronisation  
 **Tâches** : Développement de l'API - Synchronisation avec Firebase (envoi)  
@@ -248,7 +264,7 @@
 **Qui** : ETU003241  
 **Estimation** : 180   
 
-## Tâche 31
+## Tâche 33
 **Catégorie** : Backend  
 **Module** : Statistiques  
 **Tâches** : Création de l'API REST - Récapitulatif 
@@ -258,7 +274,7 @@
 
 ## Scénario 5: Infrastructure - Cartes
 
-## Tâche 32
+## Tâche 34
 **Catégorie** : Infrastructure  
 **Module** : Cartes  
 **Tâches** : Installation du serveur de cartes Offline sur Docker  
@@ -266,7 +282,7 @@
 **Qui** : ETU003346  
 **Estimation** : 90   
 
-## Tâche 33
+## Tâche 35
 **Catégorie** : Infrastructure  
 **Module** : Cartes  
 **Tâches** : Téléchargement des données cartographiques d'Antananarivo  
@@ -274,7 +290,7 @@
 **Qui** : ETU003346  
 **Estimation** : 45   
 
-## Tâche 34
+## Tâche 36
 **Catégorie** : Infrastructure  
 **Module** : Cartes  
 **Tâches** : Configuration du serveur de tiles pour OpenStreetMap  
@@ -284,7 +300,7 @@
 
 ## Scénario 6: Frontend Web
 
-## Tâche 35
+## Tâche 37
 **Catégorie** : Frontend Web  
 **Module** : Setup  
 **Tâches** : Initialisation du projet React  
@@ -292,7 +308,7 @@
 **Qui** : ETU003337  
 **Estimation** : 45   
 
-## Tâche 36
+## Tâche 38
 **Catégorie** : Frontend Web  
 **Module** : Setup  
 **Tâches** : Installation et configuration de Leaflet pour React  
@@ -300,7 +316,7 @@
 **Qui** : ETU003337  
 **Estimation** : 60   
 
-## Tâche 37
+## Tâche 39
 **Catégorie** : Frontend Web  
 **Module** : Authentification  
 **Tâches** : Création d'un service de gestion de connectivité et basculement d'authentification (Firebase/PostgreSQL)  
@@ -308,7 +324,7 @@
 **Qui** : ETU003337  
 **Estimation** : 120   
 
-## Tâche 38
+## Tâche 40
 **Catégorie** : Frontend Web  
 **Module** : Authentification  
 **Tâches** : Création du composant de connexion avec détection de connectivité Internet et basculement dynamique Firebase/PostgreSQL  
@@ -316,7 +332,7 @@
 **Qui** : ETU003337  
 **Estimation** : 180   
 
-## Tâche 39
+## Tâche 41
 **Catégorie** : Frontend Web  
 **Module** : Authentification  
 **Tâches** : Création du composant d'inscription avec basculement Firebase/PostgreSQL selon la connectivité  
@@ -324,7 +340,7 @@
 **Qui** : ETU003241  
 **Estimation** : 150   
 
-## Tâche 40
+## Tâche 42
 **Catégorie** : Frontend Web  
 **Module** : Authentification  
 **Tâches** : Implémentation de la gestion des sessions côté client (support Firebase et PostgreSQL)  
@@ -332,7 +348,7 @@
 **Qui** : ETU003241  
 **Estimation** : 120   
 
-## Tâche 41
+## Tâche 43
 **Catégorie** : Frontend Web  
 **Module** : Authentification  
 **Tâches** : Création du composant de modification de profil utilisateur avec synchronisation multicanal (Firebase/PostgreSQL)  

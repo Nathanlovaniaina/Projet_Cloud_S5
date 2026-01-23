@@ -1,0 +1,296 @@
+### ============================================================
+### TESTS POUR TÂCHES 29 & 30
+### Règles métier et récupération des assignations
+### ============================================================
+
+### Configuration
+@baseUrl = http://localhost:8080/api
+@tokenManager = 0e9d9824-696e-4535-865e-321d05cf209e
+
+### ============================================================
+### TÂCHE 30 - Récupérer toutes les assignations d'un signalement
+### ============================================================
+
+### T30-1: Récupérer les assignations d'un signalement avec assignations
+GET {{baseUrl}}/signalements/3/assignations
+Content-Type: application/json
+
+###
+
+### T30-2: Récupérer les assignations d'un signalement sans assignation
+GET {{baseUrl}}/signalements/999/assignations
+Content-Type: application/json
+
+###
+
+### T30-3: Signalement inexistant
+GET {{baseUrl}}/signalements/99999/assignations
+Content-Type: application/json
+
+###
+
+### ============================================================
+### TÂCHE 29 - Validation des transitions d'état
+### ============================================================
+
+### PRÉPARATION: Créer un nouveau signalement pour les tests
+POST {{baseUrl}}/signalements
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "titre": "Nid de poule important test",
+  "description": "Un grand nid de poule sur la RN1, dangereux pour les véhicules",
+  "latitude": -18.8492,
+  "longitude": 47.5079,
+  "surfaceMetreCarree": 2.5,
+  "urlPhoto": "https://example.com/photo.jpg",
+  "idTypeTravail": 2
+}
+
+###
+
+### T29-1: Tenter de passer en "En cours" (ID 2) sans assignation acceptée
+### ❌ DEVRAIT ÉCHOUER: "Au moins une entreprise doit avoir accepté le projet"
+@signalementId = 5
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "etatId": 2
+}
+
+###
+
+### T29-2: Assigner une entreprise (statut par défaut = En attente)
+POST {{baseUrl}}/signalements/{{signalementId}}/assign-enterprise
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "entrepriseId": 1,
+  "montant": 5000.00,
+  "dateDebut": "2024-11-20",
+  "dateFin": "2024-12-20",
+  "description": "Assignation test"
+}
+
+###
+
+### T29-3: Tenter de passer en "En cours" avec assignation "En attente"
+### ❌ DEVRAIT ÉCHOUER: "Au moins une entreprise doit avoir accepté le projet"
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "etatId": 2
+}
+
+###
+
+### T29-4: Changer le statut de l'assignation à "Accepté" (ID 2)
+@entrepriseId = 1
+PATCH {{baseUrl}}/signalements/{{signalementId}}/enterprise-assignment-status?enterpriseId={{entrepriseId}}
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "idStatutAssignation": 2,
+  "commentaire": "L'entreprise a accepté le projet et peut commencer les travaux."
+}
+
+###
+
+### T29-5: Passer le signalement en "En cours" (ID 2)
+### ✅ DEVRAIT RÉUSSIR: Une entreprise a accepté
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "etatId": 2
+}
+
+###
+
+### T29-6: Tenter de passer en "Résolu" (ID 3) sans assignation en cours/terminée
+### ❌ DEVRAIT ÉCHOUER: "Au moins une entreprise doit avoir commencé ou terminé"
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "etatId": 3
+}
+
+###
+
+### T29-7: Changer le statut de l'assignation à "En cours" (ID 4)
+PATCH {{baseUrl}}/signalements/{{signalementId}}/enterprise-assignment-status?enterpriseId={{entrepriseId}}
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "statutAssignationId": 4,
+  "remarque": "Travaux démarrés"
+}
+
+###
+
+### T29-8: Passer le signalement en "Résolu" (ID 3)
+### ✅ DEVRAIT RÉUSSIR: Une assignation est en cours
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "etatSignalementId": 3
+}
+
+###
+
+### ============================================================
+### TESTS COMBINÉS - Plusieurs entreprises
+### ============================================================
+
+### TC-1: Créer un signalement avec plusieurs assignations
+POST {{baseUrl}}/signalements
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "titre": "Test multi-entreprises",
+  "description": "Signalement avec plusieurs entreprises assignées",
+  "latitude": 48.8566,
+  "longitude": 2.3522,
+  "type_route": "Rue",
+  "gravite": "Élevée",
+  "type_signalement_id": 2
+}
+
+###
+
+### TC-2: Assigner entreprise 1
+@multiSignalementId = 2
+POST {{baseUrl}}/signalements/{{multiSignalementId}}/assign-enterprise
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "entrepriseId": 1,
+  "montant": 8000.00,
+  "dateDebut": "2024-11-25",
+  "dateFin": "2024-12-25",
+  "description": "Entreprise 1"
+}
+
+###
+
+### TC-3: Assigner entreprise 2
+POST {{baseUrl}}/signalements/{{multiSignalementId}}/assign-enterprise
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "entrepriseId": 2,
+  "montant": 7500.00,
+  "dateDebut": "2024-11-25",
+  "dateFin": "2024-12-25",
+  "description": "Entreprise 2"
+}
+
+###
+
+### TC-4: Entreprise 1 accepte
+PATCH {{baseUrl}}/signalements/{{multiSignalementId}}/enterprise-assignment-status?enterpriseId=1
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "statutAssignationId": 2,
+  "remarque": "Entreprise 1 accepte"
+}
+
+###
+
+### TC-5: Entreprise 2 refuse
+PATCH {{baseUrl}}/signalements/{{multiSignalementId}}/enterprise-assignment-status?enterpriseId=2
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "statutAssignationId": 3,
+  "remarque": "Entreprise 2 refuse"
+}
+
+###
+
+### TC-6: Passer en "En cours" avec 1 acceptation et 1 refus
+### ✅ DEVRAIT RÉUSSIR: Au moins une entreprise a accepté
+PATCH {{baseUrl}}/signalements/{{multiSignalementId}}/status
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "etatSignalementId": 2
+}
+
+###
+
+### TC-7: Récupérer toutes les assignations (devrait montrer 2 entreprises)
+GET {{baseUrl}}/signalements/{{multiSignalementId}}/assignations
+Content-Type: application/json
+
+###
+
+### TC-8: Entreprise 1 démarre les travaux
+PATCH {{baseUrl}}/signalements/{{multiSignalementId}}/enterprise-assignment-status?enterpriseId=1
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "statutAssignationId": 4,
+  "remarque": "Travaux démarrés"
+}
+
+###
+
+### TC-9: Clôturer le signalement
+### ✅ DEVRAIT RÉUSSIR: Une entreprise a démarré les travaux
+PATCH {{baseUrl}}/signalements/{{multiSignalementId}}/status
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "etatSignalementId": 3
+}
+
+###
+
+### ============================================================
+### TESTS DE RÉGRESSION - Transitions sans validation
+### ============================================================
+
+### TR-1: Passer en "Rejeté" (ID 4) - AUCUNE validation requise
+PATCH {{baseUrl}}/signalements/1/status
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "etatSignalementId": 4
+}
+
+###
+
+### TR-2: Passer en "En attente" (ID 1) - AUCUNE validation requise
+PATCH {{baseUrl}}/signalements/1/status
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "etatSignalementId": 1
+}
+
+###
