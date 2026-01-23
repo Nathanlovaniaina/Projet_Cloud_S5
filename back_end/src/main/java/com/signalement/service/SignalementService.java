@@ -3,10 +3,12 @@ package com.signalement.service;
 import com.signalement.dto.CreateSignalementRequest;
 import com.signalement.dto.UpdateSignalementRequest;
 import com.signalement.entity.EtatSignalement;
+import com.signalement.entity.HistoriqueEtatSignalement;
 import com.signalement.entity.Signalement;
 import com.signalement.entity.TypeTravail;
 import com.signalement.entity.Utilisateur;
 import com.signalement.repository.EtatSignalementRepository;
+import com.signalement.repository.HistoriqueEtatSignalementRepository;
 import com.signalement.repository.SignalementRepository;
 import com.signalement.repository.TypeTravailRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class SignalementService {
     private final SignalementRepository signalementRepository;
     private final EtatSignalementRepository etatSignalementRepository;
     private final TypeTravailRepository typeTravailRepository;
+    private final HistoriqueEtatSignalementRepository historiqueEtatSignalementRepository;
     private static final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
     @Transactional(readOnly = true)
@@ -63,44 +66,48 @@ public class SignalementService {
 
     @Transactional(readOnly = true)
     public List<com.signalement.dto.SignalementDTO> getAllSignalementsDtoWithFilters(Integer etatId, Integer typeTravauxId) {
-        List<Signalement> signalements;
+        List<Signalement> allSignalements = signalementRepository.findAll();
         
-        if (etatId != null && typeTravauxId != null) {
-            signalements = signalementRepository.findAll().stream()
-                    .filter(s -> s.getEtatActuel() != null && s.getEtatActuel().getIdEtatSignalement().equals(etatId))
-                    .filter(s -> s.getTypeTravail() != null && s.getTypeTravail().getIdTypeTravail().equals(typeTravauxId))
+        // Filter by état if specified
+        if (etatId != null) {
+            allSignalements = allSignalements.stream()
+                    .filter(s -> {
+                        EtatSignalement currentEtat = getCurrentEtat(s.getIdSignalement());
+                        return currentEtat != null && currentEtat.getIdEtatSignalement().equals(etatId);
+                    })
                     .toList();
-        } else if (etatId != null) {
-            signalements = signalementRepository.findByEtatActuel(etatId);
-        } else if (typeTravauxId != null) {
-            signalements = signalementRepository.findAll().stream()
-                    .filter(s -> s.getTypeTravail() != null && s.getTypeTravail().getIdTypeTravail().equals(typeTravauxId))
-                    .toList();
-        } else {
-            signalements = signalementRepository.findAll();
         }
         
-        return signalements.stream()
+        // Filter by type if specified
+        if (typeTravauxId != null) {
+            allSignalements = allSignalements.stream()
+                    .filter(s -> s.getTypeTravail() != null && s.getTypeTravail().getIdTypeTravail().equals(typeTravauxId))
+                    .toList();
+        }
+        
+        return allSignalements.stream()
                 .map(this::convertToEnrichedDTO)
                 .toList();
     }
 
-    private com.signalement.dto.SignalementDTO convertToEnrichedDTO(Signalement s) {
+    public com.signalement.dto.SignalementDTO convertToEnrichedDTO(Signalement s) {
         com.signalement.dto.SignalementDTO dto = new com.signalement.dto.SignalementDTO();
         dto.setIdSignalement(s.getIdSignalement());
         dto.setTitre(s.getTitre());
         dto.setDescription(s.getDescription());
         dto.setLatitude(s.getLatitude());
         dto.setLongitude(s.getLongitude());
+        dto.setSurfaceMetreCarree(s.getSurfaceMetreCarree());
         dto.setDateCreation(s.getDateCreation());
         dto.setUrlPhoto(s.getUrlPhoto());
-        dto.setSynced(s.getSynced());
-        dto.setLastSync(s.getLastSync());
+        // synced and lastSync removed from schema
         
         try {
-            if (s.getEtatActuel() != null) {
-                dto.setEtatActuelId(s.getEtatActuel().getIdEtatSignalement());
-                dto.setEtatLibelle(s.getEtatActuel().getLibelle());
+            // État managed via historique - retrieve current état
+            EtatSignalement currentEtat = getCurrentEtat(s.getIdSignalement());
+            if (currentEtat != null) {
+                dto.setEtatActuelId(currentEtat.getIdEtatSignalement());
+                dto.setEtatLibelle(currentEtat.getLibelle());
             }
         } catch (Exception ignored) {}
         
@@ -127,10 +134,11 @@ public class SignalementService {
         signalement.setDescription(request.getDescription());
         signalement.setLatitude(request.getLatitude());
         signalement.setLongitude(request.getLongitude());
+        signalement.setSurfaceMetreCarree(request.getSurfaceMetreCarree());
         signalement.setUrlPhoto(request.getUrlPhoto());
         signalement.setUtilisateur(utilisateur);
         signalement.setDateCreation(LocalDateTime.now());
-        signalement.setSynced(false);
+        // synced field removed
         
         // Créer le Point géographique PostGIS
         Point point = geometryFactory.createPoint(
@@ -138,10 +146,8 @@ public class SignalementService {
         );
         signalement.setGeom(point);
         
-        // État par défaut : "En attente" (ID 1)
-        EtatSignalement etatInitial = etatSignalementRepository.findById(1)
-                .orElseThrow(() -> new IllegalStateException("État 'En attente' non trouvé"));
-        signalement.setEtatActuel(etatInitial);
+        // État initial managed via historique - no direct FK
+        // Will create historique entry after save
         
         // Type de travail optionnel
         if (request.getIdTypeTravail() != null) {
@@ -150,12 +156,24 @@ public class SignalementService {
             signalement.setTypeTravail(typeTravail);
         }
         
-        return signalementRepository.save(signalement);
+        Signalement savedSignalement = signalementRepository.save(signalement);
+        
+        // Create initial historique entry with "En attente" état
+        EtatSignalement etatInitial = etatSignalementRepository.findById(1)
+                .orElseThrow(() -> new IllegalStateException("État 'En attente' non trouvé"));
+        createHistoriqueEtat(savedSignalement, etatInitial);
+        
+        return savedSignalement;
     }
 
     @Transactional(readOnly = true)
     public List<Signalement> getSignalementsByEtat(Integer etatId) {
-        return signalementRepository.findByEtatActuel(etatId);
+        return signalementRepository.findAll().stream()
+                .filter(s -> {
+                    EtatSignalement currentEtat = getCurrentEtat(s.getIdSignalement());
+                    return currentEtat != null && currentEtat.getIdEtatSignalement().equals(etatId);
+                })
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -176,7 +194,7 @@ public class SignalementService {
                     existing.setDescription(signalement.getDescription());
                     existing.setLatitude(signalement.getLatitude());
                     existing.setLongitude(signalement.getLongitude());
-                    existing.setEtatActuel(signalement.getEtatActuel());
+                    // etatActuel managed via historique - use updateSignalementStatus() instead
                     existing.setTypeTravail(signalement.getTypeTravail());
                     existing.setUrlPhoto(signalement.getUrlPhoto());
                     return signalementRepository.save(existing);
@@ -226,7 +244,7 @@ public class SignalementService {
         }
         
         signalement.setUrlPhoto(request.getUrlPhoto());
-        signalement.setSynced(false); // Marquer comme non synchronisé
+        // synced field removed
         
         return signalementRepository.save(signalement);
     }
@@ -249,9 +267,33 @@ public class SignalementService {
         EtatSignalement etat = etatSignalementRepository.findById(etatId)
             .orElseThrow(() -> new IllegalArgumentException("État non trouvé avec l'ID: " + etatId));
         
-        signalement.setEtatActuel(etat);
-        signalement.setSynced(false); // Marquer comme non synchronisé
+        // Create historique entry instead of setting direct FK
+        createHistoriqueEtat(signalement, etat);
         
-        return signalementRepository.save(signalement);
+        // Reload signalement to ensure fresh state for DTO conversion
+        return signalementRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé avec l'ID: " + id));
+    }
+    
+    // Helper methods for historique-based état management
+    
+    private void createHistoriqueEtat(Signalement signalement, EtatSignalement etat) {
+        HistoriqueEtatSignalement historique = new HistoriqueEtatSignalement();
+        historique.setSignalement(signalement);
+        historique.setEtatSignalement(etat);
+        historique.setDateChangement(LocalDateTime.now());
+        historiqueEtatSignalementRepository.save(historique);
+    }
+    
+    private EtatSignalement getCurrentEtat(Integer signalementId) {
+        // Get all historique entries for this signalement, ordered by most recent first
+        List<HistoriqueEtatSignalement> historiques = historiqueEtatSignalementRepository
+                .findBySignalement_IdSignalementOrderByDateChangementDesc(signalementId);
+        
+        // Return the current état (the most recent one)
+        if (!historiques.isEmpty()) {
+            return historiques.get(0).getEtatSignalement();
+        }
+        return null;
     }
 }

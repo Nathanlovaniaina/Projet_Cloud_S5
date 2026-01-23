@@ -27,5 +27,21 @@ public class HistoriqueEtatSignalement {
     private EtatSignalement etatSignalement;
 
     @Column(name = "date_changement_etat", nullable = false)
-    private LocalDateTime dateChangementEtat = LocalDateTime.now();
+    private LocalDateTime dateChangement = LocalDateTime.now();
+
+    @Column(name = "last_update", nullable = false)
+    private LocalDateTime lastUpdate;
+
+    @PrePersist
+    protected void onCreate() {
+        lastUpdate = LocalDateTime.now();
+        if (dateChangement == null) {
+            dateChangement = LocalDateTime.now();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        lastUpdate = LocalDateTime.now();
+    }
 }

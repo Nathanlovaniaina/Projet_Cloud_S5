@@ -4,8 +4,8 @@
 ### ============================================================
 
 @baseUrl = http://localhost:8080/api/auth
-@managerToken = b47213f8-ede1-40d1-b4a0-28d8e967610b
-@visiteurToken = 515104ec-af8c-4187-a616-70624d0bfbf0
+@managerToken = 0e9d9824-696e-4535-865e-321d05cf209e
+@visiteurToken = cfdd3103-da7f-4940-8495-cde22ef5194d
 
 ### ============================================================
 ### TÂCHE 11: Inscription ✅
@@ -142,7 +142,7 @@ Authorization: {{managerToken}}
 
 ###
 ### Débloquer l'utilisateur (ID 9 = koto.bloque@gmail.com)
-POST {{baseUrl}}/debloquer/9
+POST {{baseUrl}}/debloquer/8
 Authorization: {{managerToken}}
 
 ###

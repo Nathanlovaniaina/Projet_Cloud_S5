@@ -52,7 +52,7 @@ public class AuthenticationService {
             utilisateur.setMotDePasse(request.getMotDePasse()); // TODO: Hasher le mot de passe
             utilisateur.setTypeUtilisateur(typeUtilisateur);
             utilisateur.setIsBlocked(false);
-            utilisateur.setSynced(false);
+            // synced field removed from schema
 
             Utilisateur savedUser = utilisateurRepository.save(utilisateur);
 

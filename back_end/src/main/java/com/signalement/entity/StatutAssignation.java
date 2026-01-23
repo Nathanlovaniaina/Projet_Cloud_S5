@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "statut_assignation")
@@ -17,6 +18,15 @@ public class StatutAssignation {
     @Column(name = "id_statut_assignation")
     private Integer idStatutAssignation;
 
-    @Column(name = "libelle", nullable = false, unique = true, length = 20)
+    @Column(name = "libelle", nullable = false, unique = true, length = 50)
     private String libelle;
+
+    @Column(name = "last_update", nullable = false)
+    private LocalDateTime lastUpdate = LocalDateTime.now();
+
+    @PrePersist
+    @PreUpdate
+    protected void onUpdate() {
+        lastUpdate = LocalDateTime.now();
+    }
 }

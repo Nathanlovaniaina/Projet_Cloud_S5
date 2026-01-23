@@ -1,7 +1,7 @@
 ### Tests des endpoints Signalements (Tâches 19, 20, 21)
 ### Base URL
 @baseUrl = http://localhost:8080/api
-@token = 95ced581-f4eb-4512-a5e3-aaffed82a5eb
+@token = cfdd3103-da7f-4940-8495-cde22ef5194d
 
 ###############################################
 # Tâche 19 : Créer un Signalement
@@ -17,8 +17,9 @@ Authorization: Bearer {{token}}
   "description": "Un grand nid de poule sur la RN1, dangereux pour les véhicules",
   "latitude": -18.8792,
   "longitude": 47.5079,
-  "idTypeTravail": 1,
-  "urlPhoto": "https://example.com/photo.jpg"
+  "surfaceMetreCarree": 2.5,
+  "urlPhoto": "https://example.com/photo.jpg",
+  "idTypeTravail": 1
 }
 
 ### POST /api/signalements - Sans description ni type
@@ -61,7 +62,7 @@ Content-Type: application/json
 GET {{baseUrl}}/signalements
 
 ### GET /api/signalements - Filtrer par état (En attente = 1)
-GET {{baseUrl}}/signalements?etat=1
+GET {{baseUrl}}/signalements?etat=2
 
 ### GET /api/signalements - Filtrer par type de travail
 GET {{baseUrl}}/signalements?typeTravail=1

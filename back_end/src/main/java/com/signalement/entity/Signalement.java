@@ -21,7 +21,7 @@ public class Signalement {
     @Column(name = "id_signalement")
     private Integer idSignalement;
 
-    @Column(name = "titre", nullable = false, length = 100)
+    @Column(name = "titre", length = 100)
     private String titre;
 
     @Column(name = "description", columnDefinition = "TEXT")
@@ -33,38 +33,41 @@ public class Signalement {
     @Column(name = "longitude", nullable = false, precision = 15, scale = 10)
     private BigDecimal longitude;
 
+    @Column(name = "surface_metre_carree", nullable = false, precision = 15, scale = 2)
+    private BigDecimal surfaceMetreCarree;
+
     @Column(name = "date_creation", nullable = false, updatable = false)
-    private LocalDateTime dateCreation = LocalDateTime.now();
+    private LocalDateTime dateCreation;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "etat_actuel", nullable = false)
-    private EtatSignalement etatActuel;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_type_travail")
+    @JoinColumn(name = "id_type_travail", nullable = false)
     private TypeTravail typeTravail;
 
-    @Column(name = "url_photo", length = 255)
+    @Column(name = "url_photo", length = 250)
     private String urlPhoto;
 
-    @Column(name = "last_sync")
-    private LocalDateTime lastSync;
+    @Column(name = "geom", columnDefinition = "geography")
+    private Point geom;
 
-    @Column(name = "synced")
-    private Boolean synced = false;
+    @Column(name = "last_update", nullable = false)
+    private LocalDateTime lastUpdate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_utilisateur", nullable = false)
     @JsonIgnore
     private Utilisateur utilisateur;
 
-    @Column(name = "geom", columnDefinition = "geography(Point,4326)")
-    private Point geom;
-
     @PrePersist
     protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
         if (dateCreation == null) {
-            dateCreation = LocalDateTime.now();
+            dateCreation = now;
         }
+        lastUpdate = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        lastUpdate = LocalDateTime.now();
     }
 }

@@ -27,7 +27,16 @@ public class Session {
     @Column(name = "date_fin", nullable = false)
     private LocalDateTime dateFin;
 
+    @Column(name = "last_update", nullable = false)
+    private LocalDateTime lastUpdate = LocalDateTime.now();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_utilisateur", nullable = false)
     private Utilisateur utilisateur;
+
+    @PrePersist
+    @PreUpdate
+    protected void onUpdate() {
+        lastUpdate = LocalDateTime.now();
+    }
 }

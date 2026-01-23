@@ -81,15 +81,16 @@ public class SignalementController {
         dto.setDescription(s.getDescription());
         dto.setLatitude(s.getLatitude());
         dto.setLongitude(s.getLongitude());
+        dto.setSurfaceMetreCarree(s.getSurfaceMetreCarree());
         dto.setDateCreation(s.getDateCreation());
         dto.setUrlPhoto(s.getUrlPhoto());
-        dto.setSynced(s.getSynced());
-        dto.setLastSync(s.getLastSync());
+        // synced and lastSync removed from schema
         
-        if (s.getEtatActuel() != null) {
-            dto.setEtatActuelId(s.getEtatActuel().getIdEtatSignalement());
-            dto.setEtatLibelle(s.getEtatActuel().getLibelle());
-        }
+        // État managed via historique - will be set by service layer
+        // if (s.getEtatActuel() != null) {
+        //     dto.setEtatActuelId(s.getEtatActuel().getIdEtatSignalement());
+        //     dto.setEtatLibelle(s.getEtatActuel().getLibelle());
+        // }
         
         if (s.getTypeTravail() != null) {
             dto.setIdTypeTravail(s.getTypeTravail().getIdTypeTravail());
@@ -178,7 +179,7 @@ public class SignalementController {
             .map(utilisateur -> {
                 try {
                     Signalement updated = signalementService.updateSignalement(id, request, utilisateur);
-                    SignalementDTO dto = convertSignalementToDTO(updated);
+                    com.signalement.dto.SignalementDTO dto = signalementService.convertToEnrichedDTO(updated);
                     return ResponseEntity.ok(
                         new com.signalement.dto.ApiResponse(true, "Signalement modifié avec succès", dto));
                 } catch (IllegalArgumentException e) {
@@ -222,7 +223,7 @@ public class SignalementController {
             .map(utilisateur -> {
                 try {
                     Signalement updated = signalementService.updateSignalementStatus(id, request.getEtatId(), utilisateur);
-                    SignalementDTO dto = convertSignalementToDTO(updated);
+                    com.signalement.dto.SignalementDTO dto = signalementService.convertToEnrichedDTO(updated);
                     return ResponseEntity.ok(
                         new com.signalement.dto.ApiResponse(true, "Statut modifié avec succès", dto));
                 } catch (IllegalArgumentException e) {

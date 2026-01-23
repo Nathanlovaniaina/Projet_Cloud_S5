@@ -16,10 +16,10 @@ public class SignalementDTO {
     private String description;
     private BigDecimal latitude;
     private BigDecimal longitude;
+    private BigDecimal surfaceMetreCarree;
     private LocalDateTime dateCreation;
     private String urlPhoto;
-    private Boolean synced;
-    private LocalDateTime lastSync;
+    // synced and lastSync removed from schema
     private Integer etatActuelId;
     private String etatLibelle;
     private Integer idTypeTravail;
@@ -28,18 +28,16 @@ public class SignalementDTO {
     
     // Constructor simplifié pour compatibilité
     public SignalementDTO(Integer idSignalement, String titre, String description, 
-                         BigDecimal latitude, BigDecimal longitude, 
-                         LocalDateTime dateCreation, String urlPhoto, 
-                         Boolean synced, LocalDateTime lastSync, Integer etatActuelId) {
+                         BigDecimal latitude, BigDecimal longitude, BigDecimal surfaceMetreCarree,
+                         LocalDateTime dateCreation, String urlPhoto, Integer etatActuelId) {
         this.idSignalement = idSignalement;
         this.titre = titre;
         this.description = description;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.surfaceMetreCarree = surfaceMetreCarree;
         this.dateCreation = dateCreation;
         this.urlPhoto = urlPhoto;
-        this.synced = synced;
-        this.lastSync = lastSync;
         this.etatActuelId = etatActuelId;
     }
 }
