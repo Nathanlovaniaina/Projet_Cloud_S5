@@ -30,6 +30,10 @@ public class CreateSignalementRequest {
     @DecimalMax(value = "50.5", message = "Longitude invalide pour Madagascar")
     private BigDecimal longitude;
     
+    @NotNull(message = "La surface en mètres carrés est obligatoire")
+    @DecimalMin(value = "0.01", message = "La surface doit être supérieure à 0")
+    private BigDecimal surfaceMetreCarree;
+    
     private Integer idTypeTravail;
     
     private String urlPhoto;

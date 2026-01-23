@@ -34,14 +34,11 @@ public class Utilisateur {
     @Column(name = "mot_de_passe", nullable = false, length = 50)
     private String motDePasse;
 
-    @Column(name = "is_blocked")
+    @Column(name = "is_blocked", nullable = false)
     private Boolean isBlocked = false;
 
-    @Column(name = "last_sync")
-    private LocalDateTime lastSync;
-
-    @Column(name = "synced")
-    private Boolean synced = false;
+    @Column(name = "last_update", nullable = false)
+    private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_type_utilisateur", nullable = false)
@@ -49,5 +46,11 @@ public class Utilisateur {
 
     @OneToMany(mappedBy = "utilisateur", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<Signalement> signalements;
+    List<Signalement> signalements;
+
+    @PrePersist
+    @PreUpdate
+    protected void onUpdate() {
+        lastUpdate = LocalDateTime.now();
+    }
 }

@@ -5,9 +5,9 @@
 
 ### Variables
 @baseUrl = http://localhost:8080/api
-@token = 95ced581-f4eb-4512-a5e3-aaffed82a5eb
-@managerToken = e7afa3a9-7c29-427a-a112-8189b5eabee9
-@signalementId = 1
+@token = cfdd3103-da7f-4940-8495-cde22ef5194d
+@managerToken = 0e9d9824-696e-4535-865e-321d05cf209e
+@signalementId = 3
 
 # ===========================
 # TÂCHE 22: PUT /api/signalements/{id}
@@ -149,7 +149,7 @@ Authorization: Bearer {{managerToken}}
 Content-Type: application/json
 
 {
-  "etatId": 2
+  "etatId": 4
 }
 # États: 1=En attente, 2=En cours, 3=Résolu, 4=Rejeté
 

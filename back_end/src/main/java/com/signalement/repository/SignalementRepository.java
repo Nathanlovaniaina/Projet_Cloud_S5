@@ -12,8 +12,7 @@ import java.util.List;
 public interface SignalementRepository extends JpaRepository<Signalement, Integer> {
     List<Signalement> findByUtilisateur(Utilisateur utilisateur);
     
-    @Query("SELECT s FROM Signalement s WHERE s.etatActuel.idEtatSignalement = :etatId")
-    List<Signalement> findByEtatActuel(@Param("etatId") Integer etatId);
+    // etatActuel removed - use HistoriqueEtatSignalementRepository.findCurrentSignalementsByEtat() instead
     
     // Requête spatiale exemple (à adapter selon besoin)
     @Query(value = "SELECT * FROM signalement WHERE ST_DWithin(geom, ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography, :distance)", 

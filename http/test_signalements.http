@@ -1,10 +1,62 @@
-### Get my signalements (valid token)
+### POST - Create Signalement (Task 19)
+POST http://localhost:8080/api/signalements
+Content-Type: application/json
+Authorization: Bearer 11111111-1111-1111-1111-111111111111
+
+{
+  "titre": "Nid de poule important",
+  "description": "Un grand nid de poule sur la RN1, dangereux pour les véhicules",
+  "latitude": -18.8792,
+  "longitude": 47.5079,
+  "surfaceMetreCarree": 2.5,
+  "urlPhoto": "https://example.com/photo.jpg",
+  "idTypeTravail": 1
+}
+
+###
+
+### GET - Get all signalements (Task 20)
+GET http://localhost:8080/api/signalements
+Authorization: Bearer 11111111-1111-1111-1111-111111111111
+
+###
+
+### GET - Get signalements with filters (Task 20)
+GET http://localhost:8080/api/signalements?etatId=1&typeTravauxId=1
+Authorization: Bearer 11111111-1111-1111-1111-111111111111
+
+###
+
+### GET - Get my signalements (Task 20)
 GET http://localhost:8080/api/me/signalements
 Authorization: Bearer 11111111-1111-1111-1111-111111111111
 
-### Get my signalements (expired token)
-GET http://localhost:8080/api/me/signalements
-Authorization: Bearer 22222222-2222-2222-2222-222222222222
+###
 
-### Swagger UI
+### PUT - Update Signalement (Task 22)
+PUT http://localhost:8080/api/signalements/1
+Content-Type: application/json
+Authorization: Bearer 11111111-1111-1111-1111-111111111111
+
+{
+  "titre": "Nid de poule important - UPDATED",
+  "description": "Nid de poule aggravé, surfaces élargies",
+  "idTypeTravail": 2,
+  "urlPhoto": "https://example.com/photo-updated.jpg"
+}
+
+###
+
+### PATCH - Update Signalement Status (Task 23)
+PATCH http://localhost:8080/api/signalements/1/status
+Content-Type: application/json
+Authorization: Bearer 11111111-1111-1111-1111-111111111111
+
+{
+  "etatId": 2
+}
+
+###
+
+### GET Swagger UI
 GET http://localhost:8080/swagger-ui/index.html
