@@ -1,0 +1,247 @@
+# ===========================
+# Tests Tâches 27 & 28
+# API Signalements - Assignation Entreprise
+# ===========================
+
+### Variables
+@baseUrl = http://localhost:8080/api
+@managerToken = 0e9d9824-696e-4535-865e-321d05cf209e
+@visitorToken = cfdd3103-da7f-4940-8495-cde22ef5194d
+@signalementId = 3
+@entrepriseId = 1
+
+# ===========================
+# TÂCHE 27: POST /api/signalements/{id}/assign-enterprise
+# Assigner un signalement à une entreprise
+# Permission: Manager uniquement
+# ===========================
+
+### T27-1: Assigner un signalement à une entreprise (Manager) ✅
+POST {{baseUrl}}/signalements/{{signalementId}}/assign-enterprise
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idEntreprise": 1,
+  "dateDebut": "2026-01-25",
+  "dateFin": "2026-03-25",
+  "montant": 25000000.00
+}
+
+### T27-2: Assigner un autre signalement avec montant différent ✅
+POST {{baseUrl}}/signalements/4/assign-enterprise
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idEntreprise": 2,
+  "dateDebut": "2026-02-01",
+  "dateFin": "2026-04-30",
+  "montant": 18500000.50
+}
+
+### T27-3: Assigner avec entreprise SOGEA SATOM ✅
+POST {{baseUrl}}/signalements/3/assign-enterprise
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idEntreprise": 3,
+  "dateDebut": "2026-01-30",
+  "dateFin": "2026-02-28",
+  "montant": 12000000.00
+}
+
+### T27-4: Tentative d'assignation par un visiteur (doit échouer) ❌
+POST {{baseUrl}}/signalements/{{signalementId}}/assign-enterprise
+Authorization: Bearer {{visitorToken}}
+Content-Type: application/json
+
+{
+  "idEntreprise": 1,
+  "dateDebut": "2026-01-25",
+  "dateFin": "2026-03-25",
+  "montant": 25000000.00
+}
+
+### T27-5: Assignation sans authentification (doit échouer) ❌
+POST {{baseUrl}}/signalements/{{signalementId}}/assign-enterprise
+Content-Type: application/json
+
+{
+  "idEntreprise": 1,
+  "dateDebut": "2026-01-25",
+  "dateFin": "2026-03-25",
+  "montant": 25000000.00
+}
+
+### T27-6: Assignation avec date de début après date de fin (doit échouer) ❌
+POST {{baseUrl}}/signalements/{{signalementId}}/assign-enterprise
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idEntreprise": 1,
+  "dateDebut": "2026-03-25",
+  "dateFin": "2026-01-25",
+  "montant": 25000000.00
+}
+
+### T27-7: Assignation avec entreprise inexistante (doit échouer) ❌
+POST {{baseUrl}}/signalements/{{signalementId}}/assign-enterprise
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idEntreprise": 999,
+  "dateDebut": "2026-01-25",
+  "dateFin": "2026-03-25",
+  "montant": 25000000.00
+}
+
+### T27-8: Assignation avec signalement inexistant (doit échouer) ❌
+POST {{baseUrl}}/signalements/999/assign-enterprise
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idEntreprise": 1,
+  "dateDebut": "2026-01-25",
+  "dateFin": "2026-03-25",
+  "montant": 25000000.00
+}
+
+### T27-9: Assignation avec montant faible ✅
+POST {{baseUrl}}/signalements/4/assign-enterprise
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idEntreprise": 1,
+  "dateDebut": "2026-01-25",
+  "dateFin": "2026-03-25",
+  "montant": null
+}
+
+# ===========================
+# TÂCHE 28: PATCH /api/signalements/{id}/enterprise-assignment-status
+# Modifier le statut d'une assignation entreprise
+# Permission: Manager uniquement
+# ===========================
+
+### T28-1: Changer le statut à "Accepté" (ID 2) ✅
+PATCH {{baseUrl}}/signalements/{{signalementId}}/enterprise-assignment-status?enterpriseId={{entrepriseId}}
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idStatutAssignation": 2,
+  "commentaire": "L'entreprise a accepté le projet et peut commencer les travaux."
+}
+
+### T28-2: Changer le statut à "En cours" (ID 4) ✅
+PATCH {{baseUrl}}/signalements/{{signalementId}}/enterprise-assignment-status?enterpriseId={{entrepriseId}}
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idStatutAssignation": 4,
+  "commentaire": "Les travaux ont commencé le 25/01/2026."
+}
+
+### T28-3: Changer le statut à "Terminé" (ID 5) ✅
+PATCH {{baseUrl}}/signalements/{{signalementId}}/enterprise-assignment-status?enterpriseId={{entrepriseId}}
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idStatutAssignation": 5,
+  "commentaire": "Les travaux sont terminés avec succès. Inspection effectuée."
+}
+
+### T28-4: Changer le statut à "Refusé" (ID 3) ✅
+PATCH {{baseUrl}}/signalements/2/enterprise-assignment-status?enterpriseId=2
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idStatutAssignation": 3,
+  "commentaire": "L'entreprise refuse le projet en raison de contraintes budgétaires."
+}
+
+### T28-5: Changer le statut sans commentaire (optionnel) ✅
+PATCH {{baseUrl}}/signalements/3/enterprise-assignment-status?enterpriseId=3
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idStatutAssignation": 2
+}
+
+### T28-6: Tentative de modification par un visiteur (doit échouer) ❌
+PATCH {{baseUrl}}/signalements/{{signalementId}}/enterprise-assignment-status?enterpriseId={{entrepriseId}}
+Authorization: Bearer {{visitorToken}}
+Content-Type: application/json
+
+{
+  "idStatutAssignation": 2,
+  "commentaire": "Tentative de modification par un visiteur"
+}
+
+### T28-7: Modification sans authentification (doit échouer) ❌
+PATCH {{baseUrl}}/signalements/{{signalementId}}/enterprise-assignment-status?enterpriseId={{entrepriseId}}
+Content-Type: application/json
+
+{
+  "idStatutAssignation": 2,
+  "commentaire": "Pas de token"
+}
+
+### T28-8: Modification avec statut inexistant (doit échouer) ❌
+PATCH {{baseUrl}}/signalements/{{signalementId}}/enterprise-assignment-status?enterpriseId={{entrepriseId}}
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idStatutAssignation": 999,
+  "commentaire": "Statut qui n'existe pas"
+}
+
+### T28-9: Modification d'une assignation inexistante (doit échouer) ❌
+PATCH {{baseUrl}}/signalements/999/enterprise-assignment-status?enterpriseId=999
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idStatutAssignation": 2,
+  "commentaire": "Assignation qui n'existe pas"
+}
+
+### T28-10: Modification sans enterpriseId (doit échouer) ❌
+PATCH {{baseUrl}}/signalements/{{signalementId}}/enterprise-assignment-status
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "idStatutAssignation": 2,
+  "commentaire": "Pas d'enterpriseId dans le paramètre"
+}
+
+# ===========================
+# RÉCAPITULATIF DES STATUTS D'ASSIGNATION
+# ===========================
+# ID 1: En attente (statut par défaut lors de l'assignation)
+# ID 2: Accepté (l'entreprise accepte le projet)
+# ID 3: Refusé (l'entreprise refuse le projet)
+# ID 4: En cours (les travaux sont en cours)
+# ID 5: Terminé (les travaux sont terminés)
+
+# ===========================
+# NOTES D'UTILISATION
+# ===========================
+# 1. Remplacer @managerToken par un vrai token de manager obtenu via l'authentification
+# 2. Remplacer @visitorToken par un vrai token de visiteur
+# 3. Les IDs de signalement et d'entreprise doivent exister dans la base de données
+# 4. Le statut initial lors de l'assignation est toujours "En attente" (ID 1)
+# 5. Seuls les managers peuvent assigner et modifier les statuts d'assignation
+# 6. Le montant est obligatoire et doit être positif

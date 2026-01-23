@@ -28,4 +28,13 @@ public class HistoriqueStatutAssignation {
 
     @Column(name = "date_changement", nullable = false)
     private LocalDateTime dateChangement = LocalDateTime.now();
+    
+    @Column(name = "last_update", nullable = false)
+    private LocalDateTime lastUpdate = LocalDateTime.now();
+    
+    @PrePersist
+    @PreUpdate
+    protected void onUpdate() {
+        lastUpdate = LocalDateTime.now();
+    }
 }

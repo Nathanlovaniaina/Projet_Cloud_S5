@@ -1,9 +1,13 @@
 package com.signalement.controller;
 
+import com.signalement.dto.AssignEnterpriseRequest;
 import com.signalement.dto.CreateSignalementRequest;
+import com.signalement.dto.EntrepriseConcernerDTO;
 import com.signalement.dto.SignalementDTO;
+import com.signalement.dto.UpdateAssignmentStatusRequest;
 import com.signalement.dto.UpdateSignalementRequest;
 import com.signalement.dto.UpdateSignalementStatusRequest;
+import com.signalement.entity.EntrepriseConcerner;
 import com.signalement.entity.Signalement;
 import com.signalement.entity.Utilisateur;
 import com.signalement.service.SessionService;
@@ -231,6 +235,95 @@ public class SignalementController {
                         .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
                 } catch (IllegalAccessException e) {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+                }
+            })
+            .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Token invalide")));
+    }
+    
+    @Operation(
+        summary = "Assigner un signalement à une entreprise (Tâche 27)",
+        description = "Assigner un signalement à une entreprise avec dates et montant. Seul un manager peut effectuer cette action."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Assignation créée avec succès",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = EntrepriseConcernerDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Données invalides"),
+        @ApiResponse(responseCode = "401", description = "Non authentifié"),
+        @ApiResponse(responseCode = "403", description = "Pas manager"),
+        @ApiResponse(responseCode = "404", description = "Signalement ou entreprise non trouvé")
+    })
+    @PostMapping("/signalements/{id}/assign-enterprise")
+    public ResponseEntity<com.signalement.dto.ApiResponse> assignEnterpriseToSignalement(
+            @PathVariable Integer id,
+            @Valid @RequestBody AssignEnterpriseRequest request,
+            @Parameter(hidden = true) HttpServletRequest httpRequest) {
+        
+        String auth = httpRequest.getHeader("Authorization");
+        if (auth == null || !auth.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Authentification requise"));
+        }
+        
+        String token = auth.substring(7).trim();
+        return sessionService.getUtilisateurByToken(token)
+            .map(manager -> {
+                try {
+                    EntrepriseConcerner assignation = signalementService.assignEnterpriseToSignalement(id, request, manager);
+                    EntrepriseConcernerDTO dto = signalementService.convertToDTO(assignation);
+                    return ResponseEntity.status(HttpStatus.CREATED)
+                        .body(new com.signalement.dto.ApiResponse(true, "Assignation créée avec succès", dto));
+                } catch (IllegalAccessException e) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+                }
+            })
+            .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Token invalide")));
+    }
+    
+    @Operation(
+        summary = "Modifier le statut d'une assignation entreprise (Tâche 28)",
+        description = "Modifier le statut d'une assignation (EN ATTENTE, ACCEPTÉE, REJETÉE, TERMINÉE, EN COURS). Seul un manager peut effectuer cette action."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Statut modifié avec succès",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = EntrepriseConcernerDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Données invalides"),
+        @ApiResponse(responseCode = "401", description = "Non authentifié"),
+        @ApiResponse(responseCode = "403", description = "Pas manager"),
+        @ApiResponse(responseCode = "404", description = "Assignation ou statut non trouvé")
+    })
+    @PatchMapping("/signalements/{id}/enterprise-assignment-status")
+    public ResponseEntity<com.signalement.dto.ApiResponse> updateAssignmentStatus(
+            @PathVariable Integer id,
+            @RequestParam(required = true) Integer enterpriseId,
+            @Valid @RequestBody UpdateAssignmentStatusRequest request,
+            @Parameter(hidden = true) HttpServletRequest httpRequest) {
+        
+        String auth = httpRequest.getHeader("Authorization");
+        if (auth == null || !auth.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Authentification requise"));
+        }
+        
+        String token = auth.substring(7).trim();
+        return sessionService.getUtilisateurByToken(token)
+            .map(manager -> {
+                try {
+                    EntrepriseConcerner updated = signalementService.updateAssignmentStatus(id, enterpriseId, request, manager);
+                    EntrepriseConcernerDTO dto = signalementService.convertToDTO(updated);
+                    return ResponseEntity.ok(
+                        new com.signalement.dto.ApiResponse(true, "Statut modifié avec succès", dto));
+                } catch (IllegalAccessException e) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
                 }
             })
