@@ -1,15 +1,26 @@
 package com.signalement.service;
 
+import com.signalement.dto.AssignEnterpriseRequest;
 import com.signalement.dto.CreateSignalementRequest;
+import com.signalement.dto.EntrepriseConcernerDTO;
+import com.signalement.dto.UpdateAssignmentStatusRequest;
 import com.signalement.dto.UpdateSignalementRequest;
+import com.signalement.entity.Entreprise;
+import com.signalement.entity.EntrepriseConcerner;
 import com.signalement.entity.EtatSignalement;
 import com.signalement.entity.HistoriqueEtatSignalement;
+import com.signalement.entity.HistoriqueStatutAssignation;
 import com.signalement.entity.Signalement;
+import com.signalement.entity.StatutAssignation;
 import com.signalement.entity.TypeTravail;
 import com.signalement.entity.Utilisateur;
+import com.signalement.repository.EntrepriseConcernerRepository;
+import com.signalement.repository.EntrepriseRepository;
 import com.signalement.repository.EtatSignalementRepository;
 import com.signalement.repository.HistoriqueEtatSignalementRepository;
+import com.signalement.repository.HistoriqueStatutAssignationRepository;
 import com.signalement.repository.SignalementRepository;
+import com.signalement.repository.StatutAssignationRepository;
 import com.signalement.repository.TypeTravailRepository;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
@@ -19,6 +30,7 @@ import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +43,10 @@ public class SignalementService {
     private final EtatSignalementRepository etatSignalementRepository;
     private final TypeTravailRepository typeTravailRepository;
     private final HistoriqueEtatSignalementRepository historiqueEtatSignalementRepository;
+    private final EntrepriseRepository entrepriseRepository;
+    private final EntrepriseConcernerRepository entrepriseConcernerRepository;
+    private final StatutAssignationRepository statutAssignationRepository;
+    private final HistoriqueStatutAssignationRepository historiqueStatutAssignationRepository;
     private static final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
     @Transactional(readOnly = true)
@@ -296,4 +312,136 @@ public class SignalementService {
         }
         return null;
     }
+    
+    // ===== TÂCHE 27 =====
+    /**
+     * Assigner un signalement à une entreprise (Tâche 27)
+     * Seul un manager peut assigner
+     */
+    @Transactional
+    public EntrepriseConcerner assignEnterpriseToSignalement(
+            Integer signalementId, 
+            AssignEnterpriseRequest request, 
+            Utilisateur manager) 
+            throws IllegalAccessException {
+        
+        // Vérifier que l'utilisateur est manager
+        if (!isManager(manager)) {
+            throw new IllegalAccessException("Seuls les managers peuvent assigner des entreprises");
+        }
+        
+        // Récupérer le signalement
+        Signalement signalement = signalementRepository.findById(signalementId)
+            .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé"));
+        
+        // Récupérer l'entreprise
+        Entreprise entreprise = entrepriseRepository.findById(request.getIdEntreprise())
+            .orElseThrow(() -> new IllegalArgumentException("Entreprise non trouvée"));
+        
+        // Récupérer le statut d'assignation par défaut (EN ATTENTE = ID 1)
+        StatutAssignation statut = statutAssignationRepository.findById(1)
+            .orElseThrow(() -> new IllegalArgumentException("Statut d'assignation 'En attente' non trouvé"));
+        
+        // Valider les dates
+        if (request.getDateDebut().isAfter(request.getDateFin())) {
+            throw new IllegalArgumentException("La date de début doit être avant la date de fin");
+        }
+        
+        // Créer l'assignation
+        EntrepriseConcerner assignation = new EntrepriseConcerner();
+        assignation.setSignalement(signalement);
+        assignation.setEntreprise(entreprise);
+        assignation.setStatutAssignation(statut);
+        assignation.setDateCreation(LocalDate.now());
+        assignation.setDateDebut(request.getDateDebut());
+        assignation.setDateFin(request.getDateFin());
+        assignation.setMontant(request.getMontant());
+        assignation.setLastUpdate(LocalDateTime.now());
+        
+        EntrepriseConcerner saved = entrepriseConcernerRepository.save(assignation);
+        
+        // Créer un historique de l'assignation
+        createHistoriqueStatusAssignation(saved, statut);
+        
+        return saved;
+    }
+
+    // ===== TÂCHE 28 =====
+    /**
+     * Modifier le statut d'une assignation entreprise (Tâche 28)
+     * Seul un manager peut modifier
+     */
+    @Transactional
+    public EntrepriseConcerner updateAssignmentStatus(
+            Integer signalementId,
+            Integer enterpriseId,
+            UpdateAssignmentStatusRequest request,
+            Utilisateur manager)
+            throws IllegalAccessException {
+        
+        // Vérifier que l'utilisateur est manager
+        if (!isManager(manager)) {
+            throw new IllegalAccessException("Seuls les managers peuvent modifier le statut d'assignation");
+        }
+        
+        // Récupérer l'assignation
+        EntrepriseConcerner assignation = entrepriseConcernerRepository
+            .findBySignalement_IdSignalementAndEntreprise_IdEntreprise(signalementId, enterpriseId)
+            .orElseThrow(() -> new IllegalArgumentException("Assignation non trouvée"));
+        
+        // Récupérer le nouveau statut
+        StatutAssignation nouveauStatut = statutAssignationRepository.findById(request.getIdStatutAssignation())
+            .orElseThrow(() -> new IllegalArgumentException("Statut d'assignation non trouvé"));
+        
+        // Mettre à jour le statut
+        assignation.setStatutAssignation(nouveauStatut);
+        assignation.setLastUpdate(LocalDateTime.now());
+        EntrepriseConcerner updated = entrepriseConcernerRepository.save(assignation);
+        
+        // Créer un historique du changement
+        createHistoriqueStatusAssignation(updated, nouveauStatut);
+        
+        return updated;
+    }
+
+    // Helper method for assignment status history
+    private void createHistoriqueStatusAssignation(
+            EntrepriseConcerner assignation,
+            StatutAssignation statut) {
+        HistoriqueStatutAssignation historique = new HistoriqueStatutAssignation();
+        historique.setEntrepriseConcerner(assignation);
+        historique.setStatutAssignation(statut);
+        historique.setDateChangement(LocalDateTime.now());
+        historiqueStatutAssignationRepository.save(historique);
+    }
+
+    public EntrepriseConcernerDTO convertToDTO(EntrepriseConcerner assignation) {
+        EntrepriseConcernerDTO dto = new EntrepriseConcernerDTO();
+        dto.setIdEntrepriseConcerner(assignation.getIdEntrepriseConcerner());
+        dto.setDateCreation(assignation.getDateCreation());
+        dto.setMontant(assignation.getMontant());
+        dto.setDateDebut(assignation.getDateDebut());
+        dto.setDateFin(assignation.getDateFin());
+        dto.setLastUpdate(assignation.getLastUpdate());
+        
+        if (assignation.getStatutAssignation() != null) {
+            dto.setIdStatutAssignation(assignation.getStatutAssignation().getIdStatutAssignation());
+            dto.setStatutLibelle(assignation.getStatutAssignation().getLibelle());
+        }
+        
+        if (assignation.getEntreprise() != null) {
+            dto.setIdEntreprise(assignation.getEntreprise().getIdEntreprise());
+            dto.setNomEntreprise(assignation.getEntreprise().getNomDuCompagnie());
+            dto.setEmailEntreprise(assignation.getEntreprise().getEmail());
+        }
+        
+        if (assignation.getSignalement() != null) {
+            dto.setIdSignalement(assignation.getSignalement().getIdSignalement());
+            dto.setTitreSignalement(assignation.getSignalement().getTitre());
+            dto.setDescriptionSignalement(assignation.getSignalement().getDescription());
+        }
+        
+        return dto;
+    }
 }
+

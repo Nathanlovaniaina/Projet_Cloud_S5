@@ -218,13 +218,29 @@
 
 ## Tâche 27
 **Catégorie** : Backend  
+**Module** : Signalements  
+**Tâches** : Création de l'API REST - Assigner un signalement à une entreprise (manager)  
+**Type** : Développement  
+**Qui** : ETU003337  
+**Estimation** : 120   
+
+## Tâche 28
+**Catégorie** : Backend  
+**Module** : Signalements  
+**Tâches** : Création de l'API REST - Modifier le statut d'une assignation entreprise (manager)  
+**Type** : Développement  
+**Qui** : ETU003337  
+**Estimation** : 90   
+
+## Tâche 29
+**Catégorie** : Backend  
 **Module** : Synchronisation  
 **Tâches** : Développement de l'API - Synchronisation avec Firebase (récupération)  
 **Type** : Développement  
 **Qui** : ETU003241  
 **Estimation** : 180   
 
-## Tâche 28
+## Tâche 30
 **Catégorie** : Backend  
 **Module** : Synchronisation  
 **Tâches** : Développement de l'API - Synchronisation avec Firebase (envoi)  
@@ -232,7 +248,7 @@
 **Qui** : ETU003241  
 **Estimation** : 180   
 
-## Tâche 29
+## Tâche 31
 **Catégorie** : Backend  
 **Module** : Statistiques  
 **Tâches** : Création de l'API REST - Récapitulatif 
@@ -242,7 +258,7 @@
 
 ## Scénario 5: Infrastructure - Cartes
 
-## Tâche 30
+## Tâche 32
 **Catégorie** : Infrastructure  
 **Module** : Cartes  
 **Tâches** : Installation du serveur de cartes Offline sur Docker  
@@ -250,7 +266,7 @@
 **Qui** : ETU003346  
 **Estimation** : 90   
 
-## Tâche 31
+## Tâche 33
 **Catégorie** : Infrastructure  
 **Module** : Cartes  
 **Tâches** : Téléchargement des données cartographiques d'Antananarivo  
@@ -258,7 +274,7 @@
 **Qui** : ETU003346  
 **Estimation** : 45   
 
-## Tâche 32
+## Tâche 34
 **Catégorie** : Infrastructure  
 **Module** : Cartes  
 **Tâches** : Configuration du serveur de tiles pour OpenStreetMap  
@@ -268,7 +284,7 @@
 
 ## Scénario 6: Frontend Web
 
-## Tâche 33
+## Tâche 35
 **Catégorie** : Frontend Web  
 **Module** : Setup  
 **Tâches** : Initialisation du projet React  
@@ -276,7 +292,7 @@
 **Qui** : ETU003337  
 **Estimation** : 45   
 
-## Tâche 34
+## Tâche 36
 **Catégorie** : Frontend Web  
 **Module** : Setup  
 **Tâches** : Installation et configuration de Leaflet pour React  
@@ -284,7 +300,7 @@
 **Qui** : ETU003337  
 **Estimation** : 60   
 
-## Tâche 33
+## Tâche 37
 **Catégorie** : Frontend Web  
 **Module** : Authentification  
 **Tâches** : Création d'un service de gestion de connectivité et basculement d'authentification (Firebase/PostgreSQL)  
@@ -292,7 +308,7 @@
 **Qui** : ETU003337  
 **Estimation** : 120   
 
-## Tâche 34
+## Tâche 38
 **Catégorie** : Frontend Web  
 **Module** : Authentification  
 **Tâches** : Création du composant de connexion avec détection de connectivité Internet et basculement dynamique Firebase/PostgreSQL  
@@ -300,7 +316,7 @@
 **Qui** : ETU003337  
 **Estimation** : 180   
 
-## Tâche 35
+## Tâche 39
 **Catégorie** : Frontend Web  
 **Module** : Authentification  
 **Tâches** : Création du composant d'inscription avec basculement Firebase/PostgreSQL selon la connectivité  
@@ -308,7 +324,7 @@
 **Qui** : ETU003241  
 **Estimation** : 150   
 
-## Tâche 36
+## Tâche 40
 **Catégorie** : Frontend Web  
 **Module** : Authentification  
 **Tâches** : Implémentation de la gestion des sessions côté client (support Firebase et PostgreSQL)  
@@ -316,7 +332,7 @@
 **Qui** : ETU003241  
 **Estimation** : 120   
 
-## Tâche 37
+## Tâche 41
 **Catégorie** : Frontend Web  
 **Module** : Authentification  
 **Tâches** : Création du composant de modification de profil utilisateur avec synchronisation multicanal (Firebase/PostgreSQL)  
@@ -324,7 +340,7 @@
 **Qui** : ETU003241  
 **Estimation** : 120   
 
-## Tâche 40
+## Tâche 44
 **Catégorie** : Frontend Web  
 **Module** : Carte  
 **Tâches** : Intégration de Leaflet - Affichage de la carte Antananarivo  
@@ -332,7 +348,7 @@
 **Qui** : ETU003358  
 **Estimation** : 150   
 
-## Tâche 41
+## Tâche 45
 **Catégorie** : Frontend Web  
 **Module** : Carte  
 **Tâches** : Affichage des marqueurs de signalements sur la carte  
@@ -340,7 +356,7 @@
 **Qui** : ETU003358  
 **Estimation** : 120   
 
-## Tâche 42
+## Tâche 46
 **Catégorie** : Frontend Web  
 **Module** : Carte  
 **Tâches** : Implémentation du survol de marqueurs
@@ -348,7 +364,7 @@
 **Qui** : ETU003358  
 **Estimation** : 90   
 
-## Tâche 43
+## Tâche 47
 **Catégorie** : Frontend Web  
 **Module** : Visiteur  
 **Tâches** : Création de la page visiteur avec carte et récapitulatif  
@@ -356,7 +372,7 @@
 **Qui** : ETU003346  
 **Estimation** : 150   
 
-## Tâche 44
+## Tâche 48
 **Catégorie** : Frontend Web  
 **Module** : Visiteur  
 **Tâches** : Affichage du tableau de récapitulation 
@@ -364,7 +380,7 @@
 **Qui** : ETU003346  
 **Estimation** : 120   
 
-## Tâche 45
+## Tâche 49
 **Catégorie** : Frontend Web  
 **Module** : Manager  
 **Tâches** : Création de la page de gestion des signalements  
@@ -372,7 +388,7 @@
 **Qui** : ETU003241  
 **Estimation** : 180   
 
-## Tâche 46
+## Tâche 50
 **Catégorie** : Frontend Web  
 **Module** : Manager  
 **Tâches** : Implémentation du bouton de synchronisation Firebase  
@@ -380,7 +396,7 @@
 **Qui** : ETU003337  
 **Estimation** : 120   
 
-## Tâche 47
+## Tâche 51
 **Catégorie** : Frontend Web  
 **Module** : Manager  
 **Tâches** : Création de la page de déblocage des utilisateurs  
@@ -388,7 +404,7 @@
 **Qui** : ETU003346  
 **Estimation** : 90   
 
-## Tâche 48
+## Tâche 52
 **Catégorie** : Frontend Web  
 **Module** : Manager  
 **Tâches** : Formulaire d'édition des infos de signalement 
@@ -396,7 +412,7 @@
 **Qui** : ETU003358  
 **Estimation** : 150   
 
-## Tâche 49
+## Tâche 53
 **Catégorie** : Frontend Web  
 **Module** : Manager  
 **Tâches** : Implémentation de la modification du statut des signalements  
@@ -404,7 +420,7 @@
 **Qui** : ETU003337  
 **Estimation** : 90   
 
-## Tâche 50
+## Tâche 54
 **Catégorie** : Frontend Web  
 **Module** : Design  
 **Tâches** : Design responsive de l'application web  
@@ -412,7 +428,7 @@
 **Qui** : ETU003337  
 **Estimation** : 180   
 
-## Tâche 51
+## Tâche 55
 **Catégorie** : Frontend Web  
 **Module** : Design  
 **Tâches** : Création du système de navigation et routing  
@@ -422,7 +438,7 @@
 
 ## Scénario 7: Frontend Mobile
 
-## Tâche 52
+## Tâche 56
 **Catégorie** : Frontend Mobile  
 **Module** : Setup  
 **Tâches** : Initialisation du projet Ionic avec Vue.js  
@@ -430,7 +446,7 @@
 **Qui** : ETU003358  
 **Estimation** : 60   
 
-## Tâche 53
+## Tâche 57
 **Catégorie** : Frontend Mobile  
 **Module** : Setup  
 **Tâches** : Configuration de Firebase SDK pour mobile  
@@ -438,7 +454,7 @@
 **Qui** : ETU003358  
 **Estimation** : 90   
 
-## Tâche 54
+## Tâche 58
 **Catégorie** : Frontend Mobile  
 **Module** : Setup  
 **Tâches** : Installation et configuration de Leaflet pour Vue.js  
@@ -446,7 +462,7 @@
 **Qui** : ETU003337  
 **Estimation** : 60   
 
-## Tâche 55
+## Tâche 59
 **Catégorie** : Frontend Mobile  
 **Module** : Authentification  
 **Tâches** : Écran de connexion Firebase  
@@ -454,7 +470,7 @@
 **Qui** : ETU003346  
 **Estimation** : 120   
 
-## Tâche 56
+## Tâche 60
 **Catégorie** : Frontend Mobile  
 **Module** : Carte  
 **Tâches** : Intégration de Leaflet avec OpenStreetMap en ligne  
@@ -462,7 +478,7 @@
 **Qui** : ETU003358  
 **Estimation** : 150   
 
-## Tâche 57
+## Tâche 61
 **Catégorie** : Frontend Mobile  
 **Module** : Signalement  
 **Tâches** : Implémentation de la géolocalisation  
@@ -470,7 +486,7 @@
 **Qui** : ETU003241  
 **Estimation** : 120   
 
-## Tâche 58
+## Tâche 62
 **Catégorie** : Frontend Mobile  
 **Module** : Signalement  
 **Tâches** : Interface de création de signalement sur la carte  
@@ -478,7 +494,7 @@
 **Qui** : ETU003241  
 **Estimation** : 150   
 
-## Tâche 59
+## Tâche 63
 **Catégorie** : Frontend Mobile  
 **Module** : Carte  
 **Tâches** : Affichage de la carte avec tous les signalements  
@@ -486,7 +502,7 @@
 **Qui** : ETU003346  
 **Estimation** : 120   
 
-## Tâche 60
+## Tâche 64
 **Catégorie** : Frontend Mobile  
 **Module** : Filtre  
 **Tâches** : Implémentation du filtre "Mes signalements uniquement"  
@@ -494,7 +510,7 @@
 **Qui** : ETU003358  
 **Estimation** : 90   
 
-## Tâche 61
+## Tâche 65
 **Catégorie** : Frontend Mobile  
 **Module** : Build  
 **Tâches** : Configuration pour la génération de l'APK Android  
@@ -502,7 +518,7 @@
 **Qui** : ETU003337  
 **Estimation** : 60   
 
-## Tâche 62
+## Tâche 66
 **Catégorie** : Frontend Mobile  
 **Module** : Build  
 **Tâches** : Génération et test de l'APK final  
@@ -512,7 +528,7 @@
 
 ## Scénario 8: Documentation et Gestion
 
-## Tâche 63
+## Tâche 67
 **Catégorie** : Documentation  
 **Module** : Technique  
 **Tâches** : Rédaction de la documentation technique  
@@ -520,7 +536,7 @@
 **Qui** : ETU003346  
 **Estimation** : 180   
 
-## Tâche 64
+## Tâche 68
 **Catégorie** : Gestion  
 **Module** : Suivi  
 **Tâches** : Mise en place du système de suivi des tâches  

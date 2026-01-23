@@ -85,6 +85,8 @@ CREATE TABLE entreprise_concerner(
    Id_entreprise_concerner SERIAL,
    date_creation DATE,
    montant NUMERIC(15,2),
+   date_debut DATE NOT NULL,
+   date_fin DATE NOT NULL,
    last_update TIMESTAMP NOT NULL,
    Id_signalement INTEGER NOT NULL,
    Id_entreprise INTEGER NOT NULL,
