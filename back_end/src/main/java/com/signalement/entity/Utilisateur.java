@@ -1,16 +1,20 @@
 package com.signalement.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "utilisateur")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Utilisateur {
 
     @Id
@@ -42,4 +46,8 @@ public class Utilisateur {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_type_utilisateur", nullable = false)
     private TypeUtilisateur typeUtilisateur;
+
+    @OneToMany(mappedBy = "utilisateur", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Signalement> signalements;
 }

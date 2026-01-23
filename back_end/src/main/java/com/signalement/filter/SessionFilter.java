@@ -28,26 +28,36 @@ public class SessionFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        String method = request.getMethod();
+        
         // Allow unauthenticated endpoints (login, public resources) and API/docs
-        if (path.startsWith("/auth")
-            || path.startsWith("/login")
-            || path.startsWith("/public")
+        if (path.contains("/api/auth/")
+            || path.startsWith("/api/public")
             || path.startsWith("/v3/api-docs")
             || path.startsWith("/swagger")
             || path.startsWith("/swagger-ui")
             || path.equals("/swagger-ui.html")
-            || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            || "OPTIONS".equalsIgnoreCase(method)) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        // GET /api/signalements is public (no auth required for retrieving all)
+        if ("GET".equalsIgnoreCase(method) && path.equals("/api/signalements")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Vérifier le header Authorization pour les autres routes
         String header = request.getHeader("Authorization");
-        if (header == null || !header.startsWith("Bearer ")) {
+        if (header == null || header.isEmpty()) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
             return;
         }
 
-        String token = header.substring(7);
+        // Le token peut être avec ou sans "Bearer "
+        String token = header.startsWith("Bearer ") ? header.substring(7) : header;
+        
         if (!sessionService.isSessionValid(token)) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session invalid or expired");
             return;

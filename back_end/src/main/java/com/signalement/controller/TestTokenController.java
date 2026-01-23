@@ -1,5 +1,10 @@
 package com.signalement.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,13 +14,24 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api")
+@Tag(name = "Tests", description = "Endpoints de test pour la validation des tokens")
 public class TestTokenController {
 
     private static final String VALID_TOKEN = "11111111-1111-1111-1111-111111111111";
     private static final String EXPIRED_TOKEN = "22222222-2222-2222-2222-222222222222";
 
+    @Operation(
+        summary = "Endpoint protégé de test",
+        description = "Endpoint de test pour valider le fonctionnement de l'authentification par token. Tokens de test : valide='11111111-1111-1111-1111-111111111111', expiré='22222222-2222-2222-2222-222222222222'"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Accès autorisé - token valide"),
+        @ApiResponse(responseCode = "401", description = "Token manquant, invalide ou expiré"),
+        @ApiResponse(responseCode = "403", description = "Token invalide")
+    })
     @GetMapping("/protected")
-    public ResponseEntity<String> protectedEndpoint(HttpServletRequest request) {
+    public ResponseEntity<String> protectedEndpoint(
+            @Parameter(hidden = true) HttpServletRequest request) {
         String auth = request.getHeader("Authorization");
         if (auth == null || auth.isEmpty() || !auth.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body("Missing or invalid Authorization header");
@@ -30,6 +46,13 @@ public class TestTokenController {
         }
     }
 
+    @Operation(
+        summary = "Endpoint public de test",
+        description = "Endpoint de test accessible sans authentification."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Accès public accordé")
+    })
     @GetMapping("/public")
     public ResponseEntity<String> publicEndpoint() {
         return ResponseEntity.ok("Public endpoint accessible");
