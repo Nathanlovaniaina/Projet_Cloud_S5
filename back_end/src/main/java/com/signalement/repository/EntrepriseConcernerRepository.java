@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface EntrepriseConcernerRepository extends JpaRepository<EntrepriseConcerner, Integer> {
     List<EntrepriseConcerner> findBySignalement(Signalement signalement);
     
+    List<EntrepriseConcerner> findBySignalement_IdSignalement(Integer signalementId);
+    
     Optional<EntrepriseConcerner> findBySignalement_IdSignalementAndEntreprise_IdEntreprise(
         Integer signalementId, 
         Integer entrepriseId);

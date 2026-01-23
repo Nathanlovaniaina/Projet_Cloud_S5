@@ -267,7 +267,7 @@ public class SignalementService {
 
     /**
      * Modifier le statut d'un signalement (Tâche 23)
-     * Seul un manager peut modifier le statut
+     * AVEC VALIDATION DES RÈGLES MÉTIER (Tâche 29)
      */
     @Transactional
     public Signalement updateSignalementStatus(Integer id, Integer etatId, Utilisateur utilisateur) 
@@ -283,12 +283,77 @@ public class SignalementService {
         EtatSignalement etat = etatSignalementRepository.findById(etatId)
             .orElseThrow(() -> new IllegalArgumentException("État non trouvé avec l'ID: " + etatId));
         
+        // ✅ NOUVELLE VALIDATION MÉTIER (Tâche 29)
+        canTransitionToState(id, etatId);
+        
         // Create historique entry instead of setting direct FK
         createHistoriqueEtat(signalement, etat);
         
         // Reload signalement to ensure fresh state for DTO conversion
         return signalementRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé avec l'ID: " + id));
+    }
+    
+    /**
+     * Vérifier si un signalement peut passer à un nouvel état
+     * En fonction des assignations d'entreprises (Tâche 29)
+     */
+    private void canTransitionToState(Integer signalementId, Integer newStateId) throws IllegalArgumentException {
+        // ID 2 = "En cours"
+        if (newStateId == 2) {
+            // Vérifier qu'il existe au moins une assignation acceptée (ID 2)
+            List<EntrepriseConcerner> assignations = entrepriseConcernerRepository
+                .findBySignalement_IdSignalement(signalementId);
+            
+            boolean hasAcceptedAssignment = assignations.stream()
+                .anyMatch(a -> a.getStatutAssignation() != null && 
+                              a.getStatutAssignation().getIdStatutAssignation() == 2);
+            
+            if (!hasAcceptedAssignment) {
+                throw new IllegalArgumentException(
+                    "Impossible de mettre le signalement en 'En cours'. " +
+                    "Au moins une entreprise doit avoir accepté le projet."
+                );
+            }
+        }
+        
+        // ID 3 = "Résolu" (Terminé)
+        if (newStateId == 3) {
+            // Vérifier qu'il existe au moins une assignation en cours (ID 4) ou terminée (ID 5)
+            List<EntrepriseConcerner> assignations = entrepriseConcernerRepository
+                .findBySignalement_IdSignalement(signalementId);
+            
+            boolean hasActiveAssignment = assignations.stream()
+                .anyMatch(a -> a.getStatutAssignation() != null && 
+                              (a.getStatutAssignation().getIdStatutAssignation() == 4 ||
+                               a.getStatutAssignation().getIdStatutAssignation() == 5));
+            
+            if (!hasActiveAssignment) {
+                throw new IllegalArgumentException(
+                    "Impossible de mettre le signalement en 'Résolu'. " +
+                    "Au moins une entreprise doit avoir commencé ou terminé les travaux."
+                );
+            }
+        }
+    }
+    
+    /**
+     * Récupérer toutes les assignations d'un signalement (Tâche 30)
+     */
+    @Transactional(readOnly = true)
+    public List<EntrepriseConcernerDTO> getAssignationsBySignalement(Integer signalementId) {
+        // Vérifier que le signalement existe
+        Signalement signalement = signalementRepository.findById(signalementId)
+            .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé"));
+        
+        // Récupérer toutes les assignations
+        List<EntrepriseConcerner> assignations = entrepriseConcernerRepository
+            .findBySignalement_IdSignalement(signalementId);
+        
+        // Convertir en DTOs
+        return assignations.stream()
+            .map(this::convertToDTO)
+            .toList();
     }
     
     // Helper methods for historique-based état management

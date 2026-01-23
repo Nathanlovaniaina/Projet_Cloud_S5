@@ -1,0 +1,8 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyCHwO7FV4rGZ2wtfGmcKskykLGt83YNhvQ",
+  authDomain: "road-signalement-s5.firebaseapp.com",
+  projectId: "road-signalement-s5",
+  storageBucket: "road-signalement-s5.firebasestorage.app",
+  messagingSenderId: "116450123240",
+  appId: "1:116450123240:web:54d98bc8ecb609926a185d"
+};
