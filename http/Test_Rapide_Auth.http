@@ -46,6 +46,15 @@ Content-Type: application/json
   "motDePasse": "visiteur123"
 }
 
+### Connexion Visiteur
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "mialy.rakoto@outlook.com",
+  "motDePasse": "password456"
+}
+
 ### ============================================================
 ### TÂCHE 13: Gestion Sessions (intégré dans login) ✅
 ### ============================================================
