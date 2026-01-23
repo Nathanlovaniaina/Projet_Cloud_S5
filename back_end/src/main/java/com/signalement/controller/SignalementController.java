@@ -2,6 +2,8 @@ package com.signalement.controller;
 
 import com.signalement.dto.CreateSignalementRequest;
 import com.signalement.dto.SignalementDTO;
+import com.signalement.dto.UpdateSignalementRequest;
+import com.signalement.dto.UpdateSignalementStatusRequest;
 import com.signalement.entity.Signalement;
 import com.signalement.entity.Utilisateur;
 import com.signalement.service.SessionService;
@@ -20,9 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -44,15 +44,14 @@ public class SignalementController {
         @ApiResponse(responseCode = "401", description = "Non authentifié ou token invalide")
     })
     @PostMapping("/signalements")
-    public ResponseEntity<?> createSignalement(
+    public ResponseEntity<com.signalement.dto.ApiResponse> createSignalement(
             @Valid @RequestBody CreateSignalementRequest request,
             @Parameter(hidden = true) HttpServletRequest httpRequest) {
         
         String auth = httpRequest.getHeader("Authorization");
         if (auth == null || !auth.startsWith("Bearer ")) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Missing or invalid Authorization header");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Authentification requise"));
         }
         
         String token = auth.substring(7).trim();
@@ -60,24 +59,19 @@ public class SignalementController {
                 .map(utilisateur -> {
                     try {
                         Signalement created = signalementService.createSignalementForUser(request, utilisateur);
-                        // Convertir en DTO pour éviter les sérialisation issues
                         SignalementDTO dto = convertSignalementToDTO(created);
-                        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+                        return ResponseEntity.status(HttpStatus.CREATED)
+                            .body(new com.signalement.dto.ApiResponse(true, "Signalement créé avec succès", dto));
                     } catch (IllegalArgumentException e) {
-                        Map<String, String> error = new HashMap<>();
-                        error.put("error", e.getMessage());
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
                     } catch (IllegalStateException e) {
-                        Map<String, String> error = new HashMap<>();
-                        error.put("error", "Erreur de configuration: " + e.getMessage());
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(new com.signalement.dto.ApiResponse(false, "Erreur de configuration: " + e.getMessage()));
                     }
                 })
-                .orElseGet(() -> {
-                    Map<String, String> error = new HashMap<>();
-                    error.put("error", "Token invalide ou expiré");
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-                });
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new com.signalement.dto.ApiResponse(false, "Token invalide ou expiré")));
     }
 
     private SignalementDTO convertSignalementToDTO(Signalement s) {
@@ -114,14 +108,15 @@ public class SignalementController {
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = SignalementDTO.class)))
     })
     @GetMapping("/signalements")
-    public ResponseEntity<List<SignalementDTO>> getAllSignalements(
+    public ResponseEntity<com.signalement.dto.ApiResponse> getAllSignalements(
             @Parameter(description = "ID de l'état du signalement pour filtrer (1=En attente, 2=En cours, etc.)")
             @RequestParam(required = false) Integer etat,
             @Parameter(description = "ID du type de travail pour filtrer")
             @RequestParam(required = false) Integer typeTravail) {
         
         List<SignalementDTO> signalements = signalementService.getAllSignalementsDtoWithFilters(etat, typeTravail);
-        return ResponseEntity.ok(signalements);
+        return ResponseEntity.ok(
+            new com.signalement.dto.ApiResponse(true, "Liste des signalements récupérée avec succès", signalements));
     }
 
     @Operation(
@@ -134,24 +129,111 @@ public class SignalementController {
         @ApiResponse(responseCode = "401", description = "Non authentifié ou token invalide")
     })
     @GetMapping("/me/signalements")
-    public ResponseEntity<?> getMySignalements(
+    public ResponseEntity<com.signalement.dto.ApiResponse> getMySignalements(
             @Parameter(hidden = true) HttpServletRequest request) {
         String auth = request.getHeader("Authorization");
         if (auth == null || !auth.startsWith("Bearer ")) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Missing or invalid Authorization header");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Authentification requise"));
         }
         
         String token = auth.substring(7).trim();
         java.util.Optional<Utilisateur> userOpt = sessionService.getUtilisateurByToken(token);
         if (userOpt.isEmpty()) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Token invalide ou expiré");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Token invalide ou expiré"));
         }
         
         List<SignalementDTO> dtos = signalementService.getSignalementsDtoByUtilisateur(userOpt.get());
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(
+            new com.signalement.dto.ApiResponse(true, "Vos signalements récupérés avec succès", dtos));
+    }
+
+    @Operation(
+        summary = "Modifier un signalement (Tâche 22)",
+        description = "Modifier les informations d'un signalement. Seul le créateur ou un manager peut le faire."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Signalement modifié avec succès",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = SignalementDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Données invalides"),
+        @ApiResponse(responseCode = "401", description = "Non authentifié"),
+        @ApiResponse(responseCode = "403", description = "Pas de permission"),
+        @ApiResponse(responseCode = "404", description = "Signalement non trouvé")
+    })
+    @PutMapping("/signalements/{id}")
+    public ResponseEntity<com.signalement.dto.ApiResponse> updateSignalement(
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateSignalementRequest request,
+            @Parameter(hidden = true) HttpServletRequest httpRequest) {
+        
+        String auth = httpRequest.getHeader("Authorization");
+        if (auth == null || !auth.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Authentification requise"));
+        }
+        
+        String token = auth.substring(7).trim();
+        return sessionService.getUtilisateurByToken(token)
+            .map(utilisateur -> {
+                try {
+                    Signalement updated = signalementService.updateSignalement(id, request, utilisateur);
+                    SignalementDTO dto = convertSignalementToDTO(updated);
+                    return ResponseEntity.ok(
+                        new com.signalement.dto.ApiResponse(true, "Signalement modifié avec succès", dto));
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+                } catch (IllegalAccessException e) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+                }
+            })
+            .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Token invalide")));
+    }
+
+    @Operation(
+        summary = "Modifier le statut d'un signalement (Tâche 23)",
+        description = "Modifier l'état d'un signalement (En attente, En cours, Résolu, Rejeté). Réservé aux managers."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Statut modifié avec succès",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = SignalementDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Données invalides"),
+        @ApiResponse(responseCode = "401", description = "Non authentifié"),
+        @ApiResponse(responseCode = "403", description = "Pas manager"),
+        @ApiResponse(responseCode = "404", description = "Signalement ou état non trouvé")
+    })
+    @PatchMapping("/signalements/{id}/status")
+    public ResponseEntity<com.signalement.dto.ApiResponse> updateSignalementStatus(
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateSignalementStatusRequest request,
+            @Parameter(hidden = true) HttpServletRequest httpRequest) {
+        
+        String auth = httpRequest.getHeader("Authorization");
+        if (auth == null || !auth.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Authentification requise"));
+        }
+        
+        String token = auth.substring(7).trim();
+        return sessionService.getUtilisateurByToken(token)
+            .map(utilisateur -> {
+                try {
+                    Signalement updated = signalementService.updateSignalementStatus(id, request.getEtatId(), utilisateur);
+                    SignalementDTO dto = convertSignalementToDTO(updated);
+                    return ResponseEntity.ok(
+                        new com.signalement.dto.ApiResponse(true, "Statut modifié avec succès", dto));
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+                } catch (IllegalAccessException e) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+                }
+            })
+            .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Token invalide")));
     }
 }

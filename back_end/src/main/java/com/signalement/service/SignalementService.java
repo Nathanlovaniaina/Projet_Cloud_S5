@@ -1,6 +1,7 @@
 package com.signalement.service;
 
 import com.signalement.dto.CreateSignalementRequest;
+import com.signalement.dto.UpdateSignalementRequest;
 import com.signalement.entity.EtatSignalement;
 import com.signalement.entity.Signalement;
 import com.signalement.entity.TypeTravail;
@@ -186,5 +187,71 @@ public class SignalementService {
     @Transactional
     public void deleteSignalement(Integer id) {
         signalementRepository.deleteById(id);
+    }
+
+    /**
+     * Vérifier si un utilisateur est manager (Tâche 22, 23)
+     * Un manager a un TypeUtilisateur avec idTypeUtilisateur = 2
+     */
+    private boolean isManager(Utilisateur utilisateur) {
+        return utilisateur.getTypeUtilisateur() != null 
+            && utilisateur.getTypeUtilisateur().getIdTypeUtilisateur() == 2;
+    }
+
+    /**
+     * Modifier un signalement (Tâche 22)
+     * Seul le créateur ou un manager peut modifier
+     */
+    @Transactional
+    public Signalement updateSignalement(Integer id, UpdateSignalementRequest request, Utilisateur utilisateur) 
+            throws IllegalAccessException {
+        Signalement signalement = signalementRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé avec l'ID: " + id));
+        
+        // Vérifier que c'est le créateur ou un manager
+        if (!signalement.getUtilisateur().getIdUtilisateur().equals(utilisateur.getIdUtilisateur())
+            && !isManager(utilisateur)) {
+            throw new IllegalAccessException("Vous n'avez pas le droit de modifier ce signalement");
+        }
+        
+        // Mise à jour des champs
+        signalement.setTitre(request.getTitre());
+        signalement.setDescription(request.getDescription());
+        
+        // Mise à jour du type de travail si fourni
+        if (request.getIdTypeTravail() != null) {
+            TypeTravail typeTravail = typeTravailRepository.findById(request.getIdTypeTravail())
+                .orElseThrow(() -> new IllegalArgumentException("Type de travail non trouvé"));
+            signalement.setTypeTravail(typeTravail);
+        }
+        
+        signalement.setUrlPhoto(request.getUrlPhoto());
+        signalement.setSynced(false); // Marquer comme non synchronisé
+        
+        return signalementRepository.save(signalement);
+    }
+
+    /**
+     * Modifier le statut d'un signalement (Tâche 23)
+     * Seul un manager peut modifier le statut
+     */
+    @Transactional
+    public Signalement updateSignalementStatus(Integer id, Integer etatId, Utilisateur utilisateur) 
+            throws IllegalAccessException {
+        // Vérifier que l'utilisateur est manager
+        if (!isManager(utilisateur)) {
+            throw new IllegalAccessException("Seuls les managers peuvent modifier le statut");
+        }
+        
+        Signalement signalement = signalementRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé avec l'ID: " + id));
+        
+        EtatSignalement etat = etatSignalementRepository.findById(etatId)
+            .orElseThrow(() -> new IllegalArgumentException("État non trouvé avec l'ID: " + etatId));
+        
+        signalement.setEtatActuel(etat);
+        signalement.setSynced(false); // Marquer comme non synchronisé
+        
+        return signalementRepository.save(signalement);
     }
 }

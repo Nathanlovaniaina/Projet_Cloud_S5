@@ -1,0 +1,287 @@
+# ===========================
+# Tests Tâches 22 & 23
+# API Signalements - Modification
+# ===========================
+
+### Variables
+@baseUrl = http://localhost:8080/api
+@token = 95ced581-f4eb-4512-a5e3-aaffed82a5eb
+@managerToken = e7afa3a9-7c29-427a-a112-8189b5eabee9
+@signalementId = 1
+
+# ===========================
+# TÂCHE 22: PUT /api/signalements/{id}
+# Modifier un signalement
+# Permission: Créateur OU Manager
+# ===========================
+
+### T22-1: Modifier un signalement (créateur)
+PUT {{baseUrl}}/signalements/{{signalementId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titre": "Titre modifié",
+  "description": "Description mise à jour avec plus de détails",
+  "idTypeTravail": 2,
+  "urlPhoto": "https://example.com/photo-updated.jpg"
+}
+
+### T22-2: Modifier un signalement (manager)
+PUT {{baseUrl}}/signalements/{{signalementId}}
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "titre": "Modifié par manager",
+  "description": "Le manager peut modifier tous les signalements",
+  "idTypeTravail": 3,
+  "urlPhoto": "https://example.com/manager-update.jpg"
+}
+
+### T22-3: Modifier sans description (optionnelle)
+PUT {{baseUrl}}/signalements/{{signalementId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titre": "Nouveau titre sans description",
+  "description": null,
+  "idTypeTravail": 1,
+  "urlPhoto": null
+}
+
+### T22-4: Modifier sans type de travail (optionnel)
+PUT {{baseUrl}}/signalements/{{signalementId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titre": "Signalement sans type",
+  "description": "Type de travail retiré"
+}
+
+### T22-5: Erreur - Titre vide (validation)
+PUT {{baseUrl}}/signalements/{{signalementId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titre": "",
+  "description": "Description valide"
+}
+# Attendu: 400 Bad Request
+
+### T22-6: Erreur - Titre manquant (validation)
+PUT {{baseUrl}}/signalements/{{signalementId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "description": "Pas de titre"
+}
+# Attendu: 400 Bad Request
+
+### T22-7: Erreur - Type de travail invalide
+PUT {{baseUrl}}/signalements/{{signalementId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titre": "Titre valide",
+  "description": "Type invalide",
+  "idTypeTravail": 9999
+}
+# Attendu: 400 Bad Request (Type de travail non trouvé)
+
+### T22-8: Erreur - Signalement inexistant
+PUT {{baseUrl}}/signalements/99999
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titre": "Test",
+  "description": "ID n'existe pas"
+}
+# Attendu: 404 Not Found
+
+### T22-9: Erreur - Sans authentification
+PUT {{baseUrl}}/signalements/{{signalementId}}
+Content-Type: application/json
+
+{
+  "titre": "Sans token",
+  "description": "Devrait échouer"
+}
+# Attendu: 401 Unauthorized
+
+### T22-10: Erreur - Token invalide
+PUT {{baseUrl}}/signalements/{{signalementId}}
+Authorization: Bearer token_invalide_12345
+Content-Type: application/json
+
+{
+  "titre": "Avec mauvais token",
+  "description": "Devrait échouer"
+}
+# Attendu: 401 Unauthorized
+
+### T22-11: Erreur - Utilisateur non autorisé (ni créateur ni manager)
+PUT {{baseUrl}}/signalements/{{signalementId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titre": "Tentative modification",
+  "description": "Par un utilisateur qui n'est pas le créateur"
+}
+# Attendu: 403 Forbidden (si le signalement appartient à quelqu'un d'autre)
+
+# ===========================
+# TÂCHE 23: PATCH /api/signalements/{id}/status
+# Modifier le statut
+# Permission: Manager UNIQUEMENT
+# ===========================
+
+### T23-1: Modifier statut - En cours (manager)
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "etatId": 2
+}
+# États: 1=En attente, 2=En cours, 3=Résolu, 4=Rejeté
+
+### T23-2: Modifier statut - Résolu (manager)
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "etatId": 3
+}
+
+### T23-3: Modifier statut - Rejeté (manager)
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "etatId": 4
+}
+
+### T23-4: Modifier statut - Retour En attente (manager)
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "etatId": 1
+}
+
+### T23-5: Erreur - État invalide (hors plage)
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "etatId": 999
+}
+# Attendu: 404 Not Found (État non trouvé)
+
+### T23-6: Erreur - État null (validation)
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "etatId": null
+}
+# Attendu: 400 Bad Request
+
+### T23-7: Erreur - État manquant (validation)
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{}
+# Attendu: 400 Bad Request
+
+### T23-8: Erreur - Signalement inexistant
+PATCH {{baseUrl}}/signalements/99999/status
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "etatId": 2
+}
+# Attendu: 404 Not Found
+
+### T23-9: Erreur - Utilisateur non-manager (403)
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "etatId": 2
+}
+# Attendu: 403 Forbidden (Seuls les managers peuvent modifier le statut)
+
+### T23-10: Erreur - Sans authentification
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Content-Type: application/json
+
+{
+  "etatId": 2
+}
+# Attendu: 401 Unauthorized
+
+### T23-11: Erreur - Token invalide
+PATCH {{baseUrl}}/signalements/{{signalementId}}/status
+Authorization: Bearer token_invalide_xyz
+Content-Type: application/json
+
+{
+  "etatId": 2
+}
+# Attendu: 401 Unauthorized
+
+# ===========================
+# Tests de Vérification
+# ===========================
+
+### Vérifier l'état du signalement modifié
+GET {{baseUrl}}/signalements
+# Vérifier que synced=false après modification
+
+### Vérifier mes signalements (après modification)
+GET {{baseUrl}}/me/signalements
+Authorization: Bearer {{token}}
+# Vérifier que les modifications sont persistées
+
+# ===========================
+# Notes d'utilisation
+# ===========================
+
+# 1. Remplacer @token par un vrai token utilisateur
+#    Obtenir via POST /api/authentication/login
+#
+# 2. Remplacer @managerToken par un token d'un utilisateur manager
+#    (typeUtilisateur.idTypeUtilisateur = 2)
+#
+# 3. Remplacer @signalementId par un ID existant
+#    Ou créer un nouveau signalement avec POST /api/signalements
+#
+# 4. États disponibles:
+#    - 1: En attente
+#    - 2: En cours
+#    - 3: Résolu
+#    - 4: Rejeté
+#
+# 5. Permissions:
+#    - Tâche 22 (PUT): Créateur OU Manager
+#    - Tâche 23 (PATCH): Manager UNIQUEMENT
+#
+# 6. Après chaque modification, synced=false
+#    (Pour synchronisation Firebase - Tâches 24-25)
