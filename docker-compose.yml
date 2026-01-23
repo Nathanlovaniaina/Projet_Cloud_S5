@@ -12,7 +12,8 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-      - ./base_de_donnee/script.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./base_de_donnee/script.sql:/docker-entrypoint-initdb.d/1-script.sql
+      - ./base_de_donnee/data-reel.sql:/docker-entrypoint-initdb.d/2-data-reel.sql
     networks:
       - signalement_network
 

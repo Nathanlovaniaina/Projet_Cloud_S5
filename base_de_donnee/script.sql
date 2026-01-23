@@ -125,10 +125,3 @@ CREATE TABLE historique_etat_signalement(
    FOREIGN KEY(Id_signalement) REFERENCES signalement(Id_signalement),
    FOREIGN KEY(Id_etat_signalement) REFERENCES etat_signalement(Id_etat_signalement)
 );
-
--- Données initiales
-INSERT INTO etat_signalement (libelle) VALUES ('En attente'), ('En cours'), ('Terminé'), ('Annulé');
-INSERT INTO type_utilisateur (libelle) VALUES ('Visiteur'), ('Manager');
-INSERT INTO type_travail (libelle) VALUES ('Réparation de chaussée'), ('Construction de route'), ('Signalisation'), ('Éclairage public'), ('Maintenance');
-INSERT INTO statut_assignation (libelle) VALUES ('En attente'), ('Accepté'), ('Refusé'), ('En cours');
-

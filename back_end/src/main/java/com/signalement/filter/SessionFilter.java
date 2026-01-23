@@ -28,6 +28,8 @@ public class SessionFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        String method = request.getMethod();
+        
         // Allow unauthenticated endpoints (login, public resources) and API/docs
         if (path.contains("/api/auth/")
             || path.startsWith("/api/public")
@@ -35,7 +37,13 @@ public class SessionFilter extends OncePerRequestFilter {
             || path.startsWith("/swagger")
             || path.startsWith("/swagger-ui")
             || path.equals("/swagger-ui.html")
-            || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            || "OPTIONS".equalsIgnoreCase(method)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // GET /api/signalements is public (no auth required for retrieving all)
+        if ("GET".equalsIgnoreCase(method) && path.equals("/api/signalements")) {
             filterChain.doFilter(request, response);
             return;
         }

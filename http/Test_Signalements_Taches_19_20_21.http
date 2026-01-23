@@ -1,0 +1,113 @@
+### Tests des endpoints Signalements (Tâches 19, 20, 21)
+### Base URL
+@baseUrl = http://localhost:8080/api
+@token = 95ced581-f4eb-4512-a5
+
+###############################################
+# Tâche 19 : Créer un Signalement
+###############################################
+
+### POST /api/signalements - Créer un signalement (avec token)
+POST {{baseUrl}}/signalements
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "titre": "Nid de poule important",
+  "description": "Un grand nid de poule sur la RN1, dangereux pour les véhicules",
+  "latitude": -18.8792,
+  "longitude": 47.5079,
+  "idTypeTravail": 1,
+  "urlPhoto": "https://example.com/photo.jpg"
+}
+
+### POST /api/signalements - Sans description ni type
+POST {{baseUrl}}/signalements
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "titre": "Signalement rapide",
+  "latitude": -18.9000,
+  "longitude": 47.5200
+}
+
+### POST /api/signalements - Erreur validation (latitude invalide)
+POST {{baseUrl}}/signalements
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "titre": "Test invalide",
+  "latitude": 50.0,
+  "longitude": 47.5079
+}
+
+### POST /api/signalements - Sans token (401)
+POST {{baseUrl}}/signalements
+Content-Type: application/json
+
+{
+  "titre": "Sans authentification",
+  "latitude": -18.8792,
+  "longitude": 47.5079
+}
+
+###############################################
+# Tâche 20 : Récupérer tous les Signalements
+###############################################
+
+### GET /api/signalements - Tous les signalements
+GET {{baseUrl}}/signalements
+
+### GET /api/signalements - Filtrer par état (En attente = 1)
+GET {{baseUrl}}/signalements?etat=1
+
+### GET /api/signalements - Filtrer par type de travail
+GET {{baseUrl}}/signalements?typeTravail=1
+
+### GET /api/signalements - Filtrer par état ET type
+GET {{baseUrl}}/signalements?etat=1&typeTravail=1
+
+### GET /api/signalements - État "En cours" (2)
+GET {{baseUrl}}/signalements?etat=2
+
+###############################################
+# Tâche 21 : Récupérer mes Signalements
+###############################################
+
+### GET /api/me/signalements - Mes signalements (avec token)
+GET {{baseUrl}}/me/signalements
+Authorization: Bearer {{token}}
+
+### GET /api/me/signalements - Sans token (401)
+GET {{baseUrl}}/me/signalements
+
+###############################################
+# Tests additionnels
+###############################################
+
+### POST - Créer plusieurs signalements pour tester les filtres
+POST {{baseUrl}}/signalements
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "titre": "Route endommagée",
+  "description": "Chaussée fissurée sur plusieurs mètres",
+  "latitude": -18.9100,
+  "longitude": 47.5300,
+  "idTypeTravail": 2
+}
+
+###
+POST {{baseUrl}}/signalements
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "titre": "Signalisation manquante",
+  "description": "Panneau de stop absent à l'intersection",
+  "latitude": -18.8500,
+  "longitude": 47.5400
+}

@@ -1,11 +1,22 @@
 package com.signalement.service;
 
+import com.signalement.dto.CreateSignalementRequest;
+import com.signalement.entity.EtatSignalement;
 import com.signalement.entity.Signalement;
+import com.signalement.entity.TypeTravail;
 import com.signalement.entity.Utilisateur;
+import com.signalement.repository.EtatSignalementRepository;
 import com.signalement.repository.SignalementRepository;
+import com.signalement.repository.TypeTravailRepository;
 import lombok.RequiredArgsConstructor;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +25,9 @@ import java.util.Optional;
 public class SignalementService {
 
     private final SignalementRepository signalementRepository;
+    private final EtatSignalementRepository etatSignalementRepository;
+    private final TypeTravailRepository typeTravailRepository;
+    private static final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
     @Transactional(readOnly = true)
     public List<Signalement> getAllSignalements() {
@@ -34,25 +48,108 @@ public class SignalementService {
     public List<com.signalement.dto.SignalementDTO> getSignalementsDtoByUtilisateur(Utilisateur utilisateur) {
         return signalementRepository.findByUtilisateur(utilisateur)
                 .stream()
-                .map(s -> {
-                    Integer etatId = null;
-                    try {
-                        if (s.getEtatActuel() != null) etatId = s.getEtatActuel().getIdEtatSignalement();
-                    } catch (Exception ignored) {}
-                    return new com.signalement.dto.SignalementDTO(
-                            s.getIdSignalement(),
-                            s.getTitre(),
-                            s.getDescription(),
-                            s.getLatitude(),
-                            s.getLongitude(),
-                            s.getDateCreation(),
-                            s.getUrlPhoto(),
-                            s.getSynced(),
-                            s.getLastSync(),
-                            etatId
-                    );
-                })
+                .map(this::convertToEnrichedDTO)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<com.signalement.dto.SignalementDTO> getAllSignalementsDto() {
+        return signalementRepository.findAll()
+                .stream()
+                .map(this::convertToEnrichedDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<com.signalement.dto.SignalementDTO> getAllSignalementsDtoWithFilters(Integer etatId, Integer typeTravauxId) {
+        List<Signalement> signalements;
+        
+        if (etatId != null && typeTravauxId != null) {
+            signalements = signalementRepository.findAll().stream()
+                    .filter(s -> s.getEtatActuel() != null && s.getEtatActuel().getIdEtatSignalement().equals(etatId))
+                    .filter(s -> s.getTypeTravail() != null && s.getTypeTravail().getIdTypeTravail().equals(typeTravauxId))
+                    .toList();
+        } else if (etatId != null) {
+            signalements = signalementRepository.findByEtatActuel(etatId);
+        } else if (typeTravauxId != null) {
+            signalements = signalementRepository.findAll().stream()
+                    .filter(s -> s.getTypeTravail() != null && s.getTypeTravail().getIdTypeTravail().equals(typeTravauxId))
+                    .toList();
+        } else {
+            signalements = signalementRepository.findAll();
+        }
+        
+        return signalements.stream()
+                .map(this::convertToEnrichedDTO)
+                .toList();
+    }
+
+    private com.signalement.dto.SignalementDTO convertToEnrichedDTO(Signalement s) {
+        com.signalement.dto.SignalementDTO dto = new com.signalement.dto.SignalementDTO();
+        dto.setIdSignalement(s.getIdSignalement());
+        dto.setTitre(s.getTitre());
+        dto.setDescription(s.getDescription());
+        dto.setLatitude(s.getLatitude());
+        dto.setLongitude(s.getLongitude());
+        dto.setDateCreation(s.getDateCreation());
+        dto.setUrlPhoto(s.getUrlPhoto());
+        dto.setSynced(s.getSynced());
+        dto.setLastSync(s.getLastSync());
+        
+        try {
+            if (s.getEtatActuel() != null) {
+                dto.setEtatActuelId(s.getEtatActuel().getIdEtatSignalement());
+                dto.setEtatLibelle(s.getEtatActuel().getLibelle());
+            }
+        } catch (Exception ignored) {}
+        
+        try {
+            if (s.getTypeTravail() != null) {
+                dto.setIdTypeTravail(s.getTypeTravail().getIdTypeTravail());
+                dto.setTypeTravauxLibelle(s.getTypeTravail().getLibelle());
+            }
+        } catch (Exception ignored) {}
+        
+        try {
+            if (s.getUtilisateur() != null) {
+                dto.setIdUtilisateur(s.getUtilisateur().getIdUtilisateur());
+            }
+        } catch (Exception ignored) {}
+        
+        return dto;
+    }
+
+    @Transactional
+    public Signalement createSignalementForUser(CreateSignalementRequest request, Utilisateur utilisateur) {
+        Signalement signalement = new Signalement();
+        signalement.setTitre(request.getTitre());
+        signalement.setDescription(request.getDescription());
+        signalement.setLatitude(request.getLatitude());
+        signalement.setLongitude(request.getLongitude());
+        signalement.setUrlPhoto(request.getUrlPhoto());
+        signalement.setUtilisateur(utilisateur);
+        signalement.setDateCreation(LocalDateTime.now());
+        signalement.setSynced(false);
+        
+        // Créer le Point géographique PostGIS
+        Point point = geometryFactory.createPoint(
+            new Coordinate(request.getLongitude().doubleValue(), request.getLatitude().doubleValue())
+        );
+        signalement.setGeom(point);
+        
+        // État par défaut : "En attente" (ID 1)
+        EtatSignalement etatInitial = etatSignalementRepository.findById(1)
+                .orElseThrow(() -> new IllegalStateException("État 'En attente' non trouvé"));
+        signalement.setEtatActuel(etatInitial);
+        
+        // Type de travail optionnel
+        if (request.getIdTypeTravail() != null) {
+            TypeTravail typeTravail = typeTravailRepository.findById(request.getIdTypeTravail())
+                    .orElseThrow(() -> new IllegalArgumentException("Type de travail non trouvé avec l'ID: " + request.getIdTypeTravail()));
+            signalement.setTypeTravail(typeTravail);
+        }
+        
+        return signalementRepository.save(signalement);
     }
 
     @Transactional(readOnly = true)

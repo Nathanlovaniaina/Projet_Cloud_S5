@@ -1,5 +1,6 @@
 package com.signalement.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -54,6 +55,7 @@ public class Signalement {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_utilisateur", nullable = false)
+    @JsonIgnore
     private Utilisateur utilisateur;
 
     @Column(name = "geom", columnDefinition = "geography(Point,4326)")
