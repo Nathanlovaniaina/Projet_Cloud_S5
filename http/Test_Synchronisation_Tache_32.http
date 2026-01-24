@@ -1,0 +1,59 @@
+### ============================================================
+### TÂCHE 32 - SYNCHRONISATION VERS FIREBASE (FULL SYNC)
+### ============================================================
+
+### Configuration
+@baseUrl = http://localhost:8080/api
+@tokenManager = 7205fa1b-7e65-4afd-961b-7482629589df
+
+### T32-1: Lancer la synchronisation vers Firebase (Manager)
+POST {{baseUrl}}/sync/to-firebase
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+###
+
+### T32-2: Synchronisation bidirectionnelle complète
+POST {{baseUrl}}/sync/full
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+###
+
+### T32-3: Créer un signalement local puis synchroniser
+POST {{baseUrl}}/signalements
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "titre": "Test sync vers Firebase",
+  "description": "Ce signalement sera synchronisé vers Firebase",
+  "latitude": 48.8588,
+  "longitude": 2.3475,
+  "surface_metre_carree": 15.5,
+  "url_photo": "https://example.com/photo.jpg",
+  "id_type_travail": 1,
+  "id_utilisateur": 1
+}
+
+###
+
+### T32-4: Lancer la sync vers Firebase
+POST {{baseUrl}}/sync/to-firebase
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+###
+
+### T32-5: Tenter avec un token invalide (devrait échouer)
+POST {{baseUrl}}/sync/to-firebase
+Authorization: Bearer invalid-token
+Content-Type: application/json
+
+###
+
+### T32-6: Sans authentification (devrait échouer)
+POST {{baseUrl}}/sync/to-firebase
+Content-Type: application/json
+
+###

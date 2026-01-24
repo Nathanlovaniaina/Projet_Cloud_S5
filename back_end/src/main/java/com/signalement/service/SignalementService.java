@@ -1,5 +1,7 @@
 package com.signalement.service;
 
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.*;
 import com.signalement.dto.AssignEnterpriseRequest;
 import com.signalement.dto.CreateSignalementRequest;
 import com.signalement.dto.EntrepriseConcernerDTO;
@@ -30,13 +32,21 @@ import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SignalementService {
 
     private final SignalementRepository signalementRepository;
@@ -47,6 +57,7 @@ public class SignalementService {
     private final EntrepriseConcernerRepository entrepriseConcernerRepository;
     private final StatutAssignationRepository statutAssignationRepository;
     private final HistoriqueStatutAssignationRepository historiqueStatutAssignationRepository;
+    private final Firestore firestore;
     private static final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
     @Transactional(readOnly = true)
@@ -507,6 +518,93 @@ public class SignalementService {
         }
         
         return dto;
+    }
+
+    // ======== FIREBASE SYNC METHODS (Tâches 31 & 32) ========
+    
+    @Transactional
+    public int syncFromFirebase(LocalDateTime lastSyncDate) throws ExecutionException, InterruptedException {
+        CollectionReference collection = firestore.collection("signalements");
+        ApiFuture<QuerySnapshot> future = collection.get();
+        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+
+        int synced = 0;
+        for (QueryDocumentSnapshot doc : documents) {
+            Long lastUpdateMs = doc.getLong("last_update");
+            if (lastUpdateMs == null) continue;
+
+            LocalDateTime firebaseLastUpdate = LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
+
+            if (firebaseLastUpdate.isAfter(lastSyncDate)) {
+                Integer id = doc.getLong("id").intValue();
+                var existing = signalementRepository.findById(id);
+                
+                if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {
+                    Signalement signalement = existing.orElse(new Signalement());
+                    signalement.setIdSignalement(id);
+                    signalement.setTitre(doc.getString("titre"));
+                    signalement.setDescription(doc.getString("description"));
+                    
+                    Double latitude = doc.getDouble("latitude");
+                    Double longitude = doc.getDouble("longitude");
+                    if (latitude != null && longitude != null) {
+                        signalement.setLatitude(java.math.BigDecimal.valueOf(latitude));
+                        signalement.setLongitude(java.math.BigDecimal.valueOf(longitude));
+                        Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude));
+                        signalement.setGeom(point);
+                    }
+                    
+                    Double surface = doc.getDouble("surface_metre_carree");
+                    if (surface != null) {
+                        signalement.setSurfaceMetreCarree(java.math.BigDecimal.valueOf(surface));
+                    }
+                    
+                    Integer typeId = doc.getLong("id_type_travail").intValue();
+                    TypeTravail type = typeTravailRepository.findById(typeId).orElse(null);
+                    
+                    if (type != null) {
+                        signalement.setTypeTravail(type);
+                        signalementRepository.save(signalement);
+                        synced++;
+                    }
+                }
+            }
+        }
+        return synced;
+    }
+
+    @Transactional(readOnly = true)
+    public int syncAllToFirebase() throws ExecutionException, InterruptedException {
+        List<Signalement> signalements = signalementRepository.findAll();
+        for (Signalement signalement : signalements) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("id", signalement.getIdSignalement());
+            data.put("titre", signalement.getTitre());
+            data.put("description", signalement.getDescription());
+            
+            if (signalement.getLatitude() != null) {
+                data.put("latitude", signalement.getLatitude().doubleValue());
+            }
+            
+            if (signalement.getLongitude() != null) {
+                data.put("longitude", signalement.getLongitude().doubleValue());
+            }
+            
+            if (signalement.getSurfaceMetreCarree() != null) {
+                data.put("surface_metre_carree", signalement.getSurfaceMetreCarree().doubleValue());
+            }
+            
+            data.put("last_update", signalement.getLastUpdate()
+                .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+            data.put("id_type_travail", signalement.getTypeTravail().getIdTypeTravail());
+            
+            firestore.collection("signalements")
+                .document(String.valueOf(signalement.getIdSignalement()))
+                .set(data).get();
+        }
+        log.info("{} signalements recréés", signalements.size());
+        return signalements.size();
     }
 }
 

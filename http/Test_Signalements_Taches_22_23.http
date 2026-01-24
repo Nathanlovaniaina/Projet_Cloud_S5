@@ -6,7 +6,7 @@
 ### Variables
 @baseUrl = http://localhost:8080/api
 @token = cfdd3103-da7f-4940-8495-cde22ef5194d
-@managerToken = 0e9d9824-696e-4535-865e-321d05cf209e
+@managerToken = 7205fa1b-7e65-4afd-961b-7482629589df
 @signalementId = 3
 
 # ===========================
@@ -33,7 +33,7 @@ Authorization: Bearer {{managerToken}}
 Content-Type: application/json
 
 {
-  "titre": "Modifié par manager",
+  "titre": "Modifié  manager",
   "description": "Le manager peut modifier tous les signalements",
   "idTypeTravail": 3,
   "urlPhoto": "https://example.com/manager-update.jpg"
