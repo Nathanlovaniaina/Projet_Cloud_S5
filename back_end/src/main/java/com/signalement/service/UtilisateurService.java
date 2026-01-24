@@ -1,18 +1,33 @@
 package com.signalement.service;
 
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.*;
 import com.signalement.entity.Utilisateur;
+import com.signalement.entity.TypeUtilisateur;
 import com.signalement.repository.UtilisateurRepository;
+import com.signalement.repository.TypeUtilisateurRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UtilisateurService {
 
     private final UtilisateurRepository utilisateurRepository;
+    private final TypeUtilisateurRepository typeUtilisateurRepository;
+    private final Firestore firestore;
 
     @Transactional(readOnly = true)
     public List<Utilisateur> getAllUtilisateurs() {
@@ -53,5 +68,72 @@ public class UtilisateurService {
     @Transactional
     public void deleteUtilisateur(Integer id) {
         utilisateurRepository.deleteById(id);
+    }
+
+    // ======== FIREBASE SYNC METHODS (Tâches 31 & 32) ========
+    
+    @Transactional
+    public int syncFromFirebase(LocalDateTime lastSyncDate) throws ExecutionException, InterruptedException {
+        CollectionReference collection = firestore.collection("utilisateurs");
+        ApiFuture<QuerySnapshot> future = collection.get();
+        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+
+        int synced = 0;
+        for (QueryDocumentSnapshot doc : documents) {
+            Long lastUpdateMs = doc.getLong("last_update");
+            if (lastUpdateMs == null) continue;
+
+            LocalDateTime firebaseLastUpdate = LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
+
+            if (firebaseLastUpdate.isAfter(lastSyncDate)) {
+                Integer id = doc.getLong("id").intValue();
+                var existing = utilisateurRepository.findById(id);
+                
+                if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {
+                    Utilisateur utilisateur = existing.orElse(new Utilisateur());
+                    utilisateur.setIdUtilisateur(id);
+                    utilisateur.setNom(doc.getString("nom"));
+                    utilisateur.setPrenom(doc.getString("prenom"));
+                    utilisateur.setEmail(doc.getString("email"));
+                    utilisateur.setMotDePasse(doc.getString("mot_de_passe_hash"));
+                    
+                    Boolean isBlocked = doc.getBoolean("is_blocked");
+                    utilisateur.setIsBlocked(isBlocked != null ? isBlocked : false);
+                    
+                    Integer typeId = doc.getLong("id_type_utilisateur").intValue();
+                    TypeUtilisateur type = typeUtilisateurRepository.findById(typeId).orElse(null);
+                    
+                    if (type != null) {
+                        utilisateur.setTypeUtilisateur(type);
+                        utilisateurRepository.save(utilisateur);
+                        synced++;
+                    }
+                }
+            }
+        }
+        return synced;
+    }
+
+    @Transactional(readOnly = true)
+    public int syncAllToFirebase() throws ExecutionException, InterruptedException {
+        List<Utilisateur> utilisateurs = utilisateurRepository.findAll();
+        for (Utilisateur utilisateur : utilisateurs) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("id", utilisateur.getIdUtilisateur());
+            data.put("nom", utilisateur.getNom());
+            data.put("prenom", utilisateur.getPrenom());
+            data.put("email", utilisateur.getEmail());
+            data.put("mot_de_passe_hash", utilisateur.getMotDePasse());
+            data.put("is_blocked", utilisateur.getIsBlocked());
+            data.put("last_update", utilisateur.getLastUpdate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+            data.put("id_type_utilisateur", utilisateur.getTypeUtilisateur().getIdTypeUtilisateur());
+            
+            firestore.collection("utilisateurs")
+                .document(String.valueOf(utilisateur.getIdUtilisateur()))
+                .set(data).get();
+        }
+        log.info("{} utilisateurs recréés", utilisateurs.size());
+        return utilisateurs.size();
     }
 }

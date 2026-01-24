@@ -1,0 +1,28 @@
+### ============================================================
+### TÂCHE 31 - SYNCHRONISATION DEPUIS FIREBASE
+### ============================================================
+
+### Configuration
+@baseUrl = http://localhost:8080/api
+@tokenManager = 7205fa1b-7e65-4afd-961b-7482629589df
+
+### T31-1: Lancer la synchronisation depuis Firebase (Manager)
+POST {{baseUrl}}/sync/from-firebase
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+###
+
+### T31-2: Tenter avec un token visiteur (devrait échouer)
+@tokenVisiteur = votre-token-visiteur-ici
+POST {{baseUrl}}/sync/from-firebase
+Authorization: Bearer {{tokenVisiteur}}
+Content-Type: application/json
+
+###
+
+### T31-3: Sans authentification (devrait échouer)
+POST {{baseUrl}}/sync/from-firebase
+Content-Type: application/json
+
+###
