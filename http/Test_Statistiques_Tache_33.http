@@ -1,0 +1,85 @@
+### ============================================
+### TÂCHE 33 - API STATISTIQUES
+### Tests des endpoints de statistiques système
+### Accès réservé aux managers (type_utilisateur = 2)
+### ============================================
+
+### Variables
+@baseUrl = http://localhost:8080/api
+@managerToken = 7205fa1b-7e65-4afd-961b-7482629589df
+@citoyenToken = 267322dd-e34e-4910-89e4-9cfbce008804
+
+### ============================================
+### 1. STATISTIQUES GLOBALES (Dashboard)
+### ============================================
+
+### Récupérer les statistiques globales du système
+GET {{baseUrl}}/statistics/summary
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+### ============================================
+### 2. STATISTIQUES PAR TYPE DE TRAVAIL
+### ============================================
+
+### Récupérer la répartition des signalements par type de travail
+GET {{baseUrl}}/statistics/by-work-type
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+### ============================================
+### 3. STATISTIQUES PAR ÉTAT
+### ============================================
+
+### Récupérer la répartition des signalements par état
+GET {{baseUrl}}/statistics/by-state
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+### ============================================
+### 4. STATISTIQUES PAR ENTREPRISE
+### ============================================
+
+### Récupérer les performances de toutes les entreprises
+GET {{baseUrl}}/statistics/by-enterprise
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+### ============================================
+### 5. TEST D'ACCÈS NON AUTORISÉ
+### ============================================
+
+### Tentative d'accès par un citoyen (doit échouer)
+GET {{baseUrl}}/statistics/summary
+Authorization: Bearer {{citoyenToken}}
+Content-Type: application/json
+
+### Tentative d'accès sans token (doit échouer)
+GET {{baseUrl}}/statistics/summary
+Content-Type: application/json
+
+### ============================================
+### NOTES D'UTILISATION
+### ============================================
+### 
+### 1. Remplacer {{managerToken}} par un token valide de manager
+###    Pour obtenir un token manager:
+###    - Se connecter avec un compte manager via POST /api/auth/login
+###    - Copier le token retourné dans la réponse
+###
+### 2. Remplacer {{citoyenToken}} par un token de citoyen (pour test refus)
+###
+### 3. Format des réponses:
+###    {
+###      "success": true/false,
+###      "message": "...",
+###      "data": { ... }
+###    }
+###
+### 4. Codes de statut attendus:
+###    - 200 OK: Succès
+###    - 401 Unauthorized: Token invalide/manquant
+###    - 403 Forbidden: Accès refusé (non-manager)
+###    - 500 Internal Server Error: Erreur serveur
+###
+### ============================================
