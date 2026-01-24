@@ -40,27 +40,15 @@ ON CONFLICT (libelle) DO NOTHING;
 -- ==========================================
 
 -- Managers
-INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, is_blocked, last_update, Id_type_utilisateur)
+INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, firebase_uid, is_blocked, last_update, Id_type_utilisateur)
 VALUES 
-    ('Rakoto', 'Jean', 'jean.rakoto@signalement.mg', 'manager123', false, NOW(),
-     (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Manager')),
-    
-    ('Ravelo', 'Marie', 'marie.ravelo@signalement.mg', 'manager456', false, NOW(),
-     (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Manager')),
-    
-    ('Rasolofo', 'Patrick', 'patrick.rasolofo@signalement.mg', 'manager789', false, NOW(),
+    ('Rakoto', 'Jean', 'jean.rakoto@signalement.mg', 'manager123', 'YHNsPqAcw7fUE8Reb7HOFMHYoQm2', false, NOW(),
      (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Manager'));
 
 -- Visiteurs (utilisateurs normaux)
-INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, is_blocked, last_update, Id_type_utilisateur)
+INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, firebase_uid, is_blocked, last_update, Id_type_utilisateur)
 VALUES 
-    ('Andriamampianina', 'Hery', 'hery.andria@gmail.com', 'visiteur123', false, NOW(),
-     (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Visiteur')),
-    
-    ('Rakotoarison', 'Faly', 'faly.rakoto@yahoo.fr', 'visiteur456', false, NOW(),
-     (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Visiteur')),
-    
-    ('Raharison', 'Naina', 'naina.rahar@outlook.com', 'visiteur789', false, NOW(),
+    ('Andriamampianina', 'Hery', 'hery.andria@gmail.com', 'visiteur123', 'qZo7wYrxotPPEIRbA9BLcMIQOZk1', false, NOW(),
      (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Visiteur'));
 
 -- ==========================================

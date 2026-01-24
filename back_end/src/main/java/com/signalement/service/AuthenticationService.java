@@ -40,6 +40,13 @@ public class AuthenticationService {
                 return new ApiResponse(false, "Un utilisateur avec cet email existe déjà");
             }
 
+            // Vérifier si le Firebase UID existe déjà (si fourni)
+            if (request.getFirebaseUid() != null && !request.getFirebaseUid().isEmpty()) {
+                if (utilisateurRepository.existsByFirebaseUid(request.getFirebaseUid())) {
+                    return new ApiResponse(false, "Firebase UID déjà associé à un compte");
+                }
+            }
+
             // Vérifier si le type d'utilisateur existe
             TypeUtilisateur typeUtilisateur = typeUtilisateurRepository.findById(request.getIdTypeUtilisateur())
                     .orElseThrow(() -> new IllegalArgumentException("Type d'utilisateur invalide"));
@@ -50,9 +57,9 @@ public class AuthenticationService {
             utilisateur.setPrenom(request.getPrenom());
             utilisateur.setEmail(request.getEmail());
             utilisateur.setMotDePasse(request.getMotDePasse()); // TODO: Hasher le mot de passe
+            utilisateur.setFirebaseUid(request.getFirebaseUid()); // Ajouter le Firebase UID
             utilisateur.setTypeUtilisateur(typeUtilisateur);
             utilisateur.setIsBlocked(false);
-            // synced field removed from schema
 
             Utilisateur savedUser = utilisateurRepository.save(utilisateur);
 
@@ -175,6 +182,14 @@ public class AuthenticationService {
             }
             if (request.getMotDePasse() != null && !request.getMotDePasse().isEmpty()) {
                 utilisateur.setMotDePasse(request.getMotDePasse()); // TODO: Hasher le mot de passe
+            }
+            if (request.getFirebaseUid() != null && !request.getFirebaseUid().isEmpty()) {
+                // Vérifier que le nouvel UID n'existe pas
+                if (!request.getFirebaseUid().equals(utilisateur.getFirebaseUid()) && 
+                    utilisateurRepository.existsByFirebaseUid(request.getFirebaseUid())) {
+                    return new ApiResponse(false, "Firebase UID déjà associé à un autre compte");
+                }
+                utilisateur.setFirebaseUid(request.getFirebaseUid());
             }
 
             utilisateurRepository.save(utilisateur);

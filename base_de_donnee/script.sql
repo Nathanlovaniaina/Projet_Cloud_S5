@@ -55,6 +55,7 @@ CREATE TABLE utilisateur(
    prenom VARCHAR(50) NOT NULL,
    email VARCHAR(50) NOT NULL,
    mot_de_passe VARCHAR(50) NOT NULL,
+   firebase_uid VARCHAR(255) UNIQUE,
    is_blocked BOOLEAN NOT NULL,
    last_update TIMESTAMP NOT NULL,
    Id_type_utilisateur INTEGER NOT NULL,
@@ -90,9 +91,11 @@ CREATE TABLE entreprise_concerner(
    last_update TIMESTAMP NOT NULL,
    Id_signalement INTEGER NOT NULL,
    Id_entreprise INTEGER NOT NULL,
+   Id_statut_assignation INTEGER,
    PRIMARY KEY(Id_entreprise_concerner),
    FOREIGN KEY(Id_signalement) REFERENCES signalement(Id_signalement),
-   FOREIGN KEY(Id_entreprise) REFERENCES entreprise(Id_entreprise)
+   FOREIGN KEY(Id_entreprise) REFERENCES entreprise(Id_entreprise),
+   FOREIGN KEY(Id_statut_assignation) REFERENCES statut_assignation(Id_statut_assignation)
 );
 
 CREATE TABLE session(

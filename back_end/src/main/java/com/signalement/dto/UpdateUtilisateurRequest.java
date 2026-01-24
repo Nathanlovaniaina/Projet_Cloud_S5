@@ -12,4 +12,5 @@ public class UpdateUtilisateurRequest {
     private String prenom;
     private String email;
     private String motDePasse;
+    private String firebaseUid;
 }

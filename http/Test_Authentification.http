@@ -10,27 +10,29 @@
 ### TÂCHE 11: INSCRIPTION (email/pwd)
 ### ============================================================
 
-### Test 1.1: Inscription d'un nouveau visiteur
+### Test 1.1: Inscription d'un nouveau visiteur avec Firebase UID
 POST {{baseUrl}}/inscription
 Content-Type: application/json
 
 {
-  "nom": "Rakotondrabe",
-  "prenom": "Miora",
-  "email": "miora.rakotondrabe@gmail.com",
-  "motDePasse": "miora2025",
+  "nom": "Andriamampianina",
+  "prenom": "Hery",
+  "email": "hery.andria@gmail.com",
+  "motDePasse": "visiteur123",
+  "firebaseUid": "qZo7wYrxotPPEIRbA9BLcMIQOZk1",
   "idTypeUtilisateur": 1
 }
 
-### Test 1.2: Inscription d'un nouveau manager
+### Test 1.2: Inscription d'un nouveau manager avec Firebase UID
 POST {{baseUrl}}/inscription
 Content-Type: application/json
 
 {
-  "nom": "Andrianasolo",
-  "prenom": "Feno",
-  "email": "feno.andrianasolo@signalement.mg",
-  "motDePasse": "feno2025",
+  "nom": "Rakoto",
+  "prenom": "Jean",
+  "email": "jean.rakoto@signalement.mg",
+  "motDePasse": "manager123",
+  "firebaseUid": "YHNsPqAcw7fUE8Reb7HOFMHYoQm2",
   "idTypeUtilisateur": 2
 }
 

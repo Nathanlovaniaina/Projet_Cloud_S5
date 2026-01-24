@@ -12,5 +12,6 @@ public class InscriptionRequest {
     private String prenom;
     private String email;
     private String motDePasse;
+    private String firebaseUid;
     private Integer idTypeUtilisateur;
 }

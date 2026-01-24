@@ -34,6 +34,9 @@ public class Utilisateur {
     @Column(name = "mot_de_passe", nullable = false, length = 50)
     private String motDePasse;
 
+    @Column(name = "firebase_uid", length = 255, unique = true)
+    private String firebaseUid;
+
     @Column(name = "is_blocked", nullable = false)
     private Boolean isBlocked = false;
 
