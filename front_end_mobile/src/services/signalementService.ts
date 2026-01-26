@@ -10,7 +10,8 @@ export interface NewSignalement {
   latitude: number;
   longitude: number;
   description: string;
-  id_type_travail: string;
+  // Accept string or number from UI, but we'll store as number in Firestore
+  id_type_travail: number | string;
   titre?: string;
   surface_metre_carree: number;
   url_photo?: string;
@@ -77,7 +78,7 @@ export async function createSignalement(data: NewSignalement) {
       latitude: data.latitude,
       longitude: data.longitude,
       description: data.description,
-      id_type_travail: data.id_type_travail,
+      id_type_travail: Number(data.id_type_travail),
       titre: data.titre || '',
       surface_metre_carree: data.surface_metre_carree,
       url_photo: data.url_photo || '',

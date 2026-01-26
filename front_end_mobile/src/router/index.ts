@@ -1,27 +1,16 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
-import HubPage from '../views/HubPage.vue'
-import HomePage from '../views/HomePage.vue'
 import LoginPage from '../views/LoginPage.vue'
-import UserProfile from '../views/UserProfile.vue'
+import TabsPage from '../views/TabsPage.vue'
+import MapPage from '../views/MapPage.vue'
+import AddSignalementPage from '../views/AddSignalementPage.vue'
+import ProfilePage from '../views/ProfilePage.vue'
 import { loadUserFromStorage, currentUser } from '../composables/useAuth';
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/hub'
-  },
-  {
-    path: '/hub',
-    name: 'Hub',
-    component: HubPage,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/home',
-    name: 'Home',
-    component: HomePage,
-    meta: { requiresAuth: true }
+    redirect: '/tabs/map'
   },
   {
     path: '/login',
@@ -29,10 +18,30 @@ const routes: Array<RouteRecordRaw> = [
     component: LoginPage
   },
   {
-    path: '/profile',
-    name: 'Profile',
-    component: UserProfile,
-    meta: { requiresAuth: true }
+    path: '/tabs',
+    component: TabsPage,
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        redirect: '/tabs/map'
+      },
+      {
+        path: 'map',
+        name: 'Map',
+        component: MapPage
+      },
+      {
+        path: 'add',
+        name: 'AddSignalement',
+        component: AddSignalementPage
+      },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: ProfilePage
+      }
+    ]
   }
 ]
 
@@ -57,8 +66,8 @@ router.beforeEach((to, from, next) => {
       next('/login');
     }
   } else if (to.path === '/login' && currentUser.value) {
-    // Si connecté et essaye d'aller au login, rediriger vers hub
-    next('/hub');
+    // Si connecté et essaye d'aller au login, rediriger vers tabs
+    next('/tabs/map');
   } else {
     next();
   }
