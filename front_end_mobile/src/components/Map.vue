@@ -1,5 +1,39 @@
 <template>
-  <div ref="mapContainer" id="map" class="map-container"></div>
+  <div class="map-container">
+    <div ref="mapContainer" id="map"></div>
+    
+    <!-- Custom Popup Modal -->
+    <div v-if="showPopup" class="popup-overlay" @click="closePopup">
+      <div class="popup-content" @click.stop>
+        <button type="button" class="popup-close" @click.stop="closePopup">×</button>
+        
+        <div v-if="selectedSignalement" style="font-family: Arial, sans-serif;">
+          <h3 style="margin: 0 0 15px 0; color: #2196F3; font-size: 18px;">{{ selectedSignalement.titre }}</h3>
+          <hr style="margin: 15px 0; border: none; border-top: 1px solid #ddd;">
+          
+          <div style="margin-bottom: 12px;">
+            <strong>Description:</strong><br/>
+            <span style="color: #555; font-size: 14px; margin-top: 4px; display: block;">{{ selectedSignalement.description || 'Aucune description' }}</span>
+          </div>
+          
+          <div style="margin-bottom: 12px;">
+            <strong>Surface:</strong> 
+            <span style="color: #2196F3; font-weight: bold;">{{ selectedSignalement.surface }} m²</span>
+          </div>
+          
+          <div style="margin-bottom: 12px;">
+            <strong>Type de travail:</strong> 
+            <span style="color: #ff9800; font-weight: bold;">{{ selectedSignalement.typeTravail }}</span>
+          </div>
+          
+          <div>
+            <strong>Statut:</strong> 
+            <span style="color: #4CAF50; font-weight: bold;">{{ selectedSignalement.etat }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -13,7 +47,7 @@ import { db } from '@/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 
 const mapContainer = ref<HTMLElement | null>(null);
-let map: L.Map | null = null;
+let map: any = null;
 
 export interface Props {
   isCreating?: boolean;
@@ -29,12 +63,25 @@ const emit = defineEmits<{
   locationSelected: [location: { lat: number; lng: number }];
 }>();
 
-let temporaryMarker: L.Marker | null = null;
+// Popup personnalisé
+const showPopup = ref(false);
+const selectedSignalement = ref<any>(null);
+
+interface SignalementData {
+  id: number;
+  titre: string;
+  description: string;
+  surface: number;
+  typeTravail: string;
+  etat: string;
+}
+
+let temporaryMarker: any = null;
 
 // Cache pour les types de travail et états
 const typeTravailCache = new Map<number, string>();
 const etatSignalementCache = new Map<number, string>();
-const signalementMarkers = new Map<number, L.CircleMarker>();
+const signalementMarkers = new Map<number, any>();
 
 // Fix for default markers in Leaflet with bundlers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -96,14 +143,18 @@ async function getDernierEtat(idSignalement: number): Promise<string> {
     if (!historiqueDoc.empty) {
       // Trier par date_changement décroissant (le plus récent en premier)
       const historiques = historiqueDoc.docs
-        .map(doc => ({
-          ...doc.data(),
-          timestamp: doc.data().date_changement || 0
-        }))
+        .map(doc => {
+          const data = doc.data();
+          return {
+            ...data,
+            id_etat: data.id_etat || 0,
+            timestamp: data.date_changement || 0
+          };
+        })
         .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
       
       if (historiques.length > 0) {
-        const idEtat = historiques[0].id_etat;
+        const idEtat = historiques[0].id_etat as number;
         return await getEtatSignalementLibelle(idEtat);
       }
     }
@@ -111,6 +162,11 @@ async function getDernierEtat(idSignalement: number): Promise<string> {
     console.error(`Erreur récupération dernier état pour signalement ${idSignalement}:`, error);
   }
   return 'Non spécifié';
+}
+
+function closePopup() {
+  showPopup.value = false;
+  selectedSignalement.value = null;
 }
 
 async function loadSignalements() {
@@ -132,40 +188,25 @@ async function loadSignalements() {
       const typeTravail = await getTypeTravailLibelle(id_type_travail);
       const etat = await getDernierEtat(id);
       
-      // Construire le contenu de la popup
-      const popupContent = `
-        <div style="min-width: 280px; font-family: Arial, sans-serif;">
-          <h3 style="margin: 0 0 10px 0; color: #2196F3; font-size: 16px;">${titre || 'Signalement'}</h3>
-          <hr style="margin: 8px 0; border: none; border-top: 1px solid #ddd;">
-          
-          <div style="margin-bottom: 8px;">
-            <strong>Description:</strong><br/>
-            <span style="color: #555; font-size: 13px;">${description || 'Aucune description'}</span>
-          </div>
-          
-          <div style="margin-bottom: 8px;">
-            <strong>Surface:</strong> 
-            <span style="color: #2196F3; font-weight: bold;">${surface_metre_carree || 0} m²</span>
-          </div>
-          
-          <div style="margin-bottom: 8px;">
-            <strong>Type de travail:</strong> 
-            <span style="color: #ff9800; font-weight: bold;">${typeTravail}</span>
-          </div>
-          
-          <div>
-            <strong>Statut:</strong> 
-            <span style="color: #4CAF50; font-weight: bold;">${etat}</span>
-          </div>
-        </div>
-      `;
-      
       const marker = L.circleMarker([latitude, longitude], {
         radius: 6,
         color: '#2196F3',
         weight: 2,
         fillOpacity: 0.7
-      }).bindPopup(popupContent).addTo(map!);
+      }).addTo(map!);
+      
+      // Ajouter un event listener pour afficher le popup personnalisé
+      marker.on('click', () => {
+        selectedSignalement.value = {
+          id,
+          titre: titre || 'Signalement',
+          description,
+          surface: surface_metre_carree || 0,
+          typeTravail,
+          etat
+        } as SignalementData;
+        showPopup.value = true;
+      });
       
       signalementMarkers.set(id, marker);
     }
@@ -244,7 +285,7 @@ onMounted(async () => {
   await loadSignalements();
 
   // Au clic sur la carte
-  map.on('click', (e) => {
+  map.on('click', (e: any) => {
     if (props.isCreating) {
       // Supprimer le marker temporaire précédent
       if (temporaryMarker) {
@@ -293,15 +334,112 @@ defineExpose({
 <style scoped>
 .map-container {
   display: block;
-  height: 100%;
   width: 100%;
+  height: 100%;
   position: relative;
 }
 
 #map {
-  display: block;
-  height: 100%;
   width: 100%;
+  height: 100%;
+}
+
+/* Custom Popup Modal Styles */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.popup-content {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 90%;
+  width: 350px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   position: relative;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.popup-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  pointer-events: auto;
+  z-index: 2001;
+}
+
+.popup-close:hover {
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .popup-content {
+    width: 100%;
+    max-width: calc(100% - 32px);
+    border-radius: 8px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .popup-overlay {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+
+  .popup-content {
+    background: #1E293B;
+    color: #F3F4F6;
+  }
+
+  .popup-close {
+    color: #999;
+  }
+
+  .popup-close:hover {
+    color: #F3F4F6;
+  }
 }
 </style>
