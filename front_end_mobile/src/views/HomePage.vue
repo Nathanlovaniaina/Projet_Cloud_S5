@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true" class="map-content">
+    <ion-content :fullscreen="true" class="map-page">
       <Map />
     </ion-content>
   </ion-page>
@@ -18,12 +18,19 @@ import Map from '@/components/Map.vue';
 </script>
 
 <style scoped>
-.map-content {
+html, body, #app, ion-app, ion-content.map-page {
+  height: 100%;
+}
+.map-page {
   --padding-bottom: 0;
   --padding-end: 0;
   --padding-start: 0;
   --padding-top: 0;
-  height: calc(100vh - 56px);
+  height: 100%;
   overflow: hidden;
+}
+.map-container, #map {
+  height: 100% !important;
+  width: 100% !important;
 }
 </style>

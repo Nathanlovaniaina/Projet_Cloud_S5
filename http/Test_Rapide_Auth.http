@@ -5,7 +5,7 @@
 
 @baseUrl = http://localhost:8080/api/auth
 @managerToken = 0e9d9824-696e-4535-865e-321d05cf209e
-@visiteurToken = cfdd3103-da7f-4940-8495-cde22ef5194d
+@visiteurToken = 149789f2-5d8e-4569-917a-7eed5d857b5d
 
 ### ============================================================
 ### TÂCHE 11: Inscription ✅

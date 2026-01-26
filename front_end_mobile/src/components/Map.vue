@@ -1,34 +1,77 @@
 <template>
-  <div id="map" class="map-container"></div>
+  <div ref="mapContainer" id="map" class="map-container"></div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
+import { onIonViewDidEnter } from '@ionic/vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+
+const mapContainer = ref<HTMLElement | null>(null);
+let map: L.Map | null = null;
 
 // Fix for default markers in Leaflet with bundlers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href,
+  iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href,
+  shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
 });
 
 onMounted(() => {
-  console.log('Map component mounted');
-  
-  // Initialiser la carte
-  const map = L.map('map').setView([-18.8792, 47.5079], 13);
-  
-  // Ajouter les tiles OpenStreetMap
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  if (map || !mapContainer.value) return;
+
+  // Force explicit dimensions before map init
+  mapContainer.value.style.height = '100%';
+  mapContainer.value.style.width = '100%';
+
+  map = L.map(mapContainer.value, {
+    center: [-18.8792, 47.5079],
+    zoom: 13,
+    zoomControl: true,
+    preferCanvas: true,
+    tap: true,
+    touchZoom: true,
+    inertia: true
+  });
+
+  const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
     maxZoom: 19,
+    updateWhenIdle: true,
+    updateWhenZooming: false,
+    reuseTiles: true,
+    keepBuffer: 2
   }).addTo(map);
-  
-  console.log('Map initialized');
+
+  tiles.on('loading', () => {
+    // placeholder for loader
+  });
+  tiles.on('load', () => {
+    // placeholder for hiding loader
+  });
+
+  // Force size recalculation immediately
+  setTimeout(() => {
+    if (map) map.invalidateSize();
+  }, 50);
 });
+
+onIonViewDidEnter(() => {
+  setTimeout(() => {
+    if (map) map.invalidateSize();
+  }, 100);
+});
+
+// Listen to window resize events too
+if (typeof window !== 'undefined') {
+  window.addEventListener('resize', () => {
+    if (map) {
+      setTimeout(() => map.invalidateSize(), 0);
+    }
+  });
+}
 </script>
 
 <style scoped>
@@ -43,8 +86,6 @@ onMounted(() => {
   display: block;
   height: 100%;
   width: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
 }
 </style>
