@@ -2,9 +2,14 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button @click="goBack">
+            <ion-icon slot="icon-only" :icon="arrowBackIcon"></ion-icon>
+          </ion-button>
+        </ion-buttons>
         <ion-title>Mon profil</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="onLogout">Logout</ion-button>
+          <ion-button @click="onLogout" color="danger">Logout</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -36,7 +41,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonButtons, IonList, IonItem, IonLabel, IonText } from '@ionic/vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonButtons, IonList, IonItem, IonLabel, IonText, IonIcon } from '@ionic/vue';
+import { arrowBack as arrowBackIcon } from 'ionicons/icons';
 import { logout, currentUser, loadUserFromStorage } from '@/composables/useAuth';
 
 interface User {
@@ -55,6 +61,10 @@ onMounted(() => {
   loadUserFromStorage();
   user.value = currentUser.value;
 });
+
+function goBack() {
+  router.back();
+}
 
 async function onLogout() {
   await logout();

@@ -1,0 +1,79 @@
+import { db } from '@/firebase';
+import { collection, setDoc, doc, getDocs, query, orderBy, limit } from 'firebase/firestore';
+
+export interface TypeTravail {
+  id: string;
+  libelle: string;
+}
+
+export interface NewSignalement {
+  latitude: number;
+  longitude: number;
+  description: string;
+  id_type_travail: string;
+  titre?: string;
+  surface_metre_carree: number;
+}
+
+// Récupérer tous les types de travail depuis Firestore
+export async function getTypesTravail(): Promise<TypeTravail[]> {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, 'type_travail')));
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      libelle: doc.data().libelle
+    }));
+  } catch (error) {
+    console.error('Erreur récupération types travail:', error);
+    return [];
+  }
+}
+
+// Obtenir le prochain ID pour un signalement
+async function getNextId(): Promise<number> {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, 'signalements'), orderBy('id', 'desc'), limit(1)));
+    if (querySnapshot.docs.length === 0) {
+      return 1;
+    }
+    const lastDoc = querySnapshot.docs[0];
+    return (lastDoc.data().id || 0) + 1;
+  } catch (error) {
+    console.error('Erreur récupération ID:', error);
+    return 1;
+  }
+}
+
+// Créer un signalement dans Firestore avec historique
+export async function createSignalement(data: NewSignalement) {
+  try {
+    const now = Date.now();
+    const nextId = await getNextId();
+    const signalementId = nextId.toString();
+    
+    // 1. Créer le signalement avec l'ID numérique comme ID du document
+    await setDoc(doc(db, 'signalements', signalementId), {
+      id: nextId,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      description: data.description,
+      id_type_travail: data.id_type_travail,
+      titre: data.titre || '',
+      surface_metre_carree: data.surface_metre_carree,
+      last_update: now
+    });
+    
+    // 2. Créer l'historique d'état avec statut "1" par défaut (En attente)
+    await setDoc(doc(db, 'historique_etat_signalement', `${signalementId}_history`), {
+      id_signalement: signalementId,
+      id_etat: 1, // Statut par défaut : "En attente"
+      date_changement: now,
+      last_update: now
+    });
+    
+    return signalementId;
+  } catch (error) {
+    console.error('Erreur création signalement:', error);
+    throw new Error('Erreur création signalement');
+  }
+}

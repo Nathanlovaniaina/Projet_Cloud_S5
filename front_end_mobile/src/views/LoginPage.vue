@@ -47,7 +47,7 @@ async function onSubmit() {
   try {
     const user = await login(email.value, password.value);
     if (user) {
-      router.push('/profile');
+      router.push('/hub');
     } else {
       error.value = 'Utilisateur introuvable dans Firestore';
     }
