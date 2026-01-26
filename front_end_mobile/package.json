@@ -23,8 +23,10 @@
     "@ionic/vue-router": "^8.0.0",
     "firebase": "^12.8.0",
     "ionicons": "^7.0.0",
+    "leaflet": "^1.9.4",
     "vue": "^3.3.0",
-    "vue-router": "^4.2.0"
+    "vue-router": "^4.2.0",
+    "vue3-leaflet": "^1.0.1"
   },
   "devDependencies": {
     "@capacitor/cli": "8.0.1",
