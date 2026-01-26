@@ -13,6 +13,9 @@ export interface NewSignalement {
   id_type_travail: string;
   titre?: string;
   surface_metre_carree: number;
+  url_photo?: string;
+  id_utilisateur?: string;
+  date_creation?: number;
 }
 
 // Récupérer tous les types de travail depuis Firestore
@@ -44,14 +47,31 @@ async function getNextId(): Promise<number> {
   }
 }
 
+// Obtenir le prochain ID pour historique_etat_signalement
+async function getNextHistoriqueId(): Promise<number> {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, 'historique_etat_signalement'), orderBy('id', 'desc'), limit(1)));
+    if (querySnapshot.docs.length === 0) {
+      return 1;
+    }
+    const lastDoc = querySnapshot.docs[0];
+    return (lastDoc.data().id || 0) + 1;
+  } catch (error) {
+    console.error('Erreur récupération ID historique:', error);
+    return 1;
+  }
+}
+
 // Créer un signalement dans Firestore avec historique
 export async function createSignalement(data: NewSignalement) {
   try {
     const now = Date.now();
     const nextId = await getNextId();
+    const nextHistoriqueId = await getNextHistoriqueId();
     const signalementId = nextId.toString();
+    const historiqueId = nextHistoriqueId.toString();
     
-    // 1. Créer le signalement avec l'ID numérique comme ID du document
+    // 1. Créer le signalement avec tous les champs
     await setDoc(doc(db, 'signalements', signalementId), {
       id: nextId,
       latitude: data.latitude,
@@ -60,12 +80,16 @@ export async function createSignalement(data: NewSignalement) {
       id_type_travail: data.id_type_travail,
       titre: data.titre || '',
       surface_metre_carree: data.surface_metre_carree,
+      url_photo: data.url_photo || '',
+      id_utilisateur: data.id_utilisateur || '',
+      date_creation: data.date_creation || now,
       last_update: now
     });
     
     // 2. Créer l'historique d'état avec statut "1" par défaut (En attente)
-    await setDoc(doc(db, 'historique_etat_signalement', `${signalementId}_history`), {
-      id_signalement: signalementId,
+    await setDoc(doc(db, 'historique_etat_signalement', historiqueId), {
+      id: nextHistoriqueId,
+      id_signalement: nextId,
       id_etat: 1, // Statut par défaut : "En attente"
       date_changement: now,
       last_update: now

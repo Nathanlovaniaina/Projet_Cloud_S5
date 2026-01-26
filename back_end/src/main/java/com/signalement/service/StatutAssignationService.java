@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 public class StatutAssignationService {
 
     private final StatutAssignationRepository statutAssignationRepository;
+    private final FirebaseConversionService firebaseConversionService;
     private final Firestore firestore;
 
     /**
@@ -43,7 +44,7 @@ public class StatutAssignationService {
                 Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
 
             if (firebaseLastUpdate.isAfter(lastSyncDate)) {
-                Integer id = doc.getLong("id").intValue();
+                Integer id = firebaseConversionService.getLongAsInteger(doc, "id");
                 var existing = statutAssignationRepository.findById(id);
                 
                 if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {

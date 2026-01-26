@@ -28,6 +28,7 @@ public class SessionService {
 
     private final SessionRepository sessionRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final FirebaseConversionService firebaseConversionService;
     private final Firestore firestore;
 
     @Transactional
@@ -98,7 +99,7 @@ public class SessionService {
                 Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
 
             if (firebaseLastUpdate.isAfter(lastSyncDate)) {
-                Integer id = doc.getLong("id").intValue();
+                Integer id = firebaseConversionService.getLongAsInteger(doc, "id");
                 var existing = sessionRepository.findById(id);
                 
                 if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {
@@ -106,19 +107,19 @@ public class SessionService {
                     session.setIdSession(id);
                     session.setToken(doc.getString("token"));
                     
-                    Long dateDebutMs = doc.getLong("date_debut");
+                    Long dateDebutMs = firebaseConversionService.getLongValue(doc, "date_debut");
                     if (dateDebutMs != null) {
                         session.setDateDebut(LocalDateTime.ofInstant(
                             Instant.ofEpochMilli(dateDebutMs), ZoneId.systemDefault()));
                     }
                     
-                    Long dateFinMs = doc.getLong("date_fin");
+                    Long dateFinMs = firebaseConversionService.getLongValue(doc, "date_fin");
                     if (dateFinMs != null) {
                         session.setDateFin(LocalDateTime.ofInstant(
                             Instant.ofEpochMilli(dateFinMs), ZoneId.systemDefault()));
                     }
                     
-                    Integer utilisateurId = doc.getLong("id_utilisateur").intValue();
+                    Integer utilisateurId = firebaseConversionService.getLongAsInteger(doc, "id_utilisateur");
                     Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId).orElse(null);
                     
                     if (utilisateur != null) {
