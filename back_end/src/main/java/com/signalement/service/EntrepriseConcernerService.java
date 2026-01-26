@@ -26,6 +26,7 @@ public class EntrepriseConcernerService {
     private final SignalementRepository signalementRepository;
     private final EntrepriseRepository entrepriseRepository;
     private final StatutAssignationRepository statutAssignationRepository;
+    private final FirebaseConversionService firebaseConversionService;
     private final Firestore firestore;
 
     @Transactional
@@ -43,14 +44,14 @@ public class EntrepriseConcernerService {
                 Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
 
             if (firebaseLastUpdate.isAfter(lastSyncDate)) {
-                Integer id = doc.getLong("id").intValue();
+                Integer id = firebaseConversionService.getLongAsInteger(doc, "id");
                 var existing = entrepriseConcernerRepository.findById(id);
                 
                 if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {
                     EntrepriseConcerner ec = existing.orElse(new EntrepriseConcerner());
                     ec.setIdEntrepriseConcerner(id);
                     
-                    Long dateCreationMs = doc.getLong("date_creation");
+                    Long dateCreationMs = firebaseConversionService.getLongValue(doc, "date_creation");
                     if (dateCreationMs != null) {
                         ec.setDateCreation(LocalDateTime.ofInstant(
                             Instant.ofEpochMilli(dateCreationMs), ZoneId.systemDefault()).toLocalDate());
@@ -61,25 +62,25 @@ public class EntrepriseConcernerService {
                         ec.setMontant(java.math.BigDecimal.valueOf(montant));
                     }
                     
-                    Long dateDebutMs = doc.getLong("date_debut");
+                    Long dateDebutMs = firebaseConversionService.getLongValue(doc, "date_debut");
                     if (dateDebutMs != null) {
                         ec.setDateDebut(LocalDateTime.ofInstant(
                             Instant.ofEpochMilli(dateDebutMs), ZoneId.systemDefault()).toLocalDate());
                     }
                     
-                    Long dateFinMs = doc.getLong("date_fin");
+                    Long dateFinMs = firebaseConversionService.getLongValue(doc, "date_fin");
                     if (dateFinMs != null) {
                         ec.setDateFin(LocalDateTime.ofInstant(
                             Instant.ofEpochMilli(dateFinMs), ZoneId.systemDefault()).toLocalDate());
                     }
                     
-                    Integer signalementId = doc.getLong("id_signalement").intValue();
+                    Integer signalementId = firebaseConversionService.getLongAsInteger(doc, "id_signalement");
                     Signalement signalement = signalementRepository.findById(signalementId).orElse(null);
                     
-                    Integer entrepriseId = doc.getLong("id_entreprise").intValue();
+                    Integer entrepriseId = firebaseConversionService.getLongAsInteger(doc, "id_entreprise");
                     Entreprise entreprise = entrepriseRepository.findById(entrepriseId).orElse(null);
                     
-                    Long statutId = doc.getLong("id_statut_assignation");
+                    Long statutId = firebaseConversionService.getLongValue(doc, "id_statut_assignation");
                     StatutAssignation statut = null;
                     if (statutId != null) {
                         statut = statutAssignationRepository.findById(statutId.intValue()).orElse(null);

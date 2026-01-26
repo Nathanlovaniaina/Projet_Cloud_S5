@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 public class EntrepriseService {
 
     private final EntrepriseRepository entrepriseRepository;
+    private final FirebaseConversionService firebaseConversionService;
     private final Firestore firestore;
 
     @Transactional(readOnly = true)
@@ -63,7 +64,7 @@ public class EntrepriseService {
                 Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
 
             if (firebaseLastUpdate.isAfter(lastSyncDate)) {
-                Integer id = doc.getLong("id").intValue();
+                Integer id = firebaseConversionService.getLongAsInteger(doc, "id");
                 var existing = entrepriseRepository.findById(id);
                 
                 if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {

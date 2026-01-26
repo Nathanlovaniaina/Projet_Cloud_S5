@@ -23,8 +23,7 @@ import java.util.concurrent.ExecutionException;
 public class TentativeConnexionService {
 
     private final TentativeConnexionRepository tentativeRepository;
-    private final UtilisateurRepository utilisateurRepository;
-    private final Firestore firestore;
+    private final UtilisateurRepository utilisateurRepository;    private final FirebaseConversionService firebaseConversionService;    private final Firestore firestore;
 
     @Transactional
     public int syncFromFirebase(LocalDateTime lastSyncDate) throws ExecutionException, InterruptedException {
@@ -41,14 +40,14 @@ public class TentativeConnexionService {
                 Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
 
             if (firebaseLastUpdate.isAfter(lastSyncDate)) {
-                Integer id = doc.getLong("id").intValue();
+                Integer id = firebaseConversionService.getLongAsInteger(doc, "id");
                 var existing = tentativeRepository.findById(id);
                 
                 if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {
                     TentativeConnexion tentative = existing.orElse(new TentativeConnexion());
                     tentative.setIdTentative(id);
                     
-                    Long dateTentativeMs = doc.getLong("date_tentative");
+                    Long dateTentativeMs = firebaseConversionService.getLongValue(doc, "date_tentative");
                     if (dateTentativeMs != null) {
                         tentative.setDateTentative(LocalDateTime.ofInstant(
                             Instant.ofEpochMilli(dateTentativeMs), ZoneId.systemDefault()));
@@ -59,7 +58,7 @@ public class TentativeConnexionService {
                         tentative.setSuccess(success);
                     }
                     
-                    Integer utilisateurId = doc.getLong("id_utilisateur").intValue();
+                    Integer utilisateurId = firebaseConversionService.getLongAsInteger(doc, "id_utilisateur");
                     Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId).orElse(null);
                     
                     if (utilisateur != null) {

@@ -37,6 +37,11 @@
           <ion-label position="stacked">Surface (m²)</ion-label>
           <ion-input v-model.number="form.surface_metre_carree" type="number" placeholder="0" min="0"></ion-input>
         </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">URL Photo</ion-label>
+          <ion-input v-model="form.url_photo" type="text" placeholder="https://example.com/photo.jpg"></ion-input>
+        </ion-item>
         
         <ion-button 
           type="submit" 
@@ -58,6 +63,7 @@
 import { ref, onMounted } from 'vue';
 import { createSignalement, getTypesTravail } from '@/services/signalementService';
 import type { TypeTravail } from '@/services/signalementService';
+import { currentUser, loadUserFromStorage } from '@/composables/useAuth';
 import {
   IonModal,
   IonHeader,
@@ -82,7 +88,8 @@ const form = ref({
   titre: '', 
   description: '', 
   id_type_travail: '',
-  surface_metre_carree: 0
+  surface_metre_carree: 0,
+  url_photo: ''
 });
 
 const typesTravail = ref<TypeTravail[]>([]);
@@ -90,12 +97,19 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 
 onMounted(async () => {
+  loadUserFromStorage();
   typesTravail.value = await getTypesTravail();
 });
 
 async function submit() {
   if (!props.location || !form.value.id_type_travail) {
     error.value = 'Localisation et type de travail requis';
+    return;
+  }
+  
+  // Vérifier que l'utilisateur est connecté
+  if (!currentUser.value || !currentUser.value.id) {
+    error.value = 'Vous devez être connecté pour créer un signalement';
     return;
   }
   
@@ -109,7 +123,10 @@ async function submit() {
       description: form.value.description,
       titre: form.value.titre,
       id_type_travail: form.value.id_type_travail,
-      surface_metre_carree: form.value.surface_metre_carree
+      surface_metre_carree: form.value.surface_metre_carree,
+      url_photo: form.value.url_photo,
+      id_utilisateur: currentUser.value.id,
+      date_creation: Date.now()
     });
     
     emit('created');
@@ -123,7 +140,7 @@ async function submit() {
 }
 
 function closeModal() {
-  form.value = { titre: '', description: '', id_type_travail: '', surface_metre_carree: 0 };
+  form.value = { titre: '', description: '', id_type_travail: '', surface_metre_carree: 0, url_photo: '' };
   error.value = null;
   emit('close');
 }

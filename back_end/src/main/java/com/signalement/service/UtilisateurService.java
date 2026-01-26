@@ -27,6 +27,7 @@ public class UtilisateurService {
 
     private final UtilisateurRepository utilisateurRepository;
     private final TypeUtilisateurRepository typeUtilisateurRepository;
+    private final FirebaseConversionService firebaseConversionService;
     private final Firestore firestore;
 
     @Transactional(readOnly = true)
@@ -87,7 +88,7 @@ public class UtilisateurService {
                 Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
 
             if (firebaseLastUpdate.isAfter(lastSyncDate)) {
-                Integer id = doc.getLong("id").intValue();
+                Integer id = firebaseConversionService.getLongAsInteger(doc, "id");
                 var existing = utilisateurRepository.findById(id);
                 
                 if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {
@@ -103,7 +104,7 @@ public class UtilisateurService {
                     Boolean isBlocked = doc.getBoolean("is_blocked");
                     utilisateur.setIsBlocked(isBlocked != null ? isBlocked : false);
                     
-                    Integer typeId = doc.getLong("id_type_utilisateur").intValue();
+                    Integer typeId = firebaseConversionService.getLongAsInteger(doc, "id_type_utilisateur");
                     TypeUtilisateur type = typeUtilisateurRepository.findById(typeId).orElse(null);
                     
                     if (type != null) {

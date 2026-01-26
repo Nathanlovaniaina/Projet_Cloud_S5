@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 public class TypeUtilisateurService {
 
     private final TypeUtilisateurRepository typeUtilisateurRepository;
+    private final FirebaseConversionService firebaseConversionService;
     private final Firestore firestore;
 
     /**
@@ -43,7 +44,7 @@ public class TypeUtilisateurService {
                 Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
 
             if (firebaseLastUpdate.isAfter(lastSyncDate)) {
-                Integer id = doc.getLong("id").intValue();
+                Integer id = firebaseConversionService.getLongAsInteger(doc, "id");
                 var existing = typeUtilisateurRepository.findById(id);
                 
                 if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {
