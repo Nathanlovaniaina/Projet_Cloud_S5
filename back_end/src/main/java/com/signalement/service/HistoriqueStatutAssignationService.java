@@ -25,6 +25,7 @@ public class HistoriqueStatutAssignationService {
     private final HistoriqueStatutAssignationRepository historiqueRepository;
     private final EntrepriseConcernerRepository entrepriseConcernerRepository;
     private final StatutAssignationRepository statutRepository;
+    private final FirebaseConversionService firebaseConversionService;
     private final Firestore firestore;
 
     @Transactional
@@ -42,23 +43,23 @@ public class HistoriqueStatutAssignationService {
                 Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
 
             if (firebaseLastUpdate.isAfter(lastSyncDate)) {
-                Integer id = doc.getLong("id").intValue();
+                Integer id = firebaseConversionService.getLongAsInteger(doc, "id");
                 var existing = historiqueRepository.findById(id);
                 
                 if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {
                     HistoriqueStatutAssignation historique = existing.orElse(new HistoriqueStatutAssignation());
                     historique.setIdHistorique(id);
                     
-                    Long dateChangementMs = doc.getLong("date_changement");
+                    Long dateChangementMs = firebaseConversionService.getLongValue(doc, "date_changement");
                     if (dateChangementMs != null) {
                         historique.setDateChangement(LocalDateTime.ofInstant(
                             Instant.ofEpochMilli(dateChangementMs), ZoneId.systemDefault()));
                     }
                     
-                    Integer entrepriseConcernerId = doc.getLong("id_entreprise_concerner").intValue();
+                    Integer entrepriseConcernerId = firebaseConversionService.getLongAsInteger(doc, "id_entreprise_concerner");
                     EntrepriseConcerner ec = entrepriseConcernerRepository.findById(entrepriseConcernerId).orElse(null);
                     
-                    Integer statutId = doc.getLong("id_statut").intValue();
+                    Integer statutId = firebaseConversionService.getLongAsInteger(doc, "id_statut");
                     StatutAssignation statut = statutRepository.findById(statutId).orElse(null);
                     
                     if (ec != null && statut != null) {

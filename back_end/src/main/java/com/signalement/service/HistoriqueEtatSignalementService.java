@@ -25,6 +25,7 @@ public class HistoriqueEtatSignalementService {
     private final HistoriqueEtatSignalementRepository historiqueRepository;
     private final SignalementRepository signalementRepository;
     private final EtatSignalementRepository etatRepository;
+    private final FirebaseConversionService firebaseConversionService;
     private final Firestore firestore;
 
     @Transactional
@@ -42,23 +43,23 @@ public class HistoriqueEtatSignalementService {
                 Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
 
             if (firebaseLastUpdate.isAfter(lastSyncDate)) {
-                Integer id = doc.getLong("id").intValue();
+                Integer id = firebaseConversionService.getLongAsInteger(doc, "id");
                 var existing = historiqueRepository.findById(id);
                 
                 if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {
                     HistoriqueEtatSignalement historique = existing.orElse(new HistoriqueEtatSignalement());
                     historique.setIdHistorique(id);
                     
-                    Long dateChangementMs = doc.getLong("date_changement");
+                    Long dateChangementMs = firebaseConversionService.getLongValue(doc, "date_changement");
                     if (dateChangementMs != null) {
                         historique.setDateChangement(LocalDateTime.ofInstant(
                             Instant.ofEpochMilli(dateChangementMs), ZoneId.systemDefault()));
                     }
                     
-                    Integer signalementId = doc.getLong("id_signalement").intValue();
+                    Integer signalementId = firebaseConversionService.getLongAsInteger(doc, "id_signalement");
                     Signalement signalement = signalementRepository.findById(signalementId).orElse(null);
                     
-                    Integer etatId = doc.getLong("id_etat").intValue();
+                    Integer etatId = firebaseConversionService.getLongAsInteger(doc, "id_etat");
                     EtatSignalement etat = etatRepository.findById(etatId).orElse(null);
                     
                     if (signalement != null && etat != null) {
