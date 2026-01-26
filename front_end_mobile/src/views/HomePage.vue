@@ -12,12 +12,15 @@
           <ion-button @click="toggleCreating" :color="isCreating ? 'success' : 'primary'">
             {{ isCreating ? '✓ Créer' : '+ Signalement' }}
           </ion-button>
+          <ion-button @click="toggleFilter" :color="filterMySignalements ? 'success' : 'medium'">
+            <ion-icon slot="icon-only" :icon="filterIcon"></ion-icon>
+          </ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
     <ion-content :fullscreen="true" class="map-page">
-      <Map ref="mapRef" :is-creating="isCreating" @location-selected="selectedLocation = $event" />
+      <Map ref="mapRef" :is-creating="isCreating" :filter-my-signalements="filterMySignalements" @location-selected="selectedLocation = $event" />
       <SignalementForm 
         :is-open="showForm" 
         :location="selectedLocation"
@@ -32,7 +35,7 @@
 import { ref, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonButtons, IonIcon } from '@ionic/vue';
-import { arrowBack as arrowBackIcon } from 'ionicons/icons';
+import { arrowBack as arrowBackIcon, funnel as filterIcon } from 'ionicons/icons';
 import Map from '@/components/Map.vue';
 import SignalementForm from '@/components/SignalementForm.vue';
 
@@ -43,6 +46,7 @@ const mapRef = ref<any>(null);
 const isCreating = ref(false);
 const selectedLocation = ref<{ lat: number; lng: number } | null>(null);
 const showForm = ref(false);
+const filterMySignalements = ref(false);
 
 function goBack() {
   router.back();
@@ -55,6 +59,10 @@ function toggleCreating() {
   } else {
     closeForm();
   }
+}
+
+function toggleFilter() {
+  filterMySignalements.value = !filterMySignalements.value;
 }
 
 function closeForm() {

@@ -3,11 +3,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { onIonViewDidEnter } from '@ionic/vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { getCurrentPosition } from '@/composables/useGeolocation';
+import { currentUser, loadUserFromStorage } from '@/composables/useAuth';
 import { db } from '@/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 
@@ -16,10 +17,12 @@ let map: L.Map | null = null;
 
 export interface Props {
   isCreating?: boolean;
+  filterMySignalements?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  isCreating: false
+  isCreating: false,
+  filterMySignalements: false
 });
 
 const emit = defineEmits<{
@@ -31,6 +34,7 @@ let temporaryMarker: L.Marker | null = null;
 // Cache pour les types de travail et états
 const typeTravailCache = new Map<number, string>();
 const etatSignalementCache = new Map<number, string>();
+const signalementMarkers = new Map<number, L.CircleMarker>();
 
 // Fix for default markers in Leaflet with bundlers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -115,7 +119,14 @@ async function loadSignalements() {
     
     for (const doc of querySnapshot.docs) {
       const data = doc.data();
-      const { latitude, longitude, description, titre, surface_metre_carree, id_type_travail, id } = data;
+      const { latitude, longitude, description, titre, surface_metre_carree, id_type_travail, id, id_utilisateur } = data;
+      
+      // Vérifier le filtre
+      const passFilter = props.filterMySignalements 
+        ? id_utilisateur === currentUser.value?.id 
+        : true;
+      
+      if (!passFilter) continue;
       
       // Récupérer le type de travail et l'état
       const typeTravail = await getTypeTravailLibelle(id_type_travail);
@@ -149,20 +160,35 @@ async function loadSignalements() {
         </div>
       `;
       
-      L.circleMarker([latitude, longitude], {
+      const marker = L.circleMarker([latitude, longitude], {
         radius: 6,
         color: '#2196F3',
         weight: 2,
         fillOpacity: 0.7
       }).bindPopup(popupContent).addTo(map!);
+      
+      signalementMarkers.set(id, marker);
     }
   } catch (error) {
     console.error('Erreur chargement signalements:', error);
   }
 }
 
+// Effacer les marqueurs des signalements
+function clearSignalements() {
+  signalementMarkers.forEach((marker) => {
+    if (map) {
+      map.removeLayer(marker);
+    }
+  });
+  signalementMarkers.clear();
+}
+
 onMounted(async () => {
   if (map || !mapContainer.value) return;
+
+  // Charger l'utilisateur
+  loadUserFromStorage();
 
   // Force explicit dimensions before map init
   mapContainer.value.style.height = '100%';
@@ -251,6 +277,12 @@ if (typeof window !== 'undefined') {
     }
   });
 }
+
+// Watcher pour réagir au changement du filtre
+watch(() => props.filterMySignalements, async () => {
+  clearSignalements();
+  await loadSignalements();
+});
 
 // Exposer les fonctions
 defineExpose({ 
