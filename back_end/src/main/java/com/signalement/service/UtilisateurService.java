@@ -97,6 +97,8 @@ public class UtilisateurService {
                     utilisateur.setPrenom(doc.getString("prenom"));
                     utilisateur.setEmail(doc.getString("email"));
                     utilisateur.setMotDePasse(doc.getString("mot_de_passe_hash"));
+                    // Synchronisation du firebase UID
+                    utilisateur.setFirebaseUid(doc.getString("firebase_uid"));
                     
                     Boolean isBlocked = doc.getBoolean("is_blocked");
                     utilisateur.setIsBlocked(isBlocked != null ? isBlocked : false);
@@ -125,6 +127,10 @@ public class UtilisateurService {
             data.put("prenom", utilisateur.getPrenom());
             data.put("email", utilisateur.getEmail());
             data.put("mot_de_passe_hash", utilisateur.getMotDePasse());
+            // Inclure le firebase UID si présent
+            if (utilisateur.getFirebaseUid() != null) {
+                data.put("firebase_uid", utilisateur.getFirebaseUid());
+            }
             data.put("is_blocked", utilisateur.getIsBlocked());
             data.put("last_update", utilisateur.getLastUpdate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
             data.put("id_type_utilisateur", utilisateur.getTypeUtilisateur().getIdTypeUtilisateur());
