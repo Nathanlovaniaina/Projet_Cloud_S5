@@ -8,12 +8,17 @@ import com.signalement.dto.UpdateAssignmentStatusRequest;
 import com.signalement.dto.UpdateSignalementRequest;
 import com.signalement.dto.UpdateSignalementStatusRequest;
 import com.signalement.entity.EntrepriseConcerner;
+import com.signalement.entity.EtatSignalement;
 import com.signalement.entity.Signalement;
+import com.signalement.entity.TypeTravail;
 import com.signalement.entity.Utilisateur;
+import com.signalement.repository.EtatSignalementRepository;
+import com.signalement.repository.TypeTravailRepository;
 import com.signalement.service.SessionService;
 import com.signalement.service.SignalementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import com.signalement.service.StatisticsService;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -36,6 +41,9 @@ public class SignalementController {
 
     private final SessionService sessionService;
     private final SignalementService signalementService;
+    private final StatisticsService statisticsService;
+    private final EtatSignalementRepository etatSignalementRepository;
+    private final TypeTravailRepository typeTravailRepository;
 
     @Operation(
         summary = "Créer un signalement",
@@ -122,6 +130,111 @@ public class SignalementController {
         List<SignalementDTO> signalements = signalementService.getAllSignalementsDtoWithFilters(etat, typeTravail);
         return ResponseEntity.ok(
             new com.signalement.dto.ApiResponse(true, "Liste des signalements récupérée avec succès", signalements));
+    }
+
+    @Operation(
+        summary = "Récupérer les signalements pour la page visiteur (Tâches 47 & 48)",
+        description = "Retourne une liste paginée de signalements avec leurs détails pour l'affichage sur carte et tableau récapitulatif. Support des filtres et pagination."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Liste paginée retournée avec succès",
+            content = @Content(mediaType = "application/json"))
+    })
+    @GetMapping("/signalements/visiteur")
+    public ResponseEntity<java.util.Map<String, Object>> getSignalementsForVisitor(
+            @Parameter(description = "Numéro de page (commence à 1)")
+            @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "Nombre d'éléments par page")
+            @RequestParam(defaultValue = "20") int limit,
+            @Parameter(description = "ID de l'état pour filtrer")
+            @RequestParam(required = false) Integer status,
+            @Parameter(description = "ID du type de travail pour filtrer")
+            @RequestParam(required = false) Integer type) {
+        
+        // Validation
+        if (page < 1) page = 1;
+        if (limit < 1 || limit > 100) limit = 20;
+        
+        // Récupérer tous les signalements avec filtres
+        List<SignalementDTO> allSignalements = signalementService.getAllSignalementsDtoWithFilters(status, type);
+        
+        // Calculer pagination
+        int total = allSignalements.size();
+        int startIndex = (page - 1) * limit;
+        int endIndex = Math.min(startIndex + limit, total);
+        
+        List<SignalementDTO> paginatedItems = startIndex < total 
+            ? allSignalements.subList(startIndex, endIndex)
+            : java.util.Collections.emptyList();
+        
+        // Créer réponse avec métadonnées de pagination
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("items", paginatedItems);
+        response.put("total", total);
+        response.put("page", page);
+        response.put("limit", limit);
+        response.put("totalPages", (int) Math.ceil((double) total / limit));
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Récupérer les états de signalement",
+        description = "Retourne la liste de tous les états possibles pour les signalements."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Liste des états retournée avec succès")
+    })
+    @GetMapping("/signalements/etats")
+    public ResponseEntity<List<EtatSignalement>> getEtats() {
+        return ResponseEntity.ok(etatSignalementRepository.findAll());
+    }
+
+    @Operation(
+        summary = "Récupérer les types de travail",
+        description = "Retourne la liste de tous les types de travail possibles pour les signalements."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Liste des types retournée avec succès")
+    })
+    @GetMapping("/signalements/types")
+    public ResponseEntity<List<TypeTravail>> getTypes() {
+        return ResponseEntity.ok(typeTravailRepository.findAll());
+    }
+    
+    @Operation(
+        summary = "Récupérer un résumé public des statistiques des signalements",
+        description = "Retourne des métriques publiques (total, en attente, en cours, terminé) pour l'affichage visiteur."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Résumé retourné avec succès")
+    })
+    @GetMapping("/signalements/summary-public")
+    public ResponseEntity<com.signalement.dto.StatisticsDTO> getPublicSummary() {
+        com.signalement.dto.StatisticsDTO stats = statisticsService.getSummaryStatistics();
+        return ResponseEntity.ok(stats);
+    }
+
+    @Operation(
+        summary = "Récupérer les stats par type (public)",
+        description = "Retourne la répartition des signalements par type pour les visiteurs."
+    )
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Liste retournée")})
+    @GetMapping("/signalements/stats-by-type-public")
+    public ResponseEntity<List<com.signalement.dto.StatisticsDTO.TypeTravailStatDTO>> getPublicStatsByType() {
+        List<com.signalement.dto.StatisticsDTO.TypeTravailStatDTO> stats = statisticsService.getStatisticsByWorkType();
+        return ResponseEntity.ok(stats);
+    }
+
+    @Operation(
+        summary = "Récupérer les stats par état (public)",
+        description = "Retourne la répartition des signalements par état pour les visiteurs."
+    )
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Liste retournée")})
+    @GetMapping("/signalements/stats-by-state-public")
+    public ResponseEntity<List<com.signalement.dto.StatisticsDTO.EtatStatDTO>> getPublicStatsByState() {
+        List<com.signalement.dto.StatisticsDTO.EtatStatDTO> stats = statisticsService.getStatisticsByState();
+        return ResponseEntity.ok(stats);
     }
 
     @Operation(
