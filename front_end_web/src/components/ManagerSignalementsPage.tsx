@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/manager.css'
+import SyncButton from './SyncButton'
 
 interface Signalement {
   idSignalement: number
@@ -160,6 +161,9 @@ export default function ManagerSignalementsPage() {
         <p className="manager-subtitle">
           {total} signalement{total !== 1 ? 's' : ''} au total
         </p>
+        <div style={{ marginLeft: 'auto' }}>
+          <SyncButton />
+        </div>
       </div>
 
       <div className="manager-filters">
