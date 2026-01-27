@@ -99,6 +99,29 @@ public class AuthenticationController {
     }
 
     /**
+     * POST /api/auth/firebase-login
+     * Échange un idToken Firebase (côté client) contre une session backend après vérification.
+     */
+    @Operation(
+        summary = "Connexion via Firebase idToken",
+        description = "Vérifie l'idToken Firebase côté serveur, associe/cherche l'utilisateur par firebase_uid ou email, et crée une session backend."
+    )
+    @PostMapping("/firebase-login")
+    public ResponseEntity<AuthenticationResponse> firebaseLogin(@RequestBody java.util.Map<String, String> body) {
+        String idToken = body.get("idToken");
+        if (idToken == null || idToken.isEmpty()) {
+            return ResponseEntity.badRequest().body(new AuthenticationResponse("idToken manquant"));
+        }
+
+        AuthenticationResponse response = authenticationService.authenticateWithFirebase(idToken);
+        if (response.getToken() != null) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+    }
+
+    /**
      * Tâche 14: API REST - Modification des infos utilisateurs
      * PUT /api/auth/utilisateur/{id}
      */

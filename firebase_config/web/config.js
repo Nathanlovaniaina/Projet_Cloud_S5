@@ -4,7 +4,7 @@ import { initializeApp } from "firebase/app";
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyB-bnLys5qhH2dgrLJw6wkpQ2uetHni1Iw",
   authDomain: "road-report-auth-projets5.firebaseapp.com",
   projectId: "road-report-auth-projets5",
@@ -13,5 +13,8 @@ const firebaseConfig = {
   appId: "1:301784125105:web:d0e2da62f2353da9f11c90"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase and export the app instance for frontend import
+export const app = initializeApp(firebaseConfig);
+
+// Default export convenience
+export default { firebaseConfig, app };

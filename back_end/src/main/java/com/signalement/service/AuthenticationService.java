@@ -143,6 +143,72 @@ public class AuthenticationService {
     }
 
     /**
+     * Authentifier via Firebase idToken : vérifie le token, retrouve l'utilisateur via firebase_uid
+     * puis crée une session backend (ou associe le firebase_uid si l'email existe en base).
+     */
+    @Transactional
+    public AuthenticationResponse authenticateWithFirebase(String idToken) {
+        try {
+            // Vérifier et décoder l'idToken avec Firebase Admin
+            com.google.firebase.auth.FirebaseToken decoded = com.google.firebase.auth.FirebaseAuth.getInstance().verifyIdToken(idToken);
+            String firebaseUid = decoded.getUid();
+            String email = decoded.getEmail();
+
+            // Chercher par firebaseUid
+            Utilisateur utilisateur = utilisateurRepository.findByFirebaseUid(firebaseUid);
+            if (utilisateur != null) {
+                if (Boolean.TRUE.equals(utilisateur.getIsBlocked())) {
+                    return new AuthenticationResponse("Votre compte est bloqué. Veuillez contacter un administrateur.");
+                }
+
+                // Enregistrer une tentative réussie (optionnel)
+                enregistrerTentativeConnexion(utilisateur, true);
+
+                // Créer une session et renvoyer la réponse
+                Session session = sessionService.createSession(utilisateur, SESSION_DURATION_HOURS);
+                AuthenticationResponse response = new AuthenticationResponse();
+                response.setToken(session.getToken());
+                response.setIdUtilisateur(utilisateur.getIdUtilisateur());
+                response.setNom(utilisateur.getNom());
+                response.setPrenom(utilisateur.getPrenom());
+                response.setEmail(utilisateur.getEmail());
+                response.setTypeUtilisateur(utilisateur.getTypeUtilisateur().getLibelle());
+                response.setMessage("Authentification réussie (Firebase)");
+                return response;
+            }
+
+            // Si non trouvé par firebaseUid, tenter de trouver par email et lier
+            Optional<Utilisateur> byEmail = utilisateurRepository.findByEmail(email);
+            if (byEmail.isPresent()) {
+                Utilisateur exist = byEmail.get();
+                // Vérifier qu'il n'existe pas déjà un autre compte avec ce firebaseUid
+                if (utilisateurRepository.existsByFirebaseUid(firebaseUid)) {
+                    return new AuthenticationResponse("Firebase UID déjà associé à un compte");
+                }
+                exist.setFirebaseUid(firebaseUid);
+                utilisateurRepository.save(exist);
+
+                Session session = sessionService.createSession(exist, SESSION_DURATION_HOURS);
+                AuthenticationResponse response = new AuthenticationResponse();
+                response.setToken(session.getToken());
+                response.setIdUtilisateur(exist.getIdUtilisateur());
+                response.setNom(exist.getNom());
+                response.setPrenom(exist.getPrenom());
+                response.setEmail(exist.getEmail());
+                response.setTypeUtilisateur(exist.getTypeUtilisateur().getLibelle());
+                response.setMessage("Authentification réussie (Firebase - lien par email)");
+                return response;
+            }
+
+            return new AuthenticationResponse("Utilisateur non trouvé. Veuillez créer ou lier votre compte.");
+        } catch (com.google.firebase.auth.FirebaseAuthException e) {
+            return new AuthenticationResponse("Erreur de vérification Firebase: " + e.getMessage());
+        } catch (Exception e) {
+            return new AuthenticationResponse("Erreur lors de l'authentification Firebase: " + e.getMessage());
+        }
+    }
+
+    /**
      * Tâche 14: Modification des infos utilisateurs
      */
     @Transactional
