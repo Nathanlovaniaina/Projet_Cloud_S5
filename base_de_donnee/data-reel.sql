@@ -42,7 +42,7 @@ ON CONFLICT (libelle) DO NOTHING;
 -- Managers
 INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, firebase_uid, is_blocked, last_update, Id_type_utilisateur)
 VALUES 
-    ('Rakoto', 'Jean', 'jean.rakoto@signalement.mg', 'manager123', 'YHNsPqAcw7fUE8Reb7HOFMHYoQm2', false, NOW(),
+    ('Rakoto', 'Jean', 'admin@gmail.com', 'manager123', 'PCBxOaX1AsWCgexzdrkidttkN463', false, NOW(),
      (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Manager'));
 
 -- Visiteurs (utilisateurs normaux)
