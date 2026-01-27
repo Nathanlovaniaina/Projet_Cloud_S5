@@ -3,6 +3,9 @@ package com.signalement.controller;
 import com.signalement.dto.*;
 import com.signalement.entity.Utilisateur;
 import com.signalement.service.AuthenticationService;
+import com.signalement.service.SessionService;
+import com.signalement.repository.TypeUtilisateurRepository;
+import com.signalement.entity.TypeUtilisateur;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,6 +28,8 @@ import java.util.List;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
+    private final SessionService sessionService;
+    private final TypeUtilisateurRepository typeUtilisateurRepository;
 
     /**
      * Tâche 11: API REST - Inscription (email/pwd)
@@ -48,6 +53,42 @@ public class AuthenticationController {
         return ResponseEntity
                 .status(response.isSuccess() ? HttpStatus.CREATED : HttpStatus.BAD_REQUEST)
                 .body(response);
+    }
+
+    /**
+     * GET /api/auth/me
+     * Retourne l'utilisateur connecté via le token de session (Bearer <token>)
+     */
+    @Operation(
+        summary = "Récupérer l'utilisateur courant",
+        description = "Renvoie les informations de l'utilisateur lié au token de session fourni dans l'en-tête Authorization"
+    )
+    @GetMapping("/me")
+    public ResponseEntity<java.util.Map<String, Object>> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        try {
+            if (authorization == null || !authorization.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(java.util.Map.of("error", "Missing or invalid Authorization header"));
+            }
+
+            String token = authorization.substring("Bearer ".length());
+            java.util.Optional<com.signalement.entity.Utilisateur> opt = sessionService.getUtilisateurByToken(token);
+            if (opt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(java.util.Map.of("error", "Invalid or expired token"));
+            }
+
+            com.signalement.entity.Utilisateur u = opt.get();
+            java.util.Map<String, Object> user = new java.util.HashMap<>();
+            user.put("idUtilisateur", u.getIdUtilisateur());
+            user.put("nom", u.getNom());
+            user.put("prenom", u.getPrenom());
+            user.put("email", u.getEmail());
+            user.put("isBlocked", u.getIsBlocked());
+            user.put("typeUtilisateur", u.getTypeUtilisateur() != null ? u.getTypeUtilisateur().getLibelle() : null);
+
+            return ResponseEntity.ok(java.util.Map.of("user", user));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(java.util.Map.of("error", "Erreur interne"));
+        }
     }
 
     /**
@@ -119,6 +160,54 @@ public class AuthenticationController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
+    }
+
+    /**
+     * POST /api/auth/register
+     * Enregistrement d'un utilisateur créé côté Firebase (client envoie idToken + autres champs).
+     * Le serveur vérifie l'idToken, récupère le firebaseUid et insère l'utilisateur en base avec ce firebaseUid.
+     */
+    @Operation(
+        summary = "Inscription via Firebase",
+        description = "Vérifie l'idToken Firebase et crée l'utilisateur en base en renseignant le firebase_uid"
+    )
+    @PostMapping("/register")
+    public ResponseEntity<com.signalement.dto.ApiResponse> registerViaFirebase(@RequestBody java.util.Map<String, Object> body) {
+        try {
+            String idToken = (String) body.get("idToken");
+            if (idToken == null || idToken.isEmpty()) {
+                return ResponseEntity.badRequest().body(new com.signalement.dto.ApiResponse(false, "idToken manquant"));
+            }
+
+            com.signalement.dto.ApiResponse response = authenticationService.inscriptionWithFirebase(idToken, body);
+            return ResponseEntity
+                    .status(response.isSuccess() ? HttpStatus.CREATED : HttpStatus.BAD_REQUEST)
+                    .body(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new com.signalement.dto.ApiResponse(false, "Erreur serveur: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/auth/types
+     * Retourne la liste des types d'utilisateur (id + libelle)
+     */
+    @Operation(
+        summary = "Liste des types d'utilisateur",
+        description = "Retourne les types d'utilisateur disponibles (id et libelle)"
+    )
+    @GetMapping("/types")
+    public ResponseEntity<java.util.List<java.util.Map<String, Object>>> getTypes() {
+        java.util.List<TypeUtilisateur> types = typeUtilisateurRepository.findAll();
+        java.util.List<java.util.Map<String, Object>> out = new java.util.ArrayList<>();
+        for (TypeUtilisateur t : types) {
+            java.util.Map<String, Object> m = new java.util.HashMap<>();
+            m.put("id", t.getIdTypeUtilisateur());
+            m.put("libelle", t.getLibelle());
+            out.add(m);
+        }
+        return ResponseEntity.ok(out);
     }
 
     /**
