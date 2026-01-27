@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { login } from '../services/authService'
-import '../styles/login.css'
+import '../styles/auth.css'
 
 export default function LoginForm() {
   const isOnline = useConnectivity()

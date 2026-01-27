@@ -15,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
+import java.util.UUID;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseToken;
 
 @Service
 @RequiredArgsConstructor
@@ -66,6 +70,70 @@ public class AuthenticationService {
             return new ApiResponse(true, "Inscription réussie", savedUser.getIdUtilisateur());
         } catch (Exception e) {
             return new ApiResponse(false, "Erreur lors de l'inscription: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Inscription via Firebase: vérifie l'idToken, extrait le firebaseUid et crée l'utilisateur en base.
+     * Le client envoie un body contenant au moins: idToken, nom, prenom, typeUtilisateur (libelle optionnel), telephone optionnel.
+     */
+    @Transactional
+    public ApiResponse inscriptionWithFirebase(String idToken, Map<String, Object> body) {
+        try {
+            FirebaseToken decoded = FirebaseAuth.getInstance().verifyIdToken(idToken);
+            String firebaseUid = decoded.getUid();
+            String email = decoded.getEmail();
+
+            // Vérifications basiques
+            if (utilisateurRepository.existsByFirebaseUid(firebaseUid)) {
+                return new ApiResponse(false, "Firebase UID déjà associé à un compte");
+            }
+            if (email != null && utilisateurRepository.existsByEmail(email)) {
+                return new ApiResponse(false, "Un utilisateur avec cet email existe déjà");
+            }
+
+            String nom = (String) body.getOrDefault("nom", "");
+            String prenom = (String) body.getOrDefault("prenom", "");
+            String telephone = (String) body.getOrDefault("telephone", null);
+            String typeLibelle = (String) body.getOrDefault("typeUtilisateur", "CITOYEN");
+
+            // Trouver le type utilisateur par libelle, ou fallback à l'ID 1
+            TypeUtilisateur typeUtilisateur = typeUtilisateurRepository.findByLibelle(typeLibelle)
+                    .orElseGet(() -> typeUtilisateurRepository.findById(1).orElse(null));
+            if (typeUtilisateur == null) {
+                return new ApiResponse(false, "Type d'utilisateur invalide");
+            }
+
+            // Créer utilisateur en base. Utiliser le mot de passe fourni si présent, sinon fallback à un placeholder
+            Utilisateur utilisateur = new Utilisateur();
+            utilisateur.setNom(nom);
+            utilisateur.setPrenom(prenom);
+            utilisateur.setEmail(email);
+            // Use provided motDePasse from client when available (field: "motDePasse"); otherwise generate placeholder
+            String providedPassword = null;
+            if (body != null && body.containsKey("motDePasse")) {
+                Object mp = body.get("motDePasse");
+                if (mp instanceof String && !((String) mp).trim().isEmpty()) {
+                    providedPassword = (String) mp;
+                }
+            }
+            if (providedPassword != null) {
+                utilisateur.setMotDePasse(providedPassword);
+            } else {
+                // Placeholder password since column non-nullable
+                utilisateur.setMotDePasse(UUID.randomUUID().toString().substring(0, 12));
+            }
+            utilisateur.setFirebaseUid(firebaseUid);
+            utilisateur.setTypeUtilisateur(typeUtilisateur);
+            utilisateur.setIsBlocked(false);
+
+            Utilisateur saved = utilisateurRepository.save(utilisateur);
+            return new ApiResponse(true, "Inscription réussie (Firebase)", saved.getIdUtilisateur());
+
+        } catch (com.google.firebase.auth.FirebaseAuthException e) {
+            return new ApiResponse(false, "Erreur de vérification Firebase: " + e.getMessage());
+        } catch (Exception e) {
+            return new ApiResponse(false, "Erreur lors de l'inscription Firebase: " + e.getMessage());
         }
     }
 
