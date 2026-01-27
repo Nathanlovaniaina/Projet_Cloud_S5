@@ -238,6 +238,26 @@ public class SignalementController {
     }
 
     @Operation(
+        summary = "Récupérer les détails d'un signalement (public)",
+        description = "Retourne les informations détaillées d'un signalement, son historique d'états et ses assignations"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Détails retournés avec succès"),
+        @ApiResponse(responseCode = "404", description = "Signalement non trouvé")
+    })
+    @GetMapping("/signalements/{id}/details")
+    public ResponseEntity<com.signalement.dto.ApiResponse> getSignalementDetails(
+            @PathVariable Integer id) {
+        try {
+            com.signalement.dto.SignalementDetailsDTO details = signalementService.getSignalementDetails(id);
+            return ResponseEntity.ok(new com.signalement.dto.ApiResponse(true, "Détails récupérés", details));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    @Operation(
         summary = "Récupérer mes signalements",
         description = "Retourne la liste de tous les signalements créés par l'utilisateur authentifié. Authentification requise."
     )
