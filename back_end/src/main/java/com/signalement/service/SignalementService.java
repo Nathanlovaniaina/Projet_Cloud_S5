@@ -24,6 +24,8 @@ import com.signalement.repository.HistoriqueStatutAssignationRepository;
 import com.signalement.repository.SignalementRepository;
 import com.signalement.repository.StatutAssignationRepository;
 import com.signalement.repository.TypeTravailRepository;
+import com.signalement.repository.UtilisateurRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -56,6 +58,8 @@ public class SignalementService {
     private final EntrepriseRepository entrepriseRepository;
     private final EntrepriseConcernerRepository entrepriseConcernerRepository;
     private final StatutAssignationRepository statutAssignationRepository;
+    private final FirebaseConversionService firebaseConversionService;
+    private final UtilisateurRepository utilisateurRepository;
     private final HistoriqueStatutAssignationRepository historiqueStatutAssignationRepository;
     private final Firestore firestore;
     private static final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
@@ -588,7 +592,7 @@ public class SignalementService {
                 Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
 
             if (firebaseLastUpdate.isAfter(lastSyncDate)) {
-                Integer id = doc.getLong("id").intValue();
+                Integer id = firebaseConversionService.getLongAsInteger(doc, "id");
                 var existing = signalementRepository.findById(id);
                 
                 if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {
@@ -596,6 +600,7 @@ public class SignalementService {
                     signalement.setIdSignalement(id);
                     signalement.setTitre(doc.getString("titre"));
                     signalement.setDescription(doc.getString("description"));
+                    signalement.setUrlPhoto(doc.getString("url_photo"));
                     
                     Double latitude = doc.getDouble("latitude");
                     Double longitude = doc.getDouble("longitude");
@@ -611,11 +616,30 @@ public class SignalementService {
                         signalement.setSurfaceMetreCarree(java.math.BigDecimal.valueOf(surface));
                     }
                     
-                    Integer typeId = doc.getLong("id_type_travail").intValue();
-                    TypeTravail type = typeTravailRepository.findById(typeId).orElse(null);
+                    // Récupérer la date de création depuis Firebase (en millisecondes)
+                    Long dateCreationMs = firebaseConversionService.getLongValue(doc, "date_creation");
+                    if (dateCreationMs != null && signalement.getDateCreation() == null) {
+                        signalement.setDateCreation(LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(dateCreationMs), ZoneId.systemDefault()));
+                    }
+                    
+                    Integer typeId = firebaseConversionService.getLongAsInteger(doc, "id_type_travail");
+                    TypeTravail type = typeId != null ? typeTravailRepository.findById(typeId).orElse(null) : null;
+                    
+                    // Récupérer l'utilisateur depuis Firebase
+                    Integer userId = firebaseConversionService.getLongAsInteger(doc, "id_utilisateur");
+                    Utilisateur utilisateur = userId != null ? null : null; // À adapter selon votre repository d'utilisateurs
                     
                     if (type != null) {
                         signalement.setTypeTravail(type);
+                        if (userId != null) {
+                            // Trouver l'utilisateur dans la base de données
+                            utilisateur = utilisateurRepository.findById(userId).orElse(null);
+                            if (utilisateur != null) {
+                                signalement.setUtilisateur(utilisateur);
+                            }
+                        }
+                        signalement.setLastUpdate(firebaseLastUpdate);
                         signalementRepository.save(signalement);
                         synced++;
                     }
@@ -633,6 +657,7 @@ public class SignalementService {
             data.put("id", signalement.getIdSignalement());
             data.put("titre", signalement.getTitre());
             data.put("description", signalement.getDescription());
+            data.put("url_photo", signalement.getUrlPhoto());
             
             if (signalement.getLatitude() != null) {
                 data.put("latitude", signalement.getLatitude().doubleValue());
@@ -646,9 +671,18 @@ public class SignalementService {
                 data.put("surface_metre_carree", signalement.getSurfaceMetreCarree().doubleValue());
             }
             
+            if (signalement.getDateCreation() != null) {
+                data.put("date_creation", signalement.getDateCreation()
+                    .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+            }
+            
             data.put("last_update", signalement.getLastUpdate()
                 .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
             data.put("id_type_travail", signalement.getTypeTravail().getIdTypeTravail());
+            
+            if (signalement.getUtilisateur() != null) {
+                data.put("id_utilisateur", signalement.getUtilisateur().getIdUtilisateur());
+            }
             
             firestore.collection("signalements")
                 .document(String.valueOf(signalement.getIdSignalement()))
