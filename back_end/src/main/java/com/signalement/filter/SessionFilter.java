@@ -48,6 +48,22 @@ public class SessionFilter extends OncePerRequestFilter {
             return;
         }
 
+        // GET /api/signalements/visiteur should be public for the visitor page
+        if ("GET".equalsIgnoreCase(method) && path.startsWith("/api/signalements/visiteur")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        // GET /api/signalements/etats, /types and public stats endpoints should be public
+        if ("GET".equalsIgnoreCase(method) && (
+            path.startsWith("/api/signalements/etats") 
+            || path.startsWith("/api/signalements/types")
+            || path.startsWith("/api/signalements/summary-public")
+            || path.startsWith("/api/signalements/stats-by-type-public")
+            || path.startsWith("/api/signalements/stats-by-state-public")
+        )) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         // GET /api/signalements/{id}/assignations is public (no auth required)
         if ("GET".equalsIgnoreCase(method) && path.contains("/assignations")) {
             filterChain.doFilter(request, response);
