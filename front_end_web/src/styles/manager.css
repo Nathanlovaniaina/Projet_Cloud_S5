@@ -1,0 +1,616 @@
+/* Manager Interface Styles */
+.manager-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  overflow-y: auto;
+}
+
+.manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.manager-header h1 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 28px;
+  flex: 1 1 auto;
+}
+
+.manager-subtitle {
+  color: #7f8c8d;
+  font-size: 14px;
+  margin: 5px 0 0 0;
+}
+
+.btn-back {
+  background-color: #95a5a6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.btn-back:hover {
+  background-color: #7f8c8d;
+}
+
+/* Filters */
+.manager-filters {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 200px;
+  flex: 1 1 200px;
+}
+
+.filter-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.manager-filters select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+  color: #2c3e50;
+  cursor: pointer;
+}
+
+.manager-filters select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Table */
+.manager-table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.manager-table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.manager-table thead {
+  background-color: #34495e;
+  color: white;
+}
+
+.manager-table th {
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.manager-table tbody tr {
+  border-bottom: 1px solid #ecf0f1;
+  transition: background-color 0.2s;
+}
+
+.manager-table tbody tr:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.manager-table td {
+  padding: 12px 15px;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-1 {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.badge-2 {
+  background-color: #f39c12;
+  color: white;
+}
+
+.badge-3 {
+  background-color: #3498db;
+  color: white;
+}
+
+.badge-4 {
+  background-color: #27ae60;
+  color: white;
+}
+
+.badge-5 {
+  background-color: #9b59b6;
+  color: white;
+}
+
+.badge-assign-1 {
+  background-color: #95a5a6;
+  color: white;
+}
+
+.badge-assign-2 {
+  background-color: #27ae60;
+  color: white;
+}
+
+.badge-assign-3 {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.badge-assign-4 {
+  background-color: #3498db;
+  color: white;
+}
+
+.badge-assign-5 {
+  background-color: #2ecc71;
+  color: white;
+}
+
+/* Pagination */
+.manager-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pagination-info {
+  color: #2c3e50;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pagination-buttons button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #2c3e50;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.pagination-buttons button:hover:not(:disabled) {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.pagination-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f5f7fa;
+}
+
+/* Action Buttons */
+.btn-action {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.btn-action:hover {
+  background-color: #2980b9;
+}
+
+.btn-delete {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.3s;
+}
+
+.btn-delete:hover {
+  background-color: #c0392b;
+}
+
+.btn-small {
+  background-color: #95a5a6;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s;
+  margin-top: 8px;
+}
+
+.btn-small:hover {
+  background-color: #7f8c8d;
+}
+
+/* Detail View */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+}
+
+.detail-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.detail-card h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 10px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #ecf0f1;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.detail-row span:first-child {
+  font-weight: 600;
+  color: #7f8c8d;
+  min-width: 120px;
+}
+
+.detail-row span:last-child {
+  color: #2c3e50;
+  text-align: right;
+  flex: 1;
+}
+
+/* Assignations */
+.assignations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.assignation-item {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #3498db;
+}
+
+.assign-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.assign-header strong {
+  color: #2c3e50;
+  font-size: 15px;
+}
+
+.assign-details {
+  font-size: 13px;
+  color: #555;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.assign-details div {
+  color: #555;
+}
+
+/* History */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.history-item strong {
+  color: #2c3e50;
+}
+
+.history-date {
+  font-size: 12px;
+  color: #7f8c8d;
+  white-space: nowrap;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.btn-option {
+  padding: 12px 20px;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #2c3e50;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+  text-align: left;
+}
+
+.btn-option:hover {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+/* Modal form inputs */
+.modal-content label {
+  display: block;
+  margin-bottom: 6px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.modal-content input[type="text"],
+.modal-content input[type="date"],
+.modal-content input[type="number"],
+.modal-content select {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid #dfe6e9;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.modal-content input::placeholder {
+  color: #95a5a6;
+}
+
+.modal-content .btn-action {
+  min-width: 120px;
+}
+
+.modal-content .btn-cancel {
+  min-width: 120px;
+}
+
+.btn-cancel {
+  background-color: #95a5a6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  width: 100%;
+}
+
+.btn-cancel:hover {
+  background-color: #7f8c8d;
+}
+
+/* Loading & Error States */
+.manager-loading,
+.manager-error {
+  text-align: center;
+  padding: 60px 20px;
+  color: #7f8c8d;
+  font-size: 18px;
+}
+
+.manager-error {
+  color: #e74c3c;
+}
+
+.manager-error button {
+  margin-top: 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.manager-error button:hover {
+  background-color: #2980b9;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+
+  .manager-table {
+    font-size: 12px;
+  }
+
+  .manager-table th,
+  .manager-table td {
+    padding: 8px 10px;
+  }
+  
+  .manager-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .manager-header h2 {
+    font-size: 20px;
+  }
+  
+  .modal-content {
+    width: 95%;
+    padding: 20px;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .detail-row span:last-child {
+    text-align: left;
+  }
+  
+  .assign-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .pagination-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .manager-container {
+    padding: 10px;
+  }
+  
+  .btn-action,
+  .btn-delete,
+  .btn-small {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  
+  .badge {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+}

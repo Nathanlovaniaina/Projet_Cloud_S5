@@ -112,7 +112,24 @@ export async function login(email: string, password: string, online: boolean) {
     // persist token/user locally
     try {
       if (res.data?.token) localStorage.setItem('token', res.data.token)
-      if (res.data?.user) localStorage.setItem('user', JSON.stringify(res.data.user))
+
+      // Backend may return either a wrapped `user` object (res.data.user)
+      // or flat fields (res.data.idUtilisateur, res.data.nom, res.data.prenom, res.data.email, res.data.typeUtilisateur).
+      let userObj = null
+      if (res.data?.user) {
+        userObj = res.data.user
+      } else if (res.data?.idUtilisateur) {
+        userObj = {
+          idUtilisateur: res.data.idUtilisateur,
+          nom: res.data.nom,
+          prenom: res.data.prenom,
+          email: res.data.email,
+          // keep typeUtilisateur as-is (could be a string libelle or an object).
+          typeUtilisateur: res.data.typeUtilisateur || null
+        }
+      }
+
+      if (userObj) localStorage.setItem('user', JSON.stringify(userObj))
       window.dispatchEvent(new Event('authchange'))
     } catch (e) {
       console.warn('Unable to persist auth data locally', e)
