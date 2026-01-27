@@ -2,9 +2,27 @@ import { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
-export default function MapLibreMap() {
+interface Signalement {
+  idSignalement: number
+  titre?: string
+  description?: string
+  latitude: number
+  longitude: number
+  dateCreation?: string
+  etatLibelle?: string
+  typeTravauxLibelle?: string
+}
+
+interface Props {
+  signalements?: Signalement[]
+  selectedId?: number | null
+  onMarkerClick?: (id: number) => void
+}
+
+export default function MapLibreMap({ signalements = [], selectedId = null, onMarkerClick }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
+  const markersRef = useRef<maplibregl.Marker[]>([])
   const [status, setStatus] = useState<'loading' | 'local' | 'fallback'>('loading')
 
   const CENTER: [number, number] = [47.5079, -18.8792] // [lng, lat] Antananarivo
@@ -35,6 +53,7 @@ export default function MapLibreMap() {
     ]
   }
 
+  // Init map
   useEffect(() => {
     if (map.current || !mapContainer.current) return
 
@@ -42,7 +61,6 @@ export default function MapLibreMap() {
     fetch(LOCAL_STYLE, { method: 'HEAD' })
       .then((res) => {
         if (res.ok) {
-          // Local tileserver available - use vector tiles
           map.current = new maplibregl.Map({
             container: mapContainer.current!,
             style: LOCAL_STYLE,
@@ -55,7 +73,6 @@ export default function MapLibreMap() {
         }
       })
       .catch(() => {
-        // Fallback to OSM raster
         map.current = new maplibregl.Map({
           container: mapContainer.current!,
           style: FALLBACK_STYLE,
@@ -66,18 +83,14 @@ export default function MapLibreMap() {
       })
       .finally(() => {
         if (map.current) {
-          // Add navigation controls
           map.current.addControl(new maplibregl.NavigationControl(), 'top-left')
-
-          // Add marker for Antananarivo
-          new maplibregl.Marker({ color: '#3b82f6' })
-            .setLngLat(CENTER)
-            .setPopup(new maplibregl.Popup().setHTML('<strong>Antananarivo</strong>'))
-            .addTo(map.current)
         }
       })
 
     return () => {
+      // cleanup map and markers
+      markersRef.current.forEach(m => m.remove())
+      markersRef.current = []
       if (map.current) {
         map.current.remove()
         map.current = null
@@ -85,10 +98,67 @@ export default function MapLibreMap() {
     }
   }, [])
 
+  // Update markers when signalements change
+  useEffect(() => {
+    if (!map.current) return
+
+    // remove existing markers
+    markersRef.current.forEach(m => m.remove())
+    markersRef.current = []
+
+    // add markers
+    signalements.forEach(sig => {
+      try {
+        const el = document.createElement('div')
+        el.className = 'ml-marker'
+        el.style.width = '18px'
+        el.style.height = '18px'
+        el.style.borderRadius = '50%'
+        el.style.background = '#2563eb'
+        el.style.border = '2px solid white'
+        el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)'
+
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([sig.longitude, sig.latitude])
+          .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(`
+            <div style="min-width:200px; color:black;">
+              <h3 style="margin:0 0 8px 0">${sig.titre || 'Sans titre'}</h3>
+              <p style="margin:4px 0"><strong>Type:</strong> ${sig.typeTravauxLibelle || '-'}</p>
+              <p style="margin:4px 0"><strong>Statut:</strong> ${sig.etatLibelle || 'Inconnu'}</p>
+            </div>
+          `))
+          .addTo(map.current!)
+
+        el.addEventListener('click', () => onMarkerClick?.(sig.idSignalement))
+        markersRef.current.push(marker)
+      } catch (e) {
+        console.warn('Erreur ajout marker', e)
+      }
+    })
+  }, [signalements, onMarkerClick])
+
+  // Center on selected marker
+  useEffect(() => {
+    if (!map.current || selectedId == null) return
+    const sel = signalements.find(s => s.idSignalement === selectedId)
+    if (sel) {
+      map.current.flyTo({ center: [sel.longitude, sel.latitude], zoom: 16, speed: 1.2 })
+      // open popup for the matching marker (closest by position)
+      const match = markersRef.current.find(m => {
+        const lngLat = (m as any)._lngLat || (m as any).getLngLat && (m as any).getLngLat()
+        if (!lngLat) return false
+        return Math.abs(lngLat.lng - sel.longitude) < 0.000001 && Math.abs(lngLat.lat - sel.latitude) < 0.000001
+      })
+      if (match) {
+        try { (match as any).togglePopup() } catch (e) {}
+      }
+    }
+  }, [selectedId, signalements])
+
   return (
-    <div style={{ position: 'relative', height: '100vh', width: '100%' }}>
+    <div style={{ position: 'relative', height: '100%', width: '100%' }}>
       <div ref={mapContainer} style={{ height: '100%', width: '100%' }} />
-      
+
       {/* Status indicator */}
       <div style={{
         position: 'absolute',

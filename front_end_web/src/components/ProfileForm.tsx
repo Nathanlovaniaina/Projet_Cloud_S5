@@ -157,15 +157,6 @@ export default function ProfileForm() {
             L'email ne peut pas être modifié
           </small>
 
-          <label className="auth-label">Téléphone</label>
-          <input 
-            className="auth-input" 
-            type="tel"
-            value={formData.telephone}
-            onChange={e => setFormData({...formData, telephone: e.target.value})}
-            placeholder="+261 34 00 000 00"
-          />
-
           <div className="auth-section-divider">
             <h3 className="auth-section-title">
               Changer le mot de passe (optionnel)

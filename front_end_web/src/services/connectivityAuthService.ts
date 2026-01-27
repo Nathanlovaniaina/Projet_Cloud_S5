@@ -63,7 +63,7 @@ class ConnectivityAuthService {
   async register(email: string, password: string) {
     if (this.isOnline && auth) {
       try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, password)
+        await createUserWithEmailAndPassword(auth, email, password)
         return { provider: 'firebase' }
       } catch (err) {
         return axios.post('/api/auth/inscription', { email, motDePasse: password })

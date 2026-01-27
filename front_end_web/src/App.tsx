@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState, useEffect } from 'react'
+import { Suspense, lazy, useState, useEffect } from 'react'
 import './App.css'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -8,6 +8,7 @@ const MapLibreMap = lazy(() => import('./components/MapLibreMap'))
 const LoginForm = lazy(() => import('./components/LoginForm'))
 const RegisterForm = lazy(() => import('./components/RegisterForm'))
 const ProfileForm = lazy(() => import('./components/ProfileForm'))
+const VisitorPage = lazy(() => import('./components/VisitorPage'))
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -67,6 +68,9 @@ function App() {
             <Link to="/" style={{ color: '#60a5fa', textDecoration: 'none' }}>
               Carte
             </Link>
+            <Link to="/visiteur" style={{ color: '#60a5fa', textDecoration: 'none' }}>
+              Visiteur
+            </Link>
             
             {isLoggedIn ? (
               <>
@@ -119,6 +123,7 @@ function App() {
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/register" element={<RegisterForm />} />
                 <Route path="/profile" element={<ProfileForm />} />
+                <Route path="/visiteur" element={<VisitorPage />} />
                 <Route path="/" element={<MapLibreMap />} />
                 <Route path="*" element={<MapLibreMap />} />
               </Routes>
