@@ -11,6 +11,7 @@ const ProfileForm = lazy(() => import('./components/ProfileForm'))
 const VisitorPage = lazy(() => import('./components/VisitorPage'))
 const ManagerSignalementsPage = lazy(() => import('./components/ManagerSignalementsPage'))
 const ManagerSignalementDetail = lazy(() => import('./components/ManagerSignalementDetail'))
+const ManagerUsersPage = lazy(() => import('./components/ManagerUsersPage'))
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -127,6 +128,11 @@ function App() {
                 🔑 Manager
               </Link>
             )}
+            {isManager && (
+              <Link to="/manager/utilisateurs" style={{ color: '#fbbf24', textDecoration: 'none', fontWeight: 600 }}>
+                👥 Utilisateurs
+              </Link>
+            )}
             
             {isLoggedIn ? (
               <>
@@ -182,6 +188,7 @@ function App() {
                 <Route path="/visiteur" element={<VisitorPage />} />
                 <Route path="/manager/signalements" element={<ManagerSignalementsPage />} />
                 <Route path="/manager/signalements/:id" element={<ManagerSignalementDetail />} />
+                <Route path="/manager/utilisateurs" element={<ManagerUsersPage />} />
                 <Route path="/" element={<MapLibreMap />} />
                 <Route path="*" element={<MapLibreMap />} />
               </Routes>

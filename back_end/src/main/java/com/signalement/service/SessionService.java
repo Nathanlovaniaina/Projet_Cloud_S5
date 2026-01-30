@@ -28,7 +28,6 @@ public class SessionService {
 
     private final SessionRepository sessionRepository;
     private final UtilisateurRepository utilisateurRepository;
-    private final FirebaseConversionService firebaseConversionService;
     private final Firestore firestore;
 
     @Transactional
@@ -82,6 +81,10 @@ public class SessionService {
         sessionRepository.findByToken(token).ifPresent(sessionRepository::delete);
     }
 
+    @Transactional
+    public long invalidateSessionsForUser(Utilisateur utilisateur) {
+        return sessionRepository.deleteByUtilisateur(utilisateur);
+    }
     // ======== FIREBASE SYNC METHODS (Tâches 31 & 32) ========
     
     @Transactional

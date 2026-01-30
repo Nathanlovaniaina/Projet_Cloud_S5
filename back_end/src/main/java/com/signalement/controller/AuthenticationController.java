@@ -135,7 +135,9 @@ public class AuthenticationController {
     public ResponseEntity<com.signalement.dto.ApiResponse> logout(
             @Parameter(description = "Token d'authentification Bearer", required = true, example = "Bearer <token>")
             @RequestHeader("Authorization") String token) {
-        com.signalement.dto.ApiResponse response = authenticationService.logout(token);
+        String rawToken = token;
+        if (rawToken != null && rawToken.startsWith("Bearer ")) rawToken = rawToken.substring("Bearer ".length());
+        com.signalement.dto.ApiResponse response = authenticationService.logout(rawToken);
         return ResponseEntity.ok(response);
     }
 
@@ -235,7 +237,9 @@ public class AuthenticationController {
             @Parameter(description = "Token d'authentification Bearer", required = true, example = "Bearer <token>")
             @RequestHeader("Authorization") String token) {
         
-        com.signalement.dto.ApiResponse response = authenticationService.updateUtilisateur(id, request, token);
+        String rawToken = token;
+        if (rawToken != null && rawToken.startsWith("Bearer ")) rawToken = rawToken.substring("Bearer ".length());
+        com.signalement.dto.ApiResponse response = authenticationService.updateUtilisateur(id, request, rawToken);
         return ResponseEntity
                 .status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
                 .body(response);
@@ -264,7 +268,32 @@ public class AuthenticationController {
             @Parameter(description = "Token d'authentification Bearer du manager", required = true, example = "Bearer <token>")
             @RequestHeader("Authorization") String token) {
         
-        com.signalement.dto.ApiResponse response = authenticationService.debloquerUtilisateur(id, token);
+        String rawToken = token;
+        if (rawToken != null && rawToken.startsWith("Bearer ")) rawToken = rawToken.substring("Bearer ".length());
+        com.signalement.dto.ApiResponse response = authenticationService.debloquerUtilisateur(id, rawToken);
+        return ResponseEntity
+                .status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    /**
+     * Tâche : Bloquer un utilisateur (Manager)
+     * POST /api/auth/bloquer/{id}
+     */
+    @Operation(
+        summary = "Bloquer un utilisateur",
+        description = "Permet à un manager de bloquer un utilisateur (empêche la connexion). Réservé aux managers."
+    )
+    @PostMapping("/bloquer/{id}")
+    public ResponseEntity<com.signalement.dto.ApiResponse> bloquerUtilisateur(
+            @Parameter(description = "ID de l'utilisateur à bloquer", required = true)
+            @PathVariable Integer id,
+            @Parameter(description = "Token d'authentification Bearer du manager", required = true, example = "Bearer <token>")
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token;
+        if (rawToken != null && rawToken.startsWith("Bearer ")) rawToken = rawToken.substring("Bearer ".length());
+        com.signalement.dto.ApiResponse response = authenticationService.bloquerUtilisateur(id, rawToken);
         return ResponseEntity
                 .status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
                 .body(response);
@@ -290,7 +319,9 @@ public class AuthenticationController {
             @Parameter(description = "Token d'authentification Bearer du manager", required = true, example = "Bearer <token>")
             @RequestHeader("Authorization") String token) {
         try {
-            List<UtilisateurBloqueResponse> utilisateurs = authenticationService.getUtilisateursBloqués(token);
+            String rawToken = token;
+            if (rawToken != null && rawToken.startsWith("Bearer ")) rawToken = rawToken.substring("Bearer ".length());
+            List<UtilisateurBloqueResponse> utilisateurs = authenticationService.getUtilisateursBloqués(rawToken);
             return ResponseEntity.ok(utilisateurs);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
