@@ -1,5 +1,5 @@
 import React from 'react'
-import '../styles/visitor.css'
+import '../styles/recaptable.css'
 
 interface Signalement {
   idSignalement: number
@@ -73,9 +73,10 @@ export default function RecapTable({
 
   function getStatutBadgeClass(etatId?: number) {
     switch (etatId) {
-      case 1: return 'badge-pending'
-      case 2: return 'badge-inprogress'
-      case 3: return 'badge-completed'
+      case 1: return 'badge-pending'   // En attente
+      case 2: return 'badge-inprogress'// En cours
+      case 3: return 'badge-completed' // Résolu
+      case 4: return 'badge-refused'   // Rejeté
       default: return 'badge-unknown'
     }
   }
@@ -98,33 +99,45 @@ export default function RecapTable({
   return (
     <div className="recap-table-container">
       <div className="recap-header">
-        <h2>Tableau récapitulatif</h2>
-        <div className="recap-filters">
-          <select 
-            className="filter-select"
-            onChange={(e) => onStatusFilter?.(e.target.value ? Number(e.target.value) : undefined)}
-            defaultValue=""
-          >
-            <option value="">Tous les statuts</option>
-            {statusOptions.map(option => (
-              <option key={option.idEtatSignalement} value={option.idEtatSignalement}>
-                {option.libelle}
-              </option>
-            ))}
-          </select>
+        <div className="recap-header-content">
+          <div>
+            <h2 className="recap-title">Liste des Signalements</h2>
+            <p className="recap-subtitle">{total} signalement{total !== 1 ? 's' : ''} au total</p>
+          </div>
+          
+          <div className="recap-filters">
+            <div className="filter-group">
+              <label className="filter-label">Statut</label>
+              <select 
+                className="filter-select"
+                onChange={(e) => onStatusFilter?.(e.target.value ? Number(e.target.value) : undefined)}
+                defaultValue=""
+              >
+                <option value="">Tous les statuts</option>
+                {statusOptions.map(option => (
+                  <option key={option.idEtatSignalement} value={option.idEtatSignalement}>
+                    {option.libelle}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <select 
-            className="filter-select"
-            onChange={(e) => onTypeFilter?.(e.target.value ? Number(e.target.value) : undefined)}
-            defaultValue=""
-          >
-            <option value="">Tous les types</option>
-            {typeOptions.map(option => (
-              <option key={option.idTypeTravail} value={option.idTypeTravail}>
-                {option.libelle}
-              </option>
-            ))}
-          </select>
+            <div className="filter-group">
+              <label className="filter-label">Type de travaux</label>
+              <select 
+                className="filter-select"
+                onChange={(e) => onTypeFilter?.(e.target.value ? Number(e.target.value) : undefined)}
+                defaultValue=""
+              >
+                <option value="">Tous les types</option>
+                {typeOptions.map(option => (
+                  <option key={option.idTypeTravail} value={option.idTypeTravail}>
+                    {option.libelle}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -132,14 +145,35 @@ export default function RecapTable({
         <table className="recap-table">
           <thead>
             <tr>
-              <th onClick={() => handleSort('idSignalement')}>
-                ID {sortColumn === 'idSignalement' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th onClick={() => handleSort('idSignalement')} className="sortable-header">
+                <div className="header-content">
+                  ID
+                  {sortColumn === 'idSignalement' && (
+                    <span className="sort-indicator">
+                      {sortDirection === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </div>
               </th>
-              <th onClick={() => handleSort('titre')}>
-                Titre {sortColumn === 'titre' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th onClick={() => handleSort('titre')} className="sortable-header">
+                <div className="header-content">
+                  Titre
+                  {sortColumn === 'titre' && (
+                    <span className="sort-indicator">
+                      {sortDirection === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </div>
               </th>
-              <th onClick={() => handleSort('dateCreation')}>
-                Date {sortColumn === 'dateCreation' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th onClick={() => handleSort('dateCreation')} className="sortable-header">
+                <div className="header-content">
+                  Date
+                  {sortColumn === 'dateCreation' && (
+                    <span className="sort-indicator">
+                      {sortDirection === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </div>
               </th>
               <th>Statut</th>
               <th>Type</th>
@@ -150,27 +184,56 @@ export default function RecapTable({
             {sortedSignalements.length === 0 ? (
               <tr>
                 <td colSpan={6} className="empty-message">
-                  Aucun signalement trouvé
+                  <div className="empty-state">
+                    <div className="empty-icon">📋</div>
+                    <p>Aucun signalement trouvé</p>
+                    {total > 0 && <p className="empty-hint">Essayez de modifier vos filtres</p>}
+                  </div>
                 </td>
               </tr>
             ) : (
               sortedSignalements.map((sig) => (
                 <tr 
                   key={sig.idSignalement}
-                  className={selectedId === sig.idSignalement ? 'selected-row' : ''}
+                  className={`table-row ${selectedId === sig.idSignalement ? 'selected-row' : ''}`}
                   onClick={() => onRowClick(sig.idSignalement)}
-                  style={{ cursor: 'pointer' }}
                 >
-                  <td>{sig.idSignalement}</td>
-                  <td className="title-cell">{sig.titre || 'Sans titre'}</td>
-                  <td>{formatDate(sig.dateCreation)}</td>
-                  <td>
+                  <td className="cell-id">
+                    <span className="id-badge">#{sig.idSignalement}</span>
+                  </td>
+                  <td className="cell-title">
+                    <div className="title-content">
+                      <div className="title-text">{sig.titre || 'Sans titre'}</div>
+                      <div className="title-description">
+                        {sig.description && sig.description.length > 50 
+                          ? `${sig.description.substring(0, 50)}...` 
+                          : sig.description || 'Aucune description'}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="cell-date">
+                    <div className="date-content">
+                      <div className="date-day">
+                        {formatDate(sig.dateCreation).split(' ')[0]}
+                      </div>
+                      <div className="date-time">
+                        {formatDate(sig.dateCreation).split(' ')[1]}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="cell-status">
                     <span className={`status-badge ${getStatutBadgeClass(sig.etatActuelId)}`}>
                       {sig.etatLibelle || 'Inconnu'}
                     </span>
                   </td>
-                  <td>{sig.typeTravauxLibelle || '-'}</td>
-                  <td>{sig.surfaceMetreCarree?.toFixed(2) || '-'}</td>
+                  <td className="cell-type">
+                    <span className="type-tag">{sig.typeTravauxLibelle || '-'}</span>
+                  </td>
+                  <td className="cell-surface">
+                    <div className="surface-value">
+                      {sig.surfaceMetreCarree?.toFixed(2) || '0.00'}
+                    </div>
+                  </td>
                 </tr>
               ))
             )}
@@ -179,26 +242,57 @@ export default function RecapTable({
       </div>
 
       {totalPages > 1 && (
-        <div className="pagination">
-          <button 
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="pagination-button"
-          >
-            ← Précédent
-          </button>
+        <div className="pagination-container">
+          <div className="pagination">
+            <button 
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="pagination-button prev"
+            >
+              ← Précédent
+            </button>
 
-          <span className="pagination-info">
-            Page {currentPage} sur {totalPages} ({total} résultat{total !== 1 ? 's' : ''})
-          </span>
+            <div className="pagination-pages">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum: number
+                if (totalPages <= 5) {
+                  pageNum = i + 1
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i
+                } else {
+                  pageNum = currentPage - 2 + i
+                }
 
-          <button 
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="pagination-button"
-          >
-            Suivant →
-          </button>
+                if (pageNum < 1 || pageNum > totalPages) return null
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => onPageChange(pageNum)}
+                    className={`pagination-page ${currentPage === pageNum ? 'active' : ''}`}
+                  >
+                    {pageNum}
+                  </button>
+                )
+              })}
+            </div>
+
+            <button 
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="pagination-button next"
+            >
+              Suivant →
+            </button>
+          </div>
+          
+          <div className="pagination-info">
+            <span className="pagination-text">
+              Page {currentPage} sur {totalPages} • {total} résultat{total !== 1 ? 's' : ''}
+            </span>
+          </div>
         </div>
       )}
     </div>

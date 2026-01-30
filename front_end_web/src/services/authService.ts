@@ -70,6 +70,12 @@ export async function login(email: string, password: string, online: boolean) {
       // Exchange idToken with backend to get a backend session token + user info
       try {
         const res = await axios.post(`${BACKEND_URL}/firebase-login`, { idToken })
+        // If backend explicitly reports user blocked, surface that as an error
+        const backendMessage: string | undefined = res.data?.message
+        if (backendMessage && /bloqu/i.test(backendMessage)) {
+          throw new Error(backendMessage)
+        }
+
         // Persist token/user for frontend state
         try {
           if (res.data?.token) localStorage.setItem('token', res.data.token)
@@ -82,7 +88,14 @@ export async function login(email: string, password: string, online: boolean) {
 
         return { success: true, source: 'firebase', ...res.data }
       } catch (be: any) {
-        // If backend exchange fails, fall back to returning Firebase token information
+        // If backend exchange fails, check if backend responded with a blocked message
+        const respData = be?.response?.data
+        const backendMsg = respData?.message || respData?.error
+        if (backendMsg && /bloqu/i.test(backendMsg)) {
+          throw new Error(backendMsg)
+        }
+
+        // Otherwise fall back to returning Firebase token information
         console.warn('Échange idToken → backend échoué, utilisation du token Firebase localement:', be?.message)
         try {
           const userObj = { uid: userCred.user.uid, email: userCred.user.email, displayName: userCred.user.displayName }
@@ -108,7 +121,7 @@ export async function login(email: string, password: string, online: boolean) {
 
   // Try backend (either offline mode or Firebase unavailable/failed)
   try {
-    const res = await axios.post(`${BACKEND_URL}/login`, { email, password })
+    const res = await axios.post(`${BACKEND_URL}/login`, { email, motDePasse: password })
     // persist token/user locally
     try {
       if (res.data?.token) localStorage.setItem('token', res.data.token)
@@ -137,7 +150,14 @@ export async function login(email: string, password: string, online: boolean) {
 
     return { success: true, source: 'postgres', ...res.data }
   } catch (error: any) {
-    // If backend fails, enqueue for later sync
+    // If backend responded with an HTTP error, surface its message to the UI
+    const resp = error?.response?.data
+    if (resp) {
+      const backendMsg = typeof resp === 'string' ? resp : resp.message || resp.error || error?.response?.statusText
+      throw new Error(backendMsg || 'Erreur lors de la connexion via le backend')
+    }
+
+    // Otherwise (network error), enqueue for later sync
     await enqueue({ type: 'login', email, timestamp: Date.now() })
     throw new Error('Backend local indisponible. Action enregistrée pour synchronisation.')
   }
@@ -329,14 +349,71 @@ export async function updateProfile(
       // Récupérer le token mis à jour
       const idToken = await auth.currentUser.getIdToken(true)
       
-      // Synchroniser avec le backend
+      // Synchroniser avec le backend: preferer le token de session si présent, sinon utiliser idToken
       try {
+        // try to get session token and user id from localStorage
+        let sessionToken = localStorage.getItem('token')
+        let userRaw = localStorage.getItem('user')
+        let idUtilisateur: any = null
+        if (userRaw) {
+          try { idUtilisateur = JSON.parse(userRaw).idUtilisateur } catch (e) { idUtilisateur = null }
+        }
+
+        // if no id found, attempt to fetch /me
+        if (!idUtilisateur) {
+          try {
+            const me = await axios.get(`${BACKEND_URL}/me`, { headers: sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {} })
+            idUtilisateur = me.data?.user?.idUtilisateur
+          } catch (e) {
+            // ignore
+          }
+        }
+
+        const authHeader = sessionToken ? { Authorization: `Bearer ${sessionToken}` } : { Authorization: `Bearer ${idToken}` }
+        const targetId = idUtilisateur ? idUtilisateur : (updateData as any).idUtilisateur
+
+        if (!targetId) {
+          // Try to let the backend identify the user from token by hitting /me first
+          try {
+            const me = await axios.get(`${BACKEND_URL}/me`, { headers: authHeader })
+            const meId = me.data?.user?.idUtilisateur
+            if (meId) {
+              // set targetId for PUT below
+              // eslint-disable-next-line no-unused-vars
+              ;(updateData as any).idUtilisateur = meId
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+
+        const finalTargetId = idUtilisateur ? idUtilisateur : (updateData as any).idUtilisateur
+        if (!finalTargetId) {
+          return { success: true, source: 'firebase', warning: 'Profil mis à jour localement sur Firebase mais impossible de sync backend (id utilisateur manquant)' }
+        }
+
+        // Build payload matching backend DTO (UpdateUtilisateurRequest)
+        const backendPayload: any = {}
+        if ((updateData as any).nom) backendPayload.nom = (updateData as any).nom
+        if ((updateData as any).prenom) backendPayload.prenom = (updateData as any).prenom
+        if ((updateData as any).email) backendPayload.email = (updateData as any).email
+        if ((updateData as any).newPassword) backendPayload.motDePasse = (updateData as any).newPassword
+        // include firebase uid when available
+        if (auth.currentUser && auth.currentUser.uid) backendPayload.firebaseUid = auth.currentUser.uid
+
         const res = await axios.put(
-          `${BACKEND_URL}/profile`, 
-          updateData,
-          { headers: { Authorization: `Bearer ${idToken}` } }
+          `${BACKEND_URL}/utilisateur/${finalTargetId}`,
+          backendPayload,
+          { headers: authHeader }
         )
-        return { success: true, source: 'firebase', ...res.data }
+
+        // After successful update, try to fetch updated user from backend for frontend state
+        try {
+          const me = await axios.get(`${BACKEND_URL}/me`, { headers: authHeader })
+          return { success: true, source: 'firebase', ...res.data, user: me.data?.user }
+        } catch (e) {
+          return { success: true, source: 'firebase', ...res.data }
+        }
       } catch (be: any) {
         console.warn('Sync backend échouée:', be?.message)
         return {
@@ -351,14 +428,45 @@ export async function updateProfile(
   }
   
   // Mise à jour backend uniquement (mode hors ligne)
-  try {
-    const res = await axios.put(
-      `${BACKEND_URL}/profile`,
-      updateData,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-    return { success: true, source: 'postgres', ...res.data }
-  } catch (error: any) {
+    try {
+      // Determine user id to update
+      let idUtilisateur: any = null
+      try {
+        const raw = localStorage.getItem('user')
+        if (raw) idUtilisateur = JSON.parse(raw).idUtilisateur
+      } catch (e) { idUtilisateur = null }
+
+      if (!idUtilisateur) {
+        // fallback: call /me to get id
+        try {
+          const me = await axios.get(`${BACKEND_URL}/me`, { headers: { Authorization: `Bearer ${token}` } })
+          idUtilisateur = me.data?.user?.idUtilisateur
+        } catch (e) { /* ignore */ }
+      }
+
+      if (!idUtilisateur) throw new Error('Impossible de déterminer l\'ID utilisateur pour la mise à jour')
+
+      // Map frontend fields to backend DTO
+      const backendPayload: any = {}
+      if ((updateData as any).nom) backendPayload.nom = (updateData as any).nom
+      if ((updateData as any).prenom) backendPayload.prenom = (updateData as any).prenom
+      if ((updateData as any).email) backendPayload.email = (updateData as any).email
+      if ((updateData as any).newPassword) backendPayload.motDePasse = (updateData as any).newPassword
+      if (auth && auth.currentUser && auth.currentUser.uid) backendPayload.firebaseUid = auth.currentUser.uid
+
+      const res = await axios.put(
+        `${BACKEND_URL}/utilisateur/${idUtilisateur}`,
+        backendPayload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      // Try to refresh user state
+      try {
+        const me = await axios.get(`${BACKEND_URL}/me`, { headers: { Authorization: `Bearer ${token}` } })
+        return { success: true, source: 'postgres', ...res.data, user: me.data?.user }
+      } catch (e) {
+        return { success: true, source: 'postgres', ...res.data }
+      }
+    } catch (error: any) {
     // Enqueue pour sync ultérieure
     await enqueue({
       type: 'updateProfile',

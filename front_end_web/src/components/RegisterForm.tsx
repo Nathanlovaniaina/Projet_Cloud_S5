@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useConnectivity } from '../hooks/useConnectivity'
 import { register } from '../services/authService'
-import '../styles/auth.css'
+// import '../styles/auth.css'
+import '../styles/register.css' // Fichier CSS additionnel pour l'inscription
 
 export default function RegisterForm() {
   const isOnline = useConnectivity()
@@ -90,49 +91,53 @@ export default function RegisterForm() {
     <div className="auth-container">
       <div className="auth-card">
         <form onSubmit={handleSubmit}>
-          <div className="auth-brand">Signalement</div>
-          <h2 className="auth-title">Inscription</h2>
+          <div className="auth-brand">SIGNALEMENT</div>
           
-          <div className="auth-mode">
-            {isOnline 
-              ? '🌐 Mode en ligne - Inscription Firebase + Backend' 
-              : '📴 Mode hors ligne - Inscription locale PostgreSQL'
-            }
+          <h2 className="auth-title">Créer un compte</h2>
+          
+          <p className="auth-subtitle">
+            Rejoignez notre plateforme de signalement de roues abîmées en créant votre compte.
+          </p>
+
+          <div className="auth-row double">
+            <div className="auth-column">
+              <label className="auth-label">Nom</label>
+              <input 
+                className="auth-input" 
+                value={formData.nom}
+                onChange={e => setFormData({...formData, nom: e.target.value})}
+                placeholder="Dupont"
+                required
+              />
+            </div>
+            <div className="auth-column">
+              <label className="auth-label">Prénom</label>
+              <input 
+                className="auth-input" 
+                value={formData.prenom}
+                onChange={e => setFormData({...formData, prenom: e.target.value})}
+                placeholder="Jean"
+                required
+              />
+            </div>
           </div>
 
-          <label className="auth-label">Nom</label>
-          <input 
-            className="auth-input" 
-            value={formData.nom}
-            onChange={e => setFormData({...formData, nom: e.target.value})}
-            placeholder="Votre nom"
-            required
-          />
-
-          <label className="auth-label">Prénom</label>
-          <input 
-            className="auth-input" 
-            value={formData.prenom}
-            onChange={e => setFormData({...formData, prenom: e.target.value})}
-            placeholder="Votre prénom"
-            required
-          />
-
-          <label className="auth-label">Email</label>
+          <label className="auth-label">Adresse email</label>
           <input 
             className="auth-input" 
             type="email"
             value={formData.email}
             onChange={e => setFormData({...formData, email: e.target.value})}
-            placeholder="votre@email.com"
+            placeholder="exemple@email.com"
             required
           />
 
           <label className="auth-label">Type d'utilisateur</label>
           <select 
-            className="auth-input"
+            className="auth-input auth-select"
             value={formData.typeUtilisateur}
             onChange={e => setFormData({...formData, typeUtilisateur: e.target.value})}
+            required
           >
             {types.length > 0 ? (
               types.map(t => (
@@ -140,45 +145,66 @@ export default function RegisterForm() {
               ))
             ) : (
               <>
+                <option value="">Sélectionnez un type</option>
                 <option value="Visiteur">Visiteur</option>
                 <option value="Manager">Manager</option>
               </>
             )}
           </select>
 
-          <label className="auth-label">Mot de passe</label>
-          <input 
-            className="auth-input" 
-            type="password"
-            value={formData.password}
-            onChange={e => setFormData({...formData, password: e.target.value})}
-            placeholder="••••••••"
-            required
-          />
+          <div className="auth-row double">
+            <div className="auth-column">
+              <label className="auth-label">Mot de passe</label>
+              <input 
+                className="auth-input" 
+                type="password"
+                value={formData.password}
+                onChange={e => setFormData({...formData, password: e.target.value})}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            <div className="auth-column">
+              <label className="auth-label">Confirmation</label>
+              <input 
+                className="auth-input" 
+                type="password"
+                value={formData.confirmPassword}
+                onChange={e => setFormData({...formData, confirmPassword: e.target.value})}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+          </div>
 
-          <label className="auth-label">Confirmer le mot de passe</label>
-          <input 
-            className="auth-input" 
-            type="password"
-            value={formData.confirmPassword}
-            onChange={e => setFormData({...formData, confirmPassword: e.target.value})}
-            placeholder="••••••••"
-            required
-          />
+          <div className="auth-info">
+            <p className="auth-info-text">
+              {isOnline 
+                ? '🌐 Mode en ligne - Inscription sur Firebase et backend' 
+                : '📴 Mode hors ligne - Inscription sur PostgreSQL local'
+              }
+            </p>
+            <p className="auth-hint">
+              Le mot de passe doit contenir au moins 6 caractères.
+            </p>
+          </div>
 
           <button 
             className="auth-button" 
             type="submit" 
             disabled={loading}
           >
-            {loading ? 'Inscription...' : 'S\'INSCRIRE'}
+            {loading ? 'Inscription en cours...' : 'S\'INSCRIRE'}
           </button>
           
-          {status && <p className={statusClass}>{status}</p>}
+          {status && <div className={statusClass}>{status}</div>}
           
           <div className="auth-footer">
-            <span style={{color: '#64748b', fontSize: '13px'}}>Déjà inscrit ? </span>
-            <a href="/login" className="auth-forgot">Se connecter</a>
+            <div className="auth-footer-links">
+              <span className="auth-footer-text">Déjà inscrit ? </span>
+              <a href="/login" className="auth-forgot">Se connecter</a>
+            </div>
+            <p className="auth-copyright">SIGNALEMENT ROUE - Plateforme de signalement</p>
           </div>
         </form>
       </div>
