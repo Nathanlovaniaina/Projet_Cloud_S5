@@ -12,5 +12,7 @@ public interface SessionRepository extends JpaRepository<Session, Integer> {
     Optional<Session> findByToken(String token);
     Optional<Session> findByUtilisateur(Utilisateur utilisateur);
 
+    long deleteByUtilisateur(Utilisateur utilisateur);
+
     long deleteByDateFinBefore(LocalDateTime dateTime);
 }

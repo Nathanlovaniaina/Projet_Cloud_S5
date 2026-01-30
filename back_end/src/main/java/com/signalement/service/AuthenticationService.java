@@ -373,6 +373,41 @@ public class AuthenticationService {
     }
 
     /**
+     * Bloquer un utilisateur (action réservée aux managers)
+     */
+    @Transactional
+    public ApiResponse bloquerUtilisateur(Integer idUtilisateur, String token) {
+        try {
+            // Vérifier que la session est valide et que l'utilisateur est un Manager
+            Optional<Utilisateur> sessionUser = sessionService.getUtilisateurByToken(token);
+            if (sessionUser.isEmpty()) {
+                return new ApiResponse(false, "Session invalide ou expirée");
+            }
+
+            Utilisateur currentUser = sessionUser.get();
+            if (!currentUser.getTypeUtilisateur().getLibelle().equals("Manager")) {
+                return new ApiResponse(false, "Seuls les managers peuvent bloquer des utilisateurs");
+            }
+
+            // Récupérer l'utilisateur à bloquer
+            Utilisateur utilisateur = utilisateurRepository.findById(idUtilisateur)
+                    .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
+
+            // Bloquer l'utilisateur
+            utilisateur.setIsBlocked(true);
+            utilisateurRepository.save(utilisateur);
+
+            // Invalider toutes les sessions actives de cet utilisateur
+            sessionService.invalidateSessionsForUser(utilisateur);
+
+            return new ApiResponse(true, "Utilisateur bloqué avec succès");
+
+        } catch (Exception e) {
+            return new ApiResponse(false, "Erreur lors du blocage: " + e.getMessage());
+        }
+    }
+
+    /**
      * Déconnexion (invalidation de session)
      */
     @Transactional

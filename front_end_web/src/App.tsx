@@ -2,38 +2,85 @@ import { Suspense, lazy, useState, useEffect } from 'react'
 import './App.css'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
-import { isAuthenticated, logout } from './services/authService'
+import { isAuthenticated, logout, getCurrentUser } from './services/authService'
 
 const MapLibreMap = lazy(() => import('./components/MapLibreMap'))
 const LoginForm = lazy(() => import('./components/LoginForm'))
 const RegisterForm = lazy(() => import('./components/RegisterForm'))
 const ProfileForm = lazy(() => import('./components/ProfileForm'))
 const VisitorPage = lazy(() => import('./components/VisitorPage'))
+const ManagerSignalementsPage = lazy(() => import('./components/ManagerSignalementsPage'))
+const ManagerSignalementDetail = lazy(() => import('./components/ManagerSignalementDetail'))
+const ManagerUsersPage = lazy(() => import('./components/ManagerUsersPage'))
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userName, setUserName] = useState<string>('')
+  const [isManager, setIsManager] = useState(false)
 
   useEffect(() => {
     const checkAuth = () => {
-      const authenticated = isAuthenticated()
-      setIsLoggedIn(authenticated)
-      
-      if (authenticated) {
-        const userStr = localStorage.getItem('user')
-        if (userStr) {
-          try {
-            const user = JSON.parse(userStr)
-            setUserName(`${user.prenom || ''} ${user.nom || ''}`.trim() || user.email)
-          } catch (e) {
-            setUserName('Utilisateur')
+      ;(async () => {
+        const authenticated = isAuthenticated()
+        setIsLoggedIn(authenticated)
+
+        if (!authenticated) {
+          setIsManager(false)
+          setUserName('')
+          return
+        }
+
+        try {
+          const user = await getCurrentUser()
+          if (user) {
+            setUserName(`${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || '')
+
+            let manager = false
+            const t = user.typeUtilisateur
+            if (t == null) {
+              manager = user.idTypeUtilisateur === 2 || user.id_type_utilisateur === 2
+            } else if (typeof t === 'string') {
+              manager = t.toLowerCase().includes('manager') || t.toLowerCase().includes('gestion')
+            } else if (typeof t === 'number') {
+              manager = t === 2
+            } else if (typeof t === 'object') {
+              manager = (t.idTypeUtilisateur === 2) || (t.id === 2) || (t.id_type_utilisateur === 2) || (t.libelle && (t.libelle.toLowerCase().includes('manager') || t.libelle.toLowerCase().includes('gestion')))
+            }
+
+            setIsManager(Boolean(manager))
+            return
+          }
+        } catch (e) {
+          const userStr = localStorage.getItem('user')
+          if (userStr) {
+            try {
+              const user = JSON.parse(userStr)
+              setUserName(`${user.prenom || ''} ${user.nom || ''}`.trim() || user.email)
+
+              let manager = false
+              const t = user.typeUtilisateur
+              if (t == null) {
+                manager = user.idTypeUtilisateur === 2 || user.id_type_utilisateur === 2
+              } else if (typeof t === 'string') {
+                manager = t.toLowerCase().includes('manager') || t.toLowerCase().includes('gestion')
+              } else if (typeof t === 'number') {
+                manager = t === 2
+              } else if (typeof t === 'object') {
+                manager = (t.idTypeUtilisateur === 2) || (t.id === 2) || (t.id_type_utilisateur === 2) || (t.libelle && (t.libelle.toLowerCase().includes('manager') || t.libelle.toLowerCase().includes('gestion')))
+              }
+
+              setIsManager(Boolean(manager))
+            } catch (err) {
+              setUserName('Utilisateur')
+              setIsManager(false)
+            }
           }
         }
-      }
+      })()
     }
-    
+
     checkAuth()
-    
+
     window.addEventListener('storage', checkAuth)
     window.addEventListener('authchange', checkAuth)
     return () => {
@@ -71,6 +118,21 @@ function App() {
             <Link to="/visiteur" style={{ color: '#60a5fa', textDecoration: 'none' }}>
               Visiteur
             </Link>
+            
+            {isManager && (
+              <Link to="/manager/signalements" style={{ 
+                color: '#fbbf24', 
+                textDecoration: 'none',
+                fontWeight: 600 
+              }}>
+                🔑 Manager
+              </Link>
+            )}
+            {isManager && (
+              <Link to="/manager/utilisateurs" style={{ color: '#fbbf24', textDecoration: 'none', fontWeight: 600 }}>
+                👥 Utilisateurs
+              </Link>
+            )}
             
             {isLoggedIn ? (
               <>
@@ -124,6 +186,9 @@ function App() {
                 <Route path="/register" element={<RegisterForm />} />
                 <Route path="/profile" element={<ProfileForm />} />
                 <Route path="/visiteur" element={<VisitorPage />} />
+                <Route path="/manager/signalements" element={<ManagerSignalementsPage />} />
+                <Route path="/manager/signalements/:id" element={<ManagerSignalementDetail />} />
+                <Route path="/manager/utilisateurs" element={<ManagerUsersPage />} />
                 <Route path="/" element={<MapLibreMap />} />
                 <Route path="*" element={<MapLibreMap />} />
               </Routes>
