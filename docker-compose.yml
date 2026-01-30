@@ -33,22 +33,28 @@ services:
       - signalement_network
 
   frontend_web:
-    build: ./front_end_web
+    image: node:20-alpine
     container_name: signalement_frontend_web
     ports:
-      - "3000:80"
+      - "3000:3000"
+    volumes:
+      - ./front_end_web:/app
+      - /app/node_modules
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 3000"
     depends_on:
       - backend
     networks:
       - signalement_network
 
   maps_server:
-    image: openmaptiles/openmaptiles-tools:latest
+    image: klokantech/tileserver-gl
     container_name: signalement_maps
     ports:
       - "8081:80"
     volumes:
       - ./maps_data:/data
+    restart: unless-stopped
     networks:
       - signalement_network
 

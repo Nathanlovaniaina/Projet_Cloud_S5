@@ -1,0 +1,283 @@
+/* styles/navbar.css */
+.navbar-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0a;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.navbar-header {
+  padding: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.navbar-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 24px;
+  height: 64px;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navbar-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
+  position: relative;
+}
+
+.navbar-title::before {
+  content: 'SIGNALEMENT';
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  color: #666;
+  margin-bottom: -2px;
+  text-transform: uppercase;
+}
+
+.navbar-title::after {
+  content: 'ROUE';
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  color: #666;
+  margin-top: -2px;
+  text-transform: uppercase;
+}
+
+.navbar-subtitle {
+  font-size: 12px;
+  color: #888;
+  font-weight: 400;
+  margin-left: 4px;
+  padding-left: 12px;
+  border-left: 1px solid #e0e0e0;
+}
+
+.navbar-nav {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.navbar-link {
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 0;
+  position: relative;
+  transition: color 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.navbar-link:hover {
+  color: #1a1a1a;
+}
+
+.navbar-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #1a1a1a;
+  transition: width 0.3s;
+}
+
+.navbar-link:hover::after {
+  width: 100%;
+}
+
+.navbar-link.active {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.navbar-link.active::after {
+  width: 100%;
+}
+
+/* Liens manager avec style spécial */
+.manager-link {
+  color: #1a1a1a;
+  background: #f5f5f5;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+}
+
+.manager-link:hover {
+  background: #f0f0f0;
+  color: #1a1a1a;
+}
+
+/* Section utilisateur connecté */
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  background: #f5f5f5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-weight: 600;
+  border: 1px solid #e0e0e0;
+}
+
+.logout-button {
+  background: #1a1a1a;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.logout-button:hover {
+  background: #333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Liens pour non connecté */
+.auth-links {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.login-link {
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.login-link:hover {
+  color: #1a1a1a;
+}
+
+.register-button {
+  background: #1a1a1a;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+
+.register-button:hover {
+  background: #333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: white;
+}
+
+/* Contenu principal */
+.navbar-main {
+  flex: 1;
+  background: #f8f9fa;
+  height: calc(100vh - 64px);
+}
+
+.loading-container {
+  padding: 24px;
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar-content {
+    padding: 0 16px;
+    flex-direction: column;
+    height: auto;
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .navbar-brand {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .navbar-nav {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .navbar-user {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .auth-links {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Animation pour le badge manager */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(26, 26, 26, 0.4); }
+  70% { box-shadow: 0 0 0 4px rgba(26, 26, 26, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(26, 26, 26, 0); }
+}
+
+.manager-link {
+  animation: pulse 2s infinite;
+}

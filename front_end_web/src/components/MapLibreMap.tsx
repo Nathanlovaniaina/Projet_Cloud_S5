@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import '../styles/map.css'
 
 interface Signalement {
   idSignalement: number
@@ -11,6 +12,7 @@ interface Signalement {
   dateCreation?: string
   etatLibelle?: string
   typeTravauxLibelle?: string
+  etatActuelId?: number
 }
 
 interface Props {
@@ -25,6 +27,7 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
   const markersRef = useRef<maplibregl.Marker[]>([])
   const popupRef = useRef<maplibregl.Popup | null>(null)
   const [status, setStatus] = useState<'loading' | 'local' | 'fallback'>('loading')
+  const [etatOptions, setEtatOptions] = useState<{idEtatSignalement: number, libelle: string}[]>([])
 
   const CENTER: [number, number] = [47.5079, -18.8792] // [lng, lat] Antananarivo
   const ZOOM = 13
@@ -54,6 +57,81 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
     ]
   }
 
+  // Fonction pour déterminer la couleur du marqueur selon l'état
+  const getMarkerColor = (etatLibelle?: string, etatActuelId?: number) => {
+    const etat = etatLibelle?.toLowerCase() || ''
+    
+    // Priorité aux libellés
+    if (etat.includes('en attente') || etat.includes('attente')) {
+      return '#f59e0b' // Orange
+    }
+    if (etat.includes('accepté') || etat.includes('accepte')) {
+      return '#3b82f6' // Bleu
+    }
+    if (etat.includes('refusé') || etat.includes('refuse') || etat.includes('rejet')) {
+      return '#ef4444' // Rouge (Rejeté / Refusé)
+    }
+    if (etat.includes('en cours') || etat.includes('cours')) {
+      return '#8b5cf6' // Violet (En cours)
+    }
+    if (etat.includes('résolu') || etat.includes('resolu') || etat.includes('terminé') || etat.includes('termine') || etat.includes('terminée')) {
+      return '#10b981' // Vert (Résolu / Terminé)
+    }
+    
+    // Fallback sur les ID d'état
+    switch (etatActuelId) {
+      case 1: return '#f59e0b' // En attente
+      case 2: return '#8b5cf6' // En cours
+      case 3: return '#10b981' // Résolu
+      case 4: return '#ef4444' // Rejeté
+      default: return '#666666' // Gris par défaut
+    }
+  }
+
+  // Fonction pour déterminer la classe CSS du badge selon l'état
+  const getStatusBadgeClass = (etatLibelle?: string) => {
+    const etat = etatLibelle?.toLowerCase() || ''
+    
+    if (etat.includes('en attente') || etat.includes('attente')) {
+      return 'status-pending'
+    }
+    if (etat.includes('accepté') || etat.includes('accepte')) {
+      return 'status-accepted'
+    }
+    if (etat.includes('refusé') || etat.includes('refuse') || etat.includes('rejet')) {
+      return 'status-refused'
+    }
+    if (etat.includes('en cours') || etat.includes('cours')) {
+      return 'status-inprogress'
+    }
+    if (etat.includes('résolu') || etat.includes('resolu') || etat.includes('terminé') || etat.includes('termine') || etat.includes('terminée')) {
+      return 'status-completed'
+    }
+    return 'status-unknown'
+  }
+
+  // Fonction pour obtenir l'icône de l'état
+  const getStatusIcon = (etatLibelle?: string) => {
+    const etat = etatLibelle?.toLowerCase() || ''
+    
+    if (etat.includes('en attente') || etat.includes('attente')) {
+      return '⏳'
+    }
+    if (etat.includes('accepté') || etat.includes('accepte')) {
+      return '✅'
+    }
+    if (etat.includes('refusé') || etat.includes('refuse') || etat.includes('rejet')) {
+      return '❌'
+    }
+    if (etat.includes('en cours') || etat.includes('cours')) {
+      return '🚧'
+    }
+    if (etat.includes('résolu') || etat.includes('resolu') || etat.includes('terminé') || etat.includes('termine') || etat.includes('terminée')) {
+      return '🏁'
+    }
+    return '❓'
+  }
+
   // Init map
   useEffect(() => {
     if (map.current || !mapContainer.current) return
@@ -66,7 +144,8 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
             container: mapContainer.current!,
             style: LOCAL_STYLE,
             center: CENTER,
-            zoom: ZOOM
+            zoom: ZOOM,
+            attributionControl: false
           })
           setStatus('local')
         } else {
@@ -78,18 +157,35 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
           container: mapContainer.current!,
           style: FALLBACK_STYLE,
           center: CENTER,
-          zoom: ZOOM
+          zoom: ZOOM,
+          attributionControl: false
         })
         setStatus('fallback')
       })
       .finally(() => {
         if (map.current) {
-          map.current.addControl(new maplibregl.NavigationControl(), 'top-left')
+          const navControl = new maplibregl.NavigationControl({
+            showCompass: true,
+            showZoom: true,
+            visualizePitch: true
+          })
+          map.current.addControl(navControl, 'top-left')
+          
+          const scaleControl = new maplibregl.ScaleControl({
+            maxWidth: 100,
+            unit: 'metric'
+          })
+          map.current.addControl(scaleControl, 'bottom-left')
+          
+          const attributionControl = new maplibregl.AttributionControl({
+            compact: true,
+            customAttribution: '© Signalement ROUE'
+          })
+          map.current.addControl(attributionControl, 'bottom-right')
         }
       })
 
     return () => {
-      // cleanup map and markers
       markersRef.current.forEach(m => m.remove())
       markersRef.current = []
       if (map.current) {
@@ -111,29 +207,62 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
     signalements.forEach(sig => {
       try {
         const el = document.createElement('div')
-        el.className = 'ml-marker'
-        el.style.width = '18px'
-        el.style.height = '18px'
-        el.style.borderRadius = '50%'
-        el.style.background = '#2563eb'
-        el.style.border = '2px solid white'
-        el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)'
+        el.className = 'map-marker'
+        
+        // Obtenir la couleur selon l'état
+        const markerColor = getMarkerColor(sig.etatLibelle, sig.etatActuelId)
+        const isSelected = selectedId === sig.idSignalement
+        const markerSize = isSelected ? '32px' : '24px'
+        const borderWidth = isSelected ? '3px' : '2px'
+        
+        el.innerHTML = `
+          <div class="marker-content" style="
+            width: ${markerSize}; 
+            height: ${markerSize};
+            background: ${markerColor};
+            border: ${borderWidth} solid white;
+          ">
+            <span class="marker-icon">${getStatusIcon(sig.etatLibelle)}</span>
+          </div>
+        `
 
-        const marker = new maplibregl.Marker({ element: el })
+        const marker = new maplibregl.Marker({ 
+          element: el,
+          anchor: 'bottom'
+        })
           .setLngLat([sig.longitude, sig.latitude])
           .addTo(map.current!)
 
-        // lightweight preview popup on hover using available fields
-        const previewPopup = new maplibregl.Popup({ offset: 8, closeButton: false, closeOnClick: false })
-          .setHTML(`
-            <div style="min-width:180px; color:black; font-family:sans-serif;">
-              <strong>${sig.titre || 'Sans titre'}</strong>
-              <div style="font-size:12px; margin-top:6px;">${sig.typeTravauxLibelle || '-'} · ${sig.etatLibelle || 'Inconnu'}</div>
-            </div>
-          `)
+        // Ajouter une classe si sélectionné
+        if (isSelected) {
+          el.classList.add('selected')
+        }
+
+        // lightweight preview popup on hover
+        const previewPopup = new maplibregl.Popup({ 
+          offset: 8, 
+          closeButton: false, 
+          closeOnClick: false,
+          className: 'map-popup map-preview-popup'
+        })
 
         el.addEventListener('mouseenter', () => {
-          try { previewPopup.setLngLat([sig.longitude, sig.latitude]).addTo(map.current!) } catch (e) {}
+          try { 
+            previewPopup
+              .setLngLat([sig.longitude, sig.latitude])
+              .setHTML(`
+                <div class="popup-preview">
+                  <div class="popup-title">${sig.titre || 'Sans titre'}</div>
+                  <div class="popup-meta">
+                    <span class="status-badge ${getStatusBadgeClass(sig.etatLibelle)}">
+                      ${sig.etatLibelle || 'Inconnu'}
+                    </span>
+                    <span class="popup-type">${sig.typeTravauxLibelle || '-'}</span>
+                  </div>
+                </div>
+              `)
+              .addTo(map.current!) 
+          } catch (e) {}
         })
         el.addEventListener('mouseleave', () => {
           try { previewPopup.remove() } catch (e) {}
@@ -146,10 +275,20 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
           // remove previous popup if any
           try { popupRef.current?.remove() } catch(e) {}
 
-          // create loading popup (keep open on map clicks)
-          const loadingPopup = new maplibregl.Popup({ offset: 12, closeOnClick: false })
+          // create loading popup
+          const loadingPopup = new maplibregl.Popup({ 
+            offset: 12, 
+            closeOnClick: false,
+            className: 'map-popup map-detail-popup',
+            maxWidth: '400px'
+          })
             .setLngLat([sig.longitude, sig.latitude])
-            .setHTML(`<div style="min-width:260px; padding:8px; font-family:sans-serif;">Chargement…</div>`)
+            .setHTML(`
+              <div class="popup-loading">
+                <div class="loading-spinner-small"></div>
+                <div>Chargement des détails...</div>
+              </div>
+            `)
             .addTo(map.current!)
           popupRef.current = loadingPopup
 
@@ -157,50 +296,112 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
             const res = await fetch(`/api/signalements/${sig.idSignalement}/details`)
             if (!res.ok) throw new Error('Network response not ok')
             const api = await res.json()
-            const data = api?.data || api // support direct or wrapped responses
-
-            // build html content
-            const assignHtml = (data.assignations || []).map((a: any) => `
-              <div style="border-top:1px solid #eee; padding-top:6px; margin-top:6px;">
-                <div style="font-weight:600">${a.nomEntreprise || 'Entreprise'}</div>
-                <div style="font-size:12px">Statut: ${a.statutLibelle || '-'}</div>
-                <div style="font-size:12px">Période: ${a.dateDebut || '-'} → ${a.dateFin || '-'}</div>
-                <div style="font-size:12px">Montant: ${a.montant != null ? a.montant : '-'}</div>
-              </div>
-            `).join('')
-
-            const historyHtml = (data.historiqueEtat || []).slice(0,5).map((h: any) => {
-              let dateStr = ''
-              try { dateStr = h.dateChangement ? new Date(h.dateChangement).toLocaleString() : '' } catch(e) { dateStr = h.dateChangement || '' }
-              return `
-                <div style="font-size:12px; border-top:1px dashed #f0f0f0; padding-top:6px; margin-top:6px;">
-                  <div style="font-weight:600">${h.libelle || '-'}</div>
-                  <div style="font-size:11px; color:#666">${dateStr}</div>
-                </div>
-              `
-            }).join('')
+            const data = api?.data || api
 
             // format creation date
             let createdAt = ''
-            try { createdAt = data.dateCreation ? new Date(data.dateCreation).toLocaleString() : '' } catch(e) { createdAt = data.dateCreation || '' }
+            try { 
+              createdAt = data.dateCreation ? new Date(data.dateCreation).toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              }) : '' 
+            } catch(e) { createdAt = data.dateCreation || '' }
+
+            // Assignations
+            const assignationsHtml = (data.assignations || []).map((a: any) => `
+              <div class="assignation-item">
+                <div class="assignation-title">${a.nomEntreprise || 'Entreprise'}</div>
+                <div class="assignation-details">
+                  <span>Statut: ${a.statutLibelle || '-'}</span>
+                  <span>Période: ${a.dateDebut || '-'} → ${a.dateFin || '-'}</span>
+                  <span>Montant: ${a.montant != null ? `${a.montant}€` : '-'}</span>
+                </div>
+              </div>
+            `).join('') || '<div class="no-data">Aucune assignation</div>'
+
+            // Historique
+            const historyHtml = (data.historiqueEtat || []).slice(0,5).map((h: any) => {
+              let dateStr = ''
+              try { 
+                dateStr = h.dateChangement ? new Date(h.dateChangement).toLocaleDateString('fr-FR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }) : '' 
+              } catch(e) { dateStr = h.dateChangement || '' }
+              return `
+                <div class="history-item">
+                  <div class="history-status">${h.libelle || '-'}</div>
+                  <div class="history-date">${dateStr}</div>
+                </div>
+              `
+            }).join('') || '<div class="no-data">Aucun historique</div>'
 
             const html = `
-              <div style="min-width:300px; max-width:420px; color:#111; font-family:sans-serif;">
-                <h3 style="margin:0 0 8px 0">${data.titre || sig.titre || 'Sans titre'}</h3>
-                <div style="margin-bottom:8px;"><strong>État:</strong> ${data.currentEtatLibelle || sig.etatLibelle || '-' }
-                  <span style="float:right">Progress: ${data.progressionPercent ?? '-'}%</span>
+              <div class="popup-detail">
+                <div class="popup-header">
+                  <div class="popup-id">Signalement #${sig.idSignalement}</div>
+                  <h3 class="popup-title-large">${data.titre || sig.titre || 'Sans titre'}</h3>
+                  <div class="popup-meta-large">
+                    <span class="popup-date">Créé le ${createdAt}</span>
+                    <span class="popup-progress">Progression: ${data.progressionPercent ?? '-'}%</span>
+                  </div>
                 </div>
-                <div style="font-size:12px; color:#666; margin-bottom:6px">Créé: ${createdAt}</div>
-                <div style="font-size:13px; margin-bottom:8px">${data.description || sig.description || ''}</div>
-                <div style="margin-bottom:6px"><strong>Assignations</strong>${assignHtml || '<div style="font-size:12px;color:#666">Aucune</div>'}</div>
-                <div style="margin-top:8px"><strong>Historique</strong>${historyHtml || '<div style="font-size:12px;color:#666">Aucun historique</div>'}</div>
+                
+                <div class="popup-content">
+                  <div class="popup-section">
+                    <div class="section-title">Description</div>
+                    <div class="section-content">${data.description || sig.description || 'Aucune description'}</div>
+                  </div>
+                  
+                  <div class="popup-section">
+                    <div class="section-title">État actuel</div>
+                    <div class="status-badge ${getStatusBadgeClass(data.currentEtatLibelle || sig.etatLibelle)}">
+                      ${getStatusIcon(data.currentEtatLibelle || sig.etatLibelle)} 
+                      ${data.currentEtatLibelle || sig.etatLibelle || '-'}
+                    </div>
+                  </div>
+                  
+                  <div class="popup-section">
+                    <div class="section-title">Type de travaux</div>
+                    <div class="section-content">
+                      <span class="type-tag">${data.typeTravauxLibelle || sig.typeTravauxLibelle || '-'}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="popup-section">
+                    <div class="section-title">Assignations</div>
+                    <div class="section-content assignations-list">
+                      ${assignationsHtml}
+                    </div>
+                  </div>
+                  
+                  <div class="popup-section">
+                    <div class="section-title">Historique récent</div>
+                    <div class="section-content history-list">
+                      ${historyHtml}
+                    </div>
+                  </div>
+                </div>
               </div>
             `
 
             loadingPopup.setHTML(html)
             popupRef.current = loadingPopup
           } catch (err) {
-            try { loadingPopup.setHTML(`<div style="min-width:220px;padding:8px;font-family:sans-serif;color:#900">Erreur chargement</div>`) } catch(e){}
+            try { 
+              loadingPopup.setHTML(`
+                <div class="popup-error">
+                  <div class="error-icon">⚠️</div>
+                  <div class="error-text">Erreur lors du chargement des détails</div>
+                  <div class="error-hint">Veuillez réessayer plus tard</div>
+                </div>
+              `) 
+            } catch(e){}
           }
         })
 
@@ -209,46 +410,74 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
         console.warn('Erreur ajout marker', e)
       }
     })
-  }, [signalements, onMarkerClick])
+  }, [signalements, onMarkerClick, selectedId])
 
   // Center on selected marker
   useEffect(() => {
     if (!map.current || selectedId == null) return
     const sel = signalements.find(s => s.idSignalement === selectedId)
     if (sel) {
-      map.current.flyTo({ center: [sel.longitude, sel.latitude], zoom: 16, speed: 1.2 })
-      // open popup for the matching marker (closest by position)
-      const match = markersRef.current.find(m => {
-        const lngLat = (m as any)._lngLat || (m as any).getLngLat && (m as any).getLngLat()
-        if (!lngLat) return false
-        return Math.abs(lngLat.lng - sel.longitude) < 0.000001 && Math.abs(lngLat.lat - sel.latitude) < 0.000001
+      map.current.flyTo({ 
+        center: [sel.longitude, sel.latitude], 
+        zoom: 16, 
+        speed: 1.2,
+        curve: 1.42
       })
-      if (match) {
-        try { (match as any).togglePopup() } catch (e) {}
-      }
     }
   }, [selectedId, signalements])
 
-  return (
-    <div style={{ position: 'relative', height: '100%', width: '100%' }}>
-      <div ref={mapContainer} style={{ height: '100%', width: '100%' }} />
+  // Charger les états depuis l'API et construire la légende dynamiquement
+  useEffect(() => {
+    fetch('/api/signalements/etats')
+      .then(res => res.ok ? res.json() : Promise.reject('no-states'))
+      .then((data: any[]) => {
+        const normalized = (data || []).map(item => ({
+          idEtatSignalement: item.idEtatSignalement ?? item.id ?? item.Id_etat_signalement ?? null,
+          libelle: item.libelle ?? item.nomEtat ?? item.nom ?? ''
+        })).filter(i => i.idEtatSignalement != null)
+        setEtatOptions(normalized as {idEtatSignalement:number, libelle:string}[])
+      })
+      .catch(() => setEtatOptions([]))
+  }, [])
 
+  const defaultLegendItems = [
+    { label: 'En attente', color: '#f59e0b', icon: '⏳' },
+    { label: 'En cours', color: '#8b5cf6', icon: '🚧' },
+    { label: 'Résolu', color: '#10b981', icon: '🏁' },
+    { label: 'Rejeté', color: '#ef4444', icon: '❌' }
+  ]
+
+  const legendItems = etatOptions.length > 0
+    ? etatOptions.map(e => ({ label: e.libelle, color: getMarkerColor(undefined, e.idEtatSignalement), icon: getStatusIcon(e.libelle) }))
+    : defaultLegendItems
+
+  return (
+    <div className="map-container">
+      <div ref={mapContainer} className="map-viewport" />
+      
       {/* Status indicator */}
-      <div style={{
-        position: 'absolute',
-        bottom: 30,
-        left: 10,
-        background: status === 'local' ? '#22c55e' : status === 'fallback' ? '#f59e0b' : '#6b7280',
-        color: 'white',
-        padding: '4px 8px',
-        borderRadius: 4,
-        fontSize: 12,
-        fontFamily: 'sans-serif',
-        zIndex: 1000
-      }}>
-        {status === 'loading' && '⏳ Chargement...'}
-        {status === 'local' && '🗺️ Tuiles locales (vectorielles)'}
-        {status === 'fallback' && '🌐 OSM en ligne (fallback)'}
+      <div className={`map-status ${status}`}>
+        {status === 'loading' && '⏳ Chargement de la carte...'}
+        {status === 'local' && '🗺️ Mode local'}
+        {status === 'fallback' && '🌐 Mode en ligne'}
+      </div>
+      
+      {/* Legend */}
+      <div className="map-legend">
+        <div className="legend-title">Légende des états</div>
+        <div className="legend-items">
+          {legendItems.map((item, index) => (
+            <div key={index} className="legend-item">
+              <div 
+                className="legend-color" 
+                style={{ backgroundColor: item.color }}
+              >
+                {item.icon}
+              </div>
+              <div className="legend-label">{item.label}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

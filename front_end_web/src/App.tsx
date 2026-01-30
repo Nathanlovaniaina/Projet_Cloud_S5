@@ -1,6 +1,7 @@
 import { Suspense, lazy, useState, useEffect } from 'react'
 import './App.css'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import './styles/navbar.css'
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import { isAuthenticated, logout, getCurrentUser } from './services/authService'
 
@@ -12,10 +13,26 @@ const VisitorPage = lazy(() => import('./components/VisitorPage'))
 const ManagerSignalementsPage = lazy(() => import('./components/ManagerSignalementsPage'))
 const ManagerSignalementDetail = lazy(() => import('./components/ManagerSignalementDetail'))
 const ManagerUsersPage = lazy(() => import('./components/ManagerUsersPage'))
+const MapOnlyPage = lazy(() => import('./components/MapOnlyPage'))
+
+function NavbarLink({ to, children, isManager = false }: { to: string, children: React.ReactNode, isManager?: boolean }) {
+  const location = useLocation()
+  const isActive = location.pathname === to
+  
+  return (
+    <Link 
+      to={to} 
+      className={`navbar-link ${isActive ? 'active' : ''} ${isManager ? 'manager-link' : ''}`}
+    >
+      {children}
+    </Link>
+  )
+}
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userName, setUserName] = useState<string>('')
+  const [userInitial, setUserInitial] = useState<string>('')
   const [isManager, setIsManager] = useState(false)
 
   useEffect(() => {
@@ -27,14 +44,20 @@ function App() {
         if (!authenticated) {
           setIsManager(false)
           setUserName('')
+          setUserInitial('')
           return
         }
 
         try {
           const user = await getCurrentUser()
           if (user) {
-            setUserName(`${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || '')
-
+            const name = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || ''
+            setUserName(name)
+            
+            // Initiale pour l'avatar
+            const initial = name.charAt(0).toUpperCase()
+            setUserInitial(initial)
+            
             let manager = false
             const t = user.typeUtilisateur
             if (t == null) {
@@ -55,7 +78,11 @@ function App() {
           if (userStr) {
             try {
               const user = JSON.parse(userStr)
-              setUserName(`${user.prenom || ''} ${user.nom || ''}`.trim() || user.email)
+              const name = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || 'Utilisateur'
+              setUserName(name)
+              
+              const initial = name.charAt(0).toUpperCase()
+              setUserInitial(initial)
 
               let manager = false
               const t = user.typeUtilisateur
@@ -72,6 +99,7 @@ function App() {
               setIsManager(Boolean(manager))
             } catch (err) {
               setUserName('Utilisateur')
+              setUserInitial('U')
               setIsManager(false)
             }
           }
@@ -93,93 +121,70 @@ function App() {
     if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
       await logout()
       setIsLoggedIn(false)
+      setUserName('')
+      setUserInitial('')
     }
   }
 
   return (
-    <div style={{ color: 'white', minHeight: '100vh' }}>
+    <div className="navbar-container">
       <BrowserRouter>
-        <header style={{ 
-          padding: '12px 24px', 
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'linear-gradient(90deg, #1e293b 0%, #334155 100%)'
-        }}>
-          <div>
-            <strong style={{ fontSize: '18px' }}>Projet S5 — Signalement</strong>
+        <header className="navbar-header">
+          <div className="navbar-content">
+            <div className="navbar-brand">
+              <div className="navbar-title">
+                Signalement
+              </div>
+              <div className="navbar-subtitle">
+                Plateforme de signalement
+              </div>
+            </div>
+            
+            <nav className="navbar-nav">
+              <NavbarLink to="/map">Carte</NavbarLink>
+              <NavbarLink to="/visiteur">Recapitulatif</NavbarLink>
+              
+              {isManager && (
+                <NavbarLink to="/manager/signalements" isManager>
+                  🔑 Manager
+                </NavbarLink>
+              )}
+              {isManager && (
+                <NavbarLink to="/manager/utilisateurs" isManager>
+                  👥 Utilisateurs
+                </NavbarLink>
+              )}
+              
+              {isLoggedIn ? (
+                <div className="navbar-user">
+                  <div className="user-info">
+                    <div className="user-avatar">
+                      {userInitial}
+                    </div>
+                    <span>{userName}</span>
+                  </div>
+                  <NavbarLink to="/profile">Profil</NavbarLink>
+                  <button
+                    onClick={handleLogout}
+                    className="logout-button"
+                  >
+                    Déconnexion
+                  </button>
+                </div>
+              ) : (
+                <div className="auth-links">
+                  <NavbarLink to="/login">Se connecter</NavbarLink>
+                  <Link to="/register" className="register-button">
+                    S'inscrire
+                  </Link>
+                </div>
+              )}
+            </nav>
           </div>
-          
-          <nav style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <Link to="/" style={{ color: '#60a5fa', textDecoration: 'none' }}>
-              Carte
-            </Link>
-            <Link to="/visiteur" style={{ color: '#60a5fa', textDecoration: 'none' }}>
-              Visiteur
-            </Link>
-            
-            {isManager && (
-              <Link to="/manager/signalements" style={{ 
-                color: '#fbbf24', 
-                textDecoration: 'none',
-                fontWeight: 600 
-              }}>
-                🔑 Manager
-              </Link>
-            )}
-            {isManager && (
-              <Link to="/manager/utilisateurs" style={{ color: '#fbbf24', textDecoration: 'none', fontWeight: 600 }}>
-                👥 Utilisateurs
-              </Link>
-            )}
-            
-            {isLoggedIn ? (
-              <>
-                <Link to="/profile" style={{ color: '#60a5fa', textDecoration: 'none' }}>
-                  👤 {userName}
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    background: '#dc2626',
-                    color: 'white',
-                    border: 'none',
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 600
-                  }}
-                >
-                  Déconnexion
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" style={{ color: '#60a5fa', textDecoration: 'none' }}>
-                  Se connecter
-                </Link>
-                <Link 
-                  to="/register" 
-                  style={{ 
-                    background: '#2563eb',
-                    color: 'white',
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    textDecoration: 'none',
-                    fontWeight: 600
-                  }}
-                >
-                  S'inscrire
-                </Link>
-              </>
-            )}
-          </nav>
         </header>
 
-        <main style={{ height: 'calc(100vh - 48px)' }}>
-          <Suspense fallback={<div style={{ padding: 16 }}>Chargement…</div>}>
+        <main className="navbar-main">
+          <Suspense fallback={<div className="loading-container">Chargement…</div>}>
             <ErrorBoundary>
               <Routes>
                 <Route path="/login" element={<LoginForm />} />
@@ -189,8 +194,10 @@ function App() {
                 <Route path="/manager/signalements" element={<ManagerSignalementsPage />} />
                 <Route path="/manager/signalements/:id" element={<ManagerSignalementDetail />} />
                 <Route path="/manager/utilisateurs" element={<ManagerUsersPage />} />
-                <Route path="/" element={<MapLibreMap />} />
-                <Route path="*" element={<MapLibreMap />} />
+                <Route path="/visiteur" element={<VisitorPage />} />
+                <Route path="/map" element={<MapOnlyPage />} />
+                <Route path="/" element={<VisitorPage />} />
+                <Route path="*" element={<VisitorPage />} />
               </Routes>
             </ErrorBoundary>
           </Suspense>

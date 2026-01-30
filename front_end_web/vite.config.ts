@@ -8,10 +8,21 @@ export default defineConfig({
     proxy: {
       // Proxy API calls to backend Spring Boot (running on port 8080)
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://backend:8080',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api')
+      },
+      // Proxy map tiles to tileserver-gl (running on port 80 inside maps_server container)
+      '/styles': {
+        target: 'http://maps_server:80',
+        changeOrigin: true,
+        secure: false
+      },
+      '/data': {
+        target: 'http://maps_server:80',
+        changeOrigin: true,
+        secure: false
       }
     }
   },
