@@ -23,6 +23,7 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const markersRef = useRef<maplibregl.Marker[]>([])
+  const popupRef = useRef<maplibregl.Popup | null>(null)
   const [status, setStatus] = useState<'loading' | 'local' | 'fallback'>('loading')
 
   const CENTER: [number, number] = [47.5079, -18.8792] // [lng, lat] Antananarivo
@@ -120,16 +121,89 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
 
         const marker = new maplibregl.Marker({ element: el })
           .setLngLat([sig.longitude, sig.latitude])
-          .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(`
-            <div style="min-width:200px; color:black;">
-              <h3 style="margin:0 0 8px 0">${sig.titre || 'Sans titre'}</h3>
-              <p style="margin:4px 0"><strong>Type:</strong> ${sig.typeTravauxLibelle || '-'}</p>
-              <p style="margin:4px 0"><strong>Statut:</strong> ${sig.etatLibelle || 'Inconnu'}</p>
-            </div>
-          `))
           .addTo(map.current!)
 
-        el.addEventListener('click', () => onMarkerClick?.(sig.idSignalement))
+        // lightweight preview popup on hover using available fields
+        const previewPopup = new maplibregl.Popup({ offset: 8, closeButton: false, closeOnClick: false })
+          .setHTML(`
+            <div style="min-width:180px; color:black; font-family:sans-serif;">
+              <strong>${sig.titre || 'Sans titre'}</strong>
+              <div style="font-size:12px; margin-top:6px;">${sig.typeTravauxLibelle || '-'} · ${sig.etatLibelle || 'Inconnu'}</div>
+            </div>
+          `)
+
+        el.addEventListener('mouseenter', () => {
+          try { previewPopup.setLngLat([sig.longitude, sig.latitude]).addTo(map.current!) } catch (e) {}
+        })
+        el.addEventListener('mouseleave', () => {
+          try { previewPopup.remove() } catch (e) {}
+        })
+
+        // on click fetch detailed info lazily and show in popup
+        el.addEventListener('click', async () => {
+          onMarkerClick?.(sig.idSignalement)
+
+          // remove previous popup if any
+          try { popupRef.current?.remove() } catch(e) {}
+
+          // create loading popup (keep open on map clicks)
+          const loadingPopup = new maplibregl.Popup({ offset: 12, closeOnClick: false })
+            .setLngLat([sig.longitude, sig.latitude])
+            .setHTML(`<div style="min-width:260px; padding:8px; font-family:sans-serif;">Chargement…</div>`)
+            .addTo(map.current!)
+          popupRef.current = loadingPopup
+
+          try {
+            const res = await fetch(`/api/signalements/${sig.idSignalement}/details`)
+            if (!res.ok) throw new Error('Network response not ok')
+            const api = await res.json()
+            const data = api?.data || api // support direct or wrapped responses
+
+            // build html content
+            const assignHtml = (data.assignations || []).map((a: any) => `
+              <div style="border-top:1px solid #eee; padding-top:6px; margin-top:6px;">
+                <div style="font-weight:600">${a.nomEntreprise || 'Entreprise'}</div>
+                <div style="font-size:12px">Statut: ${a.statutLibelle || '-'}</div>
+                <div style="font-size:12px">Période: ${a.dateDebut || '-'} → ${a.dateFin || '-'}</div>
+                <div style="font-size:12px">Montant: ${a.montant != null ? a.montant : '-'}</div>
+              </div>
+            `).join('')
+
+            const historyHtml = (data.historiqueEtat || []).slice(0,5).map((h: any) => {
+              let dateStr = ''
+              try { dateStr = h.dateChangement ? new Date(h.dateChangement).toLocaleString() : '' } catch(e) { dateStr = h.dateChangement || '' }
+              return `
+                <div style="font-size:12px; border-top:1px dashed #f0f0f0; padding-top:6px; margin-top:6px;">
+                  <div style="font-weight:600">${h.libelle || '-'}</div>
+                  <div style="font-size:11px; color:#666">${dateStr}</div>
+                </div>
+              `
+            }).join('')
+
+            // format creation date
+            let createdAt = ''
+            try { createdAt = data.dateCreation ? new Date(data.dateCreation).toLocaleString() : '' } catch(e) { createdAt = data.dateCreation || '' }
+
+            const html = `
+              <div style="min-width:300px; max-width:420px; color:#111; font-family:sans-serif;">
+                <h3 style="margin:0 0 8px 0">${data.titre || sig.titre || 'Sans titre'}</h3>
+                <div style="margin-bottom:8px;"><strong>État:</strong> ${data.currentEtatLibelle || sig.etatLibelle || '-' }
+                  <span style="float:right">Progress: ${data.progressionPercent ?? '-'}%</span>
+                </div>
+                <div style="font-size:12px; color:#666; margin-bottom:6px">Créé: ${createdAt}</div>
+                <div style="font-size:13px; margin-bottom:8px">${data.description || sig.description || ''}</div>
+                <div style="margin-bottom:6px"><strong>Assignations</strong>${assignHtml || '<div style="font-size:12px;color:#666">Aucune</div>'}</div>
+                <div style="margin-top:8px"><strong>Historique</strong>${historyHtml || '<div style="font-size:12px;color:#666">Aucun historique</div>'}</div>
+              </div>
+            `
+
+            loadingPopup.setHTML(html)
+            popupRef.current = loadingPopup
+          } catch (err) {
+            try { loadingPopup.setHTML(`<div style="min-width:220px;padding:8px;font-family:sans-serif;color:#900">Erreur chargement</div>`) } catch(e){}
+          }
+        })
+
         markersRef.current.push(marker)
       } catch (e) {
         console.warn('Erreur ajout marker', e)

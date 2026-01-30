@@ -25,6 +25,7 @@ import com.signalement.repository.SignalementRepository;
 import com.signalement.repository.StatutAssignationRepository;
 import com.signalement.repository.TypeTravailRepository;
 import com.signalement.repository.UtilisateurRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -57,9 +58,9 @@ public class SignalementService {
     private final EntrepriseRepository entrepriseRepository;
     private final EntrepriseConcernerRepository entrepriseConcernerRepository;
     private final StatutAssignationRepository statutAssignationRepository;
-    private final HistoriqueStatutAssignationRepository historiqueStatutAssignationRepository;
-    private final UtilisateurRepository utilisateurRepository;
     private final FirebaseConversionService firebaseConversionService;
+    private final UtilisateurRepository utilisateurRepository;
+    private final HistoriqueStatutAssignationRepository historiqueStatutAssignationRepository;
     private final Firestore firestore;
     private static final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
@@ -368,6 +369,57 @@ public class SignalementService {
         return assignations.stream()
             .map(this::convertToDTO)
             .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public com.signalement.dto.SignalementDetailsDTO getSignalementDetails(Integer signalementId) {
+        Signalement s = signalementRepository.findById(signalementId)
+            .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé"));
+
+        com.signalement.dto.SignalementDetailsDTO dto = new com.signalement.dto.SignalementDetailsDTO();
+        dto.setIdSignalement(s.getIdSignalement());
+        dto.setTitre(s.getTitre());
+        dto.setDescription(s.getDescription());
+        dto.setLatitude(s.getLatitude());
+        dto.setLongitude(s.getLongitude());
+        dto.setSurfaceMetreCarree(s.getSurfaceMetreCarree());
+        dto.setDateCreation(s.getDateCreation());
+        dto.setUrlPhoto(s.getUrlPhoto());
+
+        // Current état
+        EtatSignalement current = getCurrentEtat(s.getIdSignalement());
+        if (current != null) {
+            dto.setCurrentEtatId(current.getIdEtatSignalement());
+            dto.setCurrentEtatLibelle(current.getLibelle());
+        }
+
+        // Simple progression mapping based on état id
+        int progression = 0;
+        if (current != null) {
+            Integer id = current.getIdEtatSignalement();
+            if (id == 1) progression = 0; // En attente
+            else if (id == 2) progression = 50; // En cours
+            else if (id == 3) progression = 100; // Résolu
+            else progression = 50;
+        }
+        dto.setProgressionPercent(progression);
+
+        // Assignations
+        dto.setAssignations(getAssignationsBySignalement(signalementId));
+
+        // Historique des états
+        List<HistoriqueEtatSignalement> historiques = historiqueEtatSignalementRepository
+            .findBySignalement_IdSignalementOrderByDateChangementDesc(signalementId);
+        List<com.signalement.dto.SignalementDetailsDTO.EtatHistoryEntryDTO> historyDtos = historiques.stream()
+            .map(h -> new com.signalement.dto.SignalementDetailsDTO.EtatHistoryEntryDTO(
+                h.getEtatSignalement() != null ? h.getEtatSignalement().getIdEtatSignalement() : null,
+                h.getEtatSignalement() != null ? h.getEtatSignalement().getLibelle() : null,
+                h.getDateChangement()
+            ))
+            .toList();
+        dto.setHistoriqueEtat(historyDtos);
+
+        return dto;
     }
     
     // Helper methods for historique-based état management
