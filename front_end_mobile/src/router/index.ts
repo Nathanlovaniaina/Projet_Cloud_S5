@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
+import HomePage from '../views/HomePage.vue'
 import LoginPage from '../views/LoginPage.vue'
 import TabsPage from '../views/TabsPage.vue'
 import MapPage from '../views/MapPage.vue'
@@ -10,7 +11,12 @@ import { loadUserFromStorage, currentUser } from '../composables/useAuth';
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/tabs/map'
+    redirect: '/home'
+  },
+  {
+    path: '/home',
+    name: 'Home',
+    component: HomePage
   },
   {
     path: '/login',
@@ -62,11 +68,11 @@ router.beforeEach((to, from, next) => {
     if (currentUser.value) {
       next();
     } else {
-      // Non connecté, rediriger vers login
-      next('/login');
+      // Non connecté, rediriger vers home
+      next('/home');
     }
-  } else if (to.path === '/login' && currentUser.value) {
-    // Si connecté et essaye d'aller au login, rediriger vers tabs
+  } else if ((to.path === '/login' || to.path === '/home') && currentUser.value) {
+    // Si connecté et essaye d'aller au login ou home, rediriger vers tabs
     next('/tabs/map');
   } else {
     next();

@@ -52,11 +52,13 @@ let map: any = null;
 export interface Props {
   isCreating?: boolean;
   filterMySignalements?: boolean;
+  filterStatuses?: string[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isCreating: false,
-  filterMySignalements: false
+  filterMySignalements: false,
+  filterStatuses: () => ['En attente', 'En cours', 'Résolu', 'Rejeté']
 });
 
 const emit = defineEmits<{
@@ -82,6 +84,22 @@ let temporaryMarker: any = null;
 const typeTravailCache = new Map<number, string>();
 const etatSignalementCache = new Map<number, string>();
 const signalementMarkers = new Map<number, any>();
+
+// Récupérer la couleur du marqueur selon l'état
+function getMarkerColor(etat: string): string {
+  switch (etat) {
+    case 'En attente':
+      return '#3B82F6'; // Bleu
+    case 'En cours':
+      return '#F59E0B'; // Orange
+    case 'Résolu':
+      return '#10B981'; // Vert
+    case 'Rejeté':
+      return '#EF4444'; // Rouge
+    default:
+      return '#6B7280'; // Gris par défaut
+  }
+}
 
 // Fix for default markers in Leaflet with bundlers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -177,22 +195,29 @@ async function loadSignalements() {
       const data = doc.data();
       const { latitude, longitude, description, titre, surface_metre_carree, id_type_travail, id, id_utilisateur } = data;
       
-      // Vérifier le filtre
-      const passFilter = props.filterMySignalements 
+      // Vérifier le filtre "Mes Signalements"
+      const passUserFilter = props.filterMySignalements 
         ? id_utilisateur === currentUser.value?.id 
         : true;
       
-      if (!passFilter) continue;
+      if (!passUserFilter) continue;
       
       // Récupérer le type de travail et l'état
       const typeTravail = await getTypeTravailLibelle(id_type_travail);
       const etat = await getDernierEtat(id);
       
+      // Vérifier le filtre de statut
+      if (!props.filterStatuses.includes(etat)) continue;
+      
+      // Obtenir la couleur selon le statut
+      const markerColor = getMarkerColor(etat);
+      
       const marker = L.circleMarker([latitude, longitude], {
-        radius: 6,
-        color: '#2196F3',
-        weight: 2,
-        fillOpacity: 0.7
+        radius: 8,
+        color: markerColor,
+        weight: 3,
+        fillColor: markerColor,
+        fillOpacity: 0.6
       }).addTo(map!);
       
       // Ajouter un event listener pour afficher le popup personnalisé
@@ -238,12 +263,17 @@ onMounted(async () => {
   map = L.map(mapContainer.value, {
     center: [-18.8792, 47.5079],
     zoom: 13,
-    zoomControl: true,
+    zoomControl: false,
     preferCanvas: true,
     tap: true,
     touchZoom: true,
     inertia: true
   });
+
+  // Ajouter les contrôles zoom en position personnalisée
+  L.control.zoom({
+    position: 'topleft'
+  }).addTo(map);
 
   const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
@@ -325,6 +355,12 @@ watch(() => props.filterMySignalements, async () => {
   await loadSignalements();
 });
 
+// Watcher pour réagir au changement des filtres de statuts
+watch(() => props.filterStatuses, async () => {
+  clearSignalements();
+  await loadSignalements();
+}, { deep: true });
+
 // Exposer les fonctions
 defineExpose({ 
   refreshSignalements: loadSignalements
@@ -342,6 +378,16 @@ defineExpose({
 #map {
   width: 100%;
   height: 100%;
+}
+
+/* Positionner les contrôles zoom sous la navbar à gauche */
+:deep(.leaflet-top.leaflet-left) {
+  top: 10px !important;
+  left: 5px !important;
+}
+
+:deep(.leaflet-top.leaflet-right) {
+  top: 70px !important;
 }
 
 /* Custom Popup Modal Styles */
