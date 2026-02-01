@@ -2,22 +2,26 @@
 http://ionicframework.com/docs/theming/ */
 /* Ionic Variables and Theming - Modern Design System */
 
+body {
+  padding-top: env(safe-area-inset-top);
+}
+
 :root {
-  /* Primary color - Blue gradient */
-  --ion-color-primary: #5B7EF8;
-  --ion-color-primary-rgb: 91, 126, 248;
+  /* Primary color - Bleu Sécurité */
+  --ion-color-primary: #3B82F6;
+  --ion-color-primary-rgb: 59, 130, 246;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #5070da;
-  --ion-color-primary-tint: #6b8bf9;
+  --ion-color-primary-shade: #2563EB;
+  --ion-color-primary-tint: #60A5FA;
 
-  /* Secondary color - Purple */
-  --ion-color-secondary: #8B5CF6;
-  --ion-color-secondary-rgb: 139, 92, 246;
+  /* Secondary color - Bleu foncé */
+  --ion-color-secondary: #1E40AF;
+  --ion-color-secondary-rgb: 30, 64, 175;
   --ion-color-secondary-contrast: #ffffff;
   --ion-color-secondary-contrast-rgb: 255, 255, 255;
-  --ion-color-secondary-shade: #7a51d8;
-  --ion-color-secondary-tint: #9770f7;
+  --ion-color-secondary-shade: #1E3A8A;
+  --ion-color-secondary-tint: #3B82F6;
 
   /* Tertiary color - Pink */
   --ion-color-tertiary: #EC4899;
@@ -174,4 +178,33 @@ ion-item {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--ion-color-primary);
+}
+
+/* Variables globales pour les safe areas */
+:root {
+  --ion-safe-area-top: env(safe-area-inset-top);
+  --ion-safe-area-bottom: env(safe-area-inset-bottom);
+  --ion-safe-area-left: env(safe-area-inset-left);
+  --ion-safe-area-right: env(safe-area-inset-right);
+}
+
+/* Appliquer à tout le contenu */
+ion-content {
+  --padding-bottom: calc(var(--ion-safe-area-bottom, 0) + 16px);
+  --padding-top: var(--ion-safe-area-top, 0);
+}
+
+/* Pour le footer ou éléments en bas */
+ion-footer {
+  padding-bottom: var(--ion-safe-area-bottom);
+}
+
+/* Pour les boutons fixed en bas */
+.fab-bottom {
+  margin-bottom: var(--ion-safe-area-bottom);
+}
+
+/* Spécifiquement pour éviter la barre de navigation */
+.avoid-nav-bar {
+  padding-bottom: calc(16px + var(--ion-safe-area-bottom));
 }

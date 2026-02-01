@@ -286,7 +286,7 @@ async function submit() {
 
 <style scoped>
 .add-content {
-  --background: var(--ion-background-color);
+  --background: #FFFFFF;
 }
 
 .form-container {
@@ -305,13 +305,14 @@ async function submit() {
   font-size: 28px;
   font-weight: 700;
   margin: 0 0 8px 0;
-  color: var(--ion-text-color);
+  color: #1F2937;
 }
 
 .form-subtitle {
   font-size: 15px;
-  color: var(--ion-color-medium);
+  color: #6B7280;
   margin: 0;
+  font-weight: 500;
 }
 
 .modern-form {
@@ -329,29 +330,41 @@ async function submit() {
 .input-label {
   font-size: 14px;
   font-weight: 600;
-  color: var(--ion-text-color);
+  color: #1F2937;
   padding-left: 4px;
 }
 
 .modern-input,
 .modern-textarea,
 .modern-select {
-  --background: var(--ion-color-light);
-  --color: var(--ion-color-dark);
-  --placeholder-color: var(--ion-color-medium);
-  --placeholder-opacity: 0.6;
+  --background: #F9FAFB;
+  --color: #1F2937;
+  --placeholder-color: #9CA3AF;
+  --placeholder-opacity: 1;
   --padding-start: 16px;
   --padding-end: 16px;
   --padding-top: 14px;
-  --padding-bottom: 14px;  --highlight-color-focus: transparent;  border-radius: 12px;
+  --padding-bottom: 14px;
+  --border-radius: 12px;
+  --highlight-height: 0;
   font-size: 15px;
   transition: all 0.3s ease;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.modern-input:focus-within,
+.modern-textarea:focus-within,
+.modern-select:focus-within {
+  --background: #EFF6FF;
+  border-color: #3B82F6;
 }
 
 .modern-input.input-filled,
 .modern-textarea.input-filled {
-  --background: var(--ion-color-primary-tint);
-  --color: var(--ion-color-dark);
+  --background: #EFF6FF;
+  border-color: #3B82F6;
 }
 
 .modern-textarea {
@@ -364,14 +377,15 @@ async function submit() {
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: linear-gradient(135deg, var(--ion-color-primary-tint) 0%, var(--ion-color-secondary-tint) 100%);
+  background: #EFF6FF;
   border-radius: 12px;
   margin: 8px 0;
+  border: 2px solid #3B82F6;
 }
 
 .location-icon {
   font-size: 32px;
-  color: var(--ion-color-primary);
+  color: #3B82F6;
 }
 
 .location-text {
@@ -383,12 +397,12 @@ async function submit() {
 .location-label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--ion-color-dark);
+  color: #1F2937;
 }
 
 .location-coords {
   font-size: 12px;
-  color: var(--ion-color-medium);
+  color: #6B7280;
   font-family: monospace;
 }
 
@@ -400,24 +414,33 @@ async function submit() {
 }
 
 .action-btn {
+  --background: #FFFFFF;
+  --background-hover: #F9FAFB;
+  --background-activated: #F3F4F6;
+  --border-color: #3B82F6;
   --border-width: 2px;
   --border-radius: 12px;
+  --color: #3B82F6;
   font-weight: 600;
   height: 48px;
   text-transform: none;
   letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
 .submit-btn {
-  --background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 100%);
+  --background: #1F2937;
+  --background-hover: #111827;
+  --background-activated: #111827;
   --border-radius: 12px;
+  --color: #FFFFFF;
   font-weight: 700;
   height: 56px;
   font-size: 16px;
   text-transform: none;
   letter-spacing: 0.5px;
   margin-top: 8px;
-  box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3);
+  box-shadow: 0 8px 20px rgba(31, 41, 55, 0.2);
 }
 
 .submit-btn:disabled {
@@ -426,42 +449,16 @@ async function submit() {
 
 .error-message {
   padding: 12px;
-  background: rgba(var(--ion-color-danger-rgb), 0.1);
+  background: #FEE2E2;
   border-radius: 8px;
   text-align: center;
+  border-left: 4px solid #EF4444;
 }
 
 .error-message p {
   margin: 0;
   font-size: 14px;
   font-weight: 500;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .form-title {
-    color: var(--ion-color-light);
-  }
-  
-  .input-label {
-    color: var(--ion-color-light);
-  }
-
-  .modern-input,
-  .modern-textarea,
-  .modern-select {
-    --background: rgba(255, 255, 255, 0.05);
-    --color: var(--ion-color-light);
-  }
-
-  .modern-input.input-filled,
-  .modern-textarea.input-filled {
-    --background: rgba(var(--ion-color-primary-rgb), 0.2);
-    --color: var(--ion-color-light);
-  }
-
-  .location-label {
-    color: var(--ion-color-light);
-  }
+  color: #DC2626;
 }
 </style>

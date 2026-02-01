@@ -1,23 +1,27 @@
 <template>
   <ion-page>
-    <ion-content :fullscreen="true" class="login-content">
+    <ion-content class="login-content" :fullscreen="false">
+      <!-- Back Button -->
+      <button class="back-button" @click="goBack">
+        <ion-icon :icon="chevronBackIcon"></ion-icon>
+      </button>
+
       <div class="login-container">
-        <!-- Logo/Brand Section -->
-        <div class="brand-section">
-          <div class="app-icon">
-            <ion-icon :icon="mapIcon" class="icon-large"></ion-icon>
-          </div>
-          <h1 class="app-title">Signalements</h1>
-          <p class="app-subtitle">Gérez vos signalements facilement</p>
+        <!-- Welcome Text -->
+        <div class="welcome-section">
+          <h1 class="welcome-title">Content de vo revor ev!</h1>
         </div>
 
         <!-- Login Form -->
-        <form @submit.prevent="onSubmit" class="login-form">
+        <form @submit.prevent="onSubmit" class="login-form" autocomplete="off">
           <div class="input-group">
             <label class="input-label">Email</label>
             <ion-input
-              v-model="email"
+              :value="email"
+              @ionInput="email = $event.detail.value ?? ''"
               type="email"
+              inputmode="email"
+              autocomplete="off"
               placeholder="votre@email.com"
               required
               class="modern-input"
@@ -28,8 +32,10 @@
           <div class="input-group">
             <label class="input-label">Mot de passe</label>
             <ion-input
-              v-model="password"
+              :value="password"
+              @ionInput="password = $event.detail.value ?? ''"
               type="password"
+              autocomplete="off"
               placeholder="••••••••"
               required
               class="modern-input"
@@ -58,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { 
   IonPage, 
@@ -68,17 +74,37 @@ import {
   IonIcon 
 } from '@ionic/vue';
 import { 
-  logIn as logInIcon, 
-  map as mapIcon,
-  alertCircle as alertCircleIcon 
+  logIn as logInIcon,
+  alertCircle as alertCircleIcon,
+  chevronBack as chevronBackIcon
 } from 'ionicons/icons';
 import { login } from '@/composables/useAuth';
+import { useKeyboardFix } from '@/composables/useKeyboardFix';
 
 const email = ref('');
 const password = ref('');
 const loading = ref(false);
 const error = ref('');
 const router = useRouter();
+
+// Appliquer le fix du clavier
+useKeyboardFix();
+
+onMounted(() => {
+  // Nettoyer les valeurs au montage
+  email.value = '';
+  password.value = '';
+  error.value = '';
+  
+  // Debug focus events
+  document.addEventListener('focusin', e => {
+    console.log('FOCUS:', e.target);
+  });
+});
+
+function goBack() {
+  router.push('/home');
+}
 
 async function onSubmit() {
   error.value = '';
@@ -101,7 +127,38 @@ async function onSubmit() {
 
 <style scoped>
 .login-content {
-  --background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 100%);
+  --background: #FFFFFF;
+}
+
+.back-button {
+  position: absolute;
+  top: calc(var(--ion-safe-area-top) + 10px);
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: #1F2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.back-button ion-icon {
+  font-size: 24px;
+}
+
+.back-button:hover {
+  transform: scale(1.1);
+  color: #3B82F6;
+}
+
+.back-button:active {
+  transform: scale(0.95);
 }
 
 .login-container {
@@ -110,56 +167,27 @@ async function onSubmit() {
   justify-content: center;
   align-items: center;
   min-height: 100%;
-  padding: 40px 24px;
+  padding: 20px 24px 40px;
 }
 
-.brand-section {
-  text-align: center;
-  margin-bottom: 48px;
+.welcome-section {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 32px;
   animation: fadeInDown 0.6s ease;
 }
 
-.app-icon {
-  width: 100px;
-  height: 100px;
-  margin: 0 auto 24px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.icon-large {
-  font-size: 56px;
-  color: white;
-}
-
-.app-title {
-  font-size: 36px;
-  font-weight: 800;
-  color: white;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.5px;
-}
-
-.app-subtitle {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
+.welcome-title {
+  font-size: 30px;
+  font-weight: 700;
+  color: #1F2937;
   margin: 0;
-  font-weight: 500;
+  line-height: 1.3;
 }
 
 .login-form {
   width: 100%;
   max-width: 400px;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(10px);
-  border-radius: 24px;
-  padding: 32px 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   animation: fadeInUp 0.6s ease;
 }
 
@@ -173,37 +201,50 @@ async function onSubmit() {
 .input-label {
   font-size: 14px;
   font-weight: 600;
-  color: var(--ion-text-color);
+  color: #1F2937;
   padding-left: 4px;
 }
 
 .modern-input {
-  --background: var(--ion-color-light);
-  --color: var(--ion-color-dark);
-  --placeholder-color: var(--ion-color-medium);
-  --placeholder-opacity: 0.6;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 14px;
-  --padding-bottom: 14px;  --highlight-color-focus: transparent;  border-radius: 12px;
+  --background: #F3F4F6;
+  --color: #1F2937;
+  --placeholder-color: #9CA3AF;
+  --placeholder-opacity: 1;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  --border-radius: 12px;
+  --highlight-height: 0;
   font-size: 15px;
   transition: all 0.3s ease;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .modern-input.input-filled {
-  --background: rgba(var(--ion-color-primary-rgb), 0.08);
+  --background: #EFF6FF;
+  border-color: #3B82F6;
+}
+
+.modern-input:focus-within {
+  --background: #EFF6FF;
+  border-color: #3B82F6;
 }
 
 .login-button {
-  --background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 100%);
+  --background: #1F2937;
+  --background-hover: #111827;
+  --background-activated: #111827;
   --border-radius: 12px;
+  --box-shadow: 0 10px 30px rgba(31, 41, 55, 0.2);
   margin-top: 12px;
   height: 56px;
   font-weight: 700;
   font-size: 16px;
   text-transform: none;
   letter-spacing: 0.5px;
-  box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.4);
 }
 
 .login-button:disabled {
@@ -216,10 +257,10 @@ async function onSubmit() {
   gap: 10px;
   margin-top: 20px;
   padding: 14px 16px;
-  background: rgba(var(--ion-color-danger-rgb), 0.1);
-  border-left: 4px solid var(--ion-color-danger);
+  background: #FEE2E2;
+  border-left: 4px solid #EF4444;
   border-radius: 8px;
-  color: var(--ion-color-danger);
+  color: #DC2626;
   font-size: 14px;
   font-weight: 500;
   animation: shake 0.5s ease;
@@ -260,21 +301,28 @@ async function onSubmit() {
 
 /* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
-  .login-form {
-    background: rgba(30, 41, 59, 0.95);
+  .login-content {
+    --background: #111827;
+  }
+
+  .welcome-title {
+    color: #F9FAFB;
   }
 
   .input-label {
-    color: var(--ion-color-light);
+    color: #F3F4F6;
   }
 
   .modern-input {
-    --background: rgba(255, 255, 255, 0.05);
-    --color: var(--ion-color-light);
+    --background: #1F2937;
+    --color: #F9FAFB;
+    --placeholder-color: #6B7280;
   }
 
-  .modern-input.input-filled {
-    --background: rgba(var(--ion-color-primary-rgb), 0.2);
+  .modern-input.input-filled,
+  .modern-input:focus-within {
+    --background: #1E3A8A;
+    border-color: #60A5FA;
   }
 }
 </style>

@@ -1,6 +1,17 @@
 <template>
   <ion-page>
+    <ion-header :translucent="true">
+      <ion-toolbar class="profile-toolbar">
+        <ion-title>Profil</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    
     <ion-content :fullscreen="true" class="profile-content">
+      <ion-header collapse="condense">
+        <ion-toolbar class="profile-toolbar">
+          <ion-title size="large">Profil</ion-title>
+        </ion-toolbar>
+      </ion-header>
       <div class="profile-container" v-if="user">
         <!-- Header Section -->
         <div class="profile-header">
@@ -34,16 +45,6 @@
             <div class="info-card-content">
               <span class="info-label">Type d'utilisateur</span>
               <span class="info-value">{{ typeUtilisateurLabel }}</span>
-            </div>
-          </div>
-
-          <div class="info-card" v-if="user.firebase_uid">
-            <div class="info-card-icon">
-              <ion-icon :icon="keyIcon"></ion-icon>
-            </div>
-            <div class="info-card-content">
-              <span class="info-label">Identifiant</span>
-              <span class="info-value info-value-small">{{ user.firebase_uid.substring(0, 20) }}...</span>
             </div>
           </div>
         </div>
@@ -172,7 +173,12 @@ function goToLogin() {
 
 <style scoped>
 .profile-content {
-  --background: linear-gradient(180deg, var(--ion-color-primary-tint) 0%, var(--ion-background-color) 40%);
+  --background: #FFFFFF;
+}
+
+.profile-toolbar {
+  --background: #FFFFFF;
+  --border-color: #E5E7EB;
 }
 
 .profile-container {
@@ -197,11 +203,11 @@ function goToLogin() {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 100%);
+  background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.3);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
 }
 
 .avatar-icon {
@@ -215,21 +221,21 @@ function goToLogin() {
   right: 8px;
   width: 20px;
   height: 20px;
-  background: #4CAF50;
+  background: #10B981;
   border-radius: 50%;
-  border: 3px solid var(--ion-background-color);
+  border: 3px solid #FFFFFF;
 }
 
 .user-name {
   font-size: 28px;
   font-weight: 700;
   margin: 0 0 8px 0;
-  color: var(--ion-text-color);
+  color: #1F2937;
 }
 
 .user-role {
   font-size: 16px;
-  color: var(--ion-color-medium);
+  color: #6B7280;
   margin: 0;
   font-weight: 500;
 }
@@ -246,7 +252,7 @@ function goToLogin() {
   align-items: center;
   gap: 16px;
   padding: 18px 20px;
-  background: var(--ion-color-light);
+  background: #F9FAFB;
   border-radius: 16px;
   transition: all 0.3s ease;
 }
@@ -259,7 +265,7 @@ function goToLogin() {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 100%);
+  background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -281,13 +287,13 @@ function goToLogin() {
 
 .info-label {
   font-size: 13px;
-  color: var(--ion-color-medium);
+  color: #6B7280;
   font-weight: 500;
 }
 
 .info-value {
   font-size: 16px;
-  color: var(--ion-text-color);
+  color: #1F2937;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -308,7 +314,7 @@ function goToLogin() {
 
 .stat-card {
   padding: 20px;
-  background: linear-gradient(135deg, var(--ion-color-primary-tint) 0%, var(--ion-color-secondary-tint) 100%);
+  background: #EFF6FF;
   border-radius: 16px;
   display: flex;
   flex-direction: column;
@@ -318,18 +324,18 @@ function goToLogin() {
 
 .stat-icon {
   font-size: 32px;
-  color: var(--ion-color-primary);
+  color: #3B82F6;
 }
 
 .stat-number {
   font-size: 32px;
   font-weight: 700;
-  color: var(--ion-text-color);
+  color: #1F2937;
 }
 
 .stat-label {
   font-size: 13px;
-  color: var(--ion-color-medium);
+  color: #6B7280;
   font-weight: 500;
 }
 
@@ -344,7 +350,7 @@ function goToLogin() {
   font-size: 16px;
   text-transform: none;
   letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px rgba(var(--ion-color-danger-rgb), 0.3);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .not-connected-container {
@@ -357,38 +363,17 @@ function goToLogin() {
   text-align: center;
 }
 
-        .not-connected-icon {
-          font-size: 120px;
-          color: var(--ion-color-medium);
-          margin-bottom: 24px;
-          opacity: 0.5;
-        }
+.not-connected-icon {
+  font-size: 120px;
+  color: #9CA3AF;
+  margin-bottom: 24px;
+  opacity: 0.5;
+}
 
-        .not-connected-container h2 {
-          font-size: 24px;
-          font-weight: 700;
-          margin: 0 0 12px 0;
-          color: var(--ion-text-color);
-        }
-
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-          .profile-content {
-            --background: linear-gradient(180deg, rgba(var(--ion-color-primary-rgb), 0.2) 0%, var(--ion-background-color) 40%);
-          }
-
-          .user-name,
-          .info-value,
-          .stat-number {
-            color: var(--ion-color-light);
-          }
-
-          .info-card {
-            background: rgba(255, 255, 255, 0.05);
-          }
-
-          .not-connected-container h2 {
-            color: var(--ion-color-light);
-          }
-        }
-      </style>
+.not-connected-container h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: #1F2937;
+}
+</style>
