@@ -28,6 +28,7 @@ public class SessionService {
 
     private final SessionRepository sessionRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final FirebaseConversionService firebaseConversionService;
     private final Firestore firestore;
 
     @Transactional
