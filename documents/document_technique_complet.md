@@ -1,7 +1,7 @@
 # Documentation Technique - Système de Signalement de Travaux Routiers
 
-**Version:** 1.0  
-**Date:** Janvier 2026  
+**Version:** 3.0  
+**Date:** Février 2026  
 **Équipe de développement:** ETU003241, ETU003346, ETU003337, ETU003358
 
 ---
@@ -9,13 +9,50 @@
 ## Table des Matières
 
 1. [Introduction](#1-introduction)
-2. [Présentation Générale et Fonctionnalités](#2-présentation-générale-et-fonctionnalités)
-3. [Architecture Générale](#3-architecture-générale)
-4. [Choix Technologiques](#4-choix-technologiques)
-5. [Sécurité et Authentification](#5-sécurité-et-authentification)
-6. [Modélisation des Données](#6-modélisation-des-données)
-7. [Carte et Géolocalisation](#7-carte-et-géolocalisation)
+   - 1.1 [Contexte du Projet](#11-contexte-du-projet)
+   - 1.2 [Objectif du Document](#12-objectif-du-document)
+   - 1.3 [Périmètre du Document](#13-périmètre-du-document)
+   - 1.4 [Public Cible](#14-public-cible)
+   - 1.5 [Définitions et Acronymes](#15-définitions-et-acronymes)
+2. [Contexte & Besoins](#2-contexte--besoins)
+   - 2.1 [Problématique à résoudre](#21-problématique-à-résoudre)
+   - 2.2 [Contraintes](#22-contraintes)
+   - 2.3 [Exigences fonctionnelles](#23-exigences-fonctionnelles)
+3. [Architecture générale](#3-architecture-générale)
+   - 3.1 [Vue d'ensemble du système](#31-vue-densemble-du-système)
+   - 3.2 [Schéma d'architecture](#32-schéma-darchitecture)
+   - 3.3 [Technologies utilisées](#33-technologies-utilisées)
+   - 3.4 [Environnements](#34-environnements)
+4. [Description fonctionnelle](#4-description-fonctionnelle)
+   - 4.1 [Cas d'utilisation](#41-cas-dutilisation)
+   - 4.2 [Parcours utilisateur](#42-parcours-utilisateur)
+   - 4.3 [Règles de gestion](#43-règles-de-gestion)
+5. [Modélisation des Données](#5-modélisation-des-données)
+   - 5.1 [Modèle Conceptuel de Données (MCD)](#51-modèle-conceptuel-de-données-mcd)
+   - 5.2 [Tables Principales](#52-tables-principales)
+   - 5.3 [Tables de Référence](#53-tables-de-référence)
+   - 5.4 [Table de Synchronisation](#54-table-de-synchronisation)
+6. [Sécurité et Authentification](#6-sécurité-et-authentification)
+   - 6.1 [Authentification / autorisation](#61-authentification--autorisation)
+   - 6.2 [Gestion des rôles et droits](#62-gestion-des-rôles-et-droits)
+   - 6.3 [Protection des données](#63-protection-des-données)
+   - 6.4 [Logs et traçabilité](#64-logs-et-traçabilité)
+7. [Installation et Déploiement](#7-installation-et-déploiement)
+   - 7.1 [Prérequis système](#71-prérequis-système)
+   - 7.2 [Déploiement avec Docker Compose](#72-déploiement-avec-docker-compose)
+   - 7.3 [Accès aux applications](#73-accès-aux-applications)
+   - 7.4 [Application Mobile](#74-application-mobile)
+   - 7.5 [Configuration Firebase](#75-configuration-firebase)
+   - 7.6 [Dépannage](#76-dépannage)
 8. [Conclusion et Améliorations](#8-conclusion-et-améliorations)
+   - 8.1 [Bilan du Projet](#81-bilan-du-projet)
+   - 8.2 [Fonctionnalités Réalisées](#82-fonctionnalités-réalisées)
+   - 8.3 [Améliorations Futures](#83-améliorations-futures)
+   - 8.4 [Impact et Valeur Ajoutée](#84-impact-et-valeur-ajoutée)
+9. [Annexes](#9-annexes)
+   - 9.1 [Liens et Ressources](#91-liens-et-ressources)
+   - 9.2 [Technologies et Versions](#92-technologies-et-versions)
+   - 9.6 [Contacts et Support](#96-contacts-et-support)
 
 ---
 
@@ -23,249 +60,87 @@
 
 ### 1.1 Contexte du Projet
 
-Le système de **Signalement de Travaux Routiers** est une application full-stack conçue pour améliorer la gestion des infrastructures routières à Madagascar, plus spécifiquement à Antananarivo. L'objectif principal est de faciliter la communication entre les citoyens, les gestionnaires d'infrastructures et les entreprises de travaux publics.
+Le système de **Signalement de Travaux Routiers** est une application full-stack conçue pour améliorer la gestion des infrastructures routières à Madagascar. Il permet aux citoyens de signaler les problèmes routiers et aux gestionnaires municipaux de superviser les réparations.
 
-Ce projet répond à un besoin réel : permettre aux citoyens de signaler rapidement les problèmes routiers (nids-de-poule, routes endommagées, etc.), tout en offrant aux gestionnaires municipaux une plateforme centralisée pour superviser, assigner et suivre les réparations.
+### 1.2 Objectif du Document
 
-### 1.2 Problématique
+Ce document technique vise à démontrer la maîtrise technique, justifier les choix architecturaux, faciliter la maintenance et servir de référence pour les développeurs futurs.
 
-Les infrastructures routières souffrent souvent de:
-- **Manque de visibilité**: Les dégradations ne sont pas toujours rapidement détectées
-- **Communication inefficace**: Difficulté pour les citoyens de signaler les problèmes
-- **Gestion dispersée**: Absence d'outil centralisé pour suivre l'état des réparations
-- **Traçabilité limitée**: Difficulté à historiser les interventions et mesurer l'efficacité
+### 1.3 Périmètre du Document
 
-### 1.3 Objectif du Document
+**Couvre :** Architecture générale, choix technologiques, modélisation des données, mécanismes de sécurité.
 
-Ce document technique vise à:
-- ✅ **Démontrer la maîtrise technique** du système développé
-- ✅ **Justifier les choix architecturaux** et technologiques
-- ✅ **Faciliter la maintenance** et l'évolution du projet
-- ✅ **Servir de référence** pour les développeurs futurs
-- ✅ **Documenter l'infrastructure** et les processus de déploiement
+### 1.4 Public Cible
 
----
+- **Développeurs** : Comprendre l'architecture et contribuer au code
+- **Administrateurs** : Déployer et maintenir l'infrastructure  
+- **Décideurs** : Évaluer la viabilité technique du système
 
-## 2. Présentation Générale et Fonctionnalités
+### 1.5 Définitions et Acronymes
 
-### 2.1 Vue d'Ensemble de l'Application
+**Termes clés :**
+- **API REST** : Architecture pour services web
+- **JWT** : Standard d'authentification stateless
+- **PostGIS** : Extension géospatiale PostgreSQL
+- **Firebase** : Plateforme cloud Google
+- **Ionic** : Framework d'applications mobiles hybrides
+- **Leaflet** : Bibliothèque pour cartes interactives
+- **Docker** : Plateforme de containerisation pour le déploiement
+- **Docker Compose** : Outil d'orchestration de conteneurs multi-services
+- **RBAC** : Contrôle d'accès basé sur les rôles
 
-Le système se compose de trois applications distinctes mais interconnectées:
+**Rôles :** Citoyen (VISITEUR), Manager (gestion complète)
 
-1. **Application Mobile (Ionic Vue)**: Pour les citoyens et utilisateurs nomades
-2. **Application Web (React)**: Pour les managers et les citoyens (supervision et consultation)
-3. **API Backend (Spring Boot)**: Serveur centralisé gérant la logique métier
+## 2. Contexte & Besoins
 
-**[Screenshot: Architecture globale avec les 3 applications]**
+### 2.1 Problématique à résoudre
 
-### 2.2 Rôles et Permissions
+Les infrastructures routières à Madagascar souffrent de manque de visibilité, communication inefficace entre citoyens et municipalité, gestion dispersée des interventions, et traçabilité limitée. Les citoyens ne peuvent pas signaler facilement les problèmes (nids-de-poule, affaissements), les managers ne suivent pas l'avancement des réparations, et il n'y a pas de statistiques fiables.
 
-Le système implémente deux rôles utilisateurs avec des permissions distinctes:
+**Objectif :** Plateforme collaborative pour signalements géolocalisés, gestion des assignations aux entreprises, et analyses statistiques avec traçabilité complète.
 
-#### 2.2.1 Citoyen (Type Utilisateur: VISITEUR)
+### 2.2 Contraintes
 
-**Permissions:**
-- ✅ Créer des signalements de problèmes routiers
-- ✅ Consulter l'état de ses propres signalements
-- ✅ Changer le statut de ces signalements
-- ✅ Visualiser la carte avec tous les signalements publics
-- ✅ Ajouter des descriptions détaillées
-- ✅ Géolocaliser précisément les problèmes
+- **Techniques :** Multi-plateforme, mode offline, performance cartes, sécurité, évolutivité.
+- **Sécurité :** authentification robuste, audit trail, protection contre attaques.
+- **Budgétaires :** Technologies open-source , Firebase gratuit.
 
-**Cas d'usage typique:**
-> Un citoyen remarque un nid-de-poule important sur son trajet quotidien. Il ouvre l'application mobile, utilise la géolocalisation pour marquer l'emplacement exact, estime la surface endommagée et soumet le signalement. Il peut ensuite suivre l'évolution du traitement de son signalement.
+### 2.3 Exigences Fonctionnelles
 
-**[Screenshot: Interface mobile - Création de signalement]**
+- **EF1 :** Gestion utilisateurs (inscription, auth, rôles, blocage/déblocage).
+- **EF2 :** Signalements (création GPS, consultation, modification statut, historisation).
+- **EF3 :** Cartographie (affichage Leaflet, géolocalisation, filtrage, offline).
+- **EF4 :** Assignations (création, suivi statuts, historisation).
+- **EF5 :** Synchronisation (bidirectionnelle Firebase↔PostgreSQL, conflits, traçabilité).
+- **EF6 :** Statistiques (tableaux/graphiques, performance entreprises, export).
 
-#### 2.2.2 Manager (Type Utilisateur: MANAGER)
 
-**Permissions:**
-- ✅ Consulter tous les signalements
-- ✅ Modifier les informations détaillées des signalements
-- ✅ Changer le statut des signalements (nouveau, en cours, résolu)
-- ✅ Assigner des signalements aux entreprises partenaires
-- ✅ Débloquer des utilisateurs bloqués suite à tentatives de connexion échouées
-- ✅ Déclencher la synchronisation avec Firebase
-- ✅ Visualiser les statistiques et rapports
-- ✅ Gérer les assignations et suivre les entreprises
+## 3. Architecture générale
 
-**Cas d'usage typique:**
-> Un manager se connecte sur l'interface web, consulte les nouveaux signalements sur la carte, évalue leur priorité. Il assigne un signalement urgent à une entreprise de travaux publics en définissant les dates de début et fin, le montant estimé. Il suit ensuite l'avancement via les changements de statut.
+### 3.1 Vue d'ensemble du système
 
-**[Screenshot: Interface web Manager - Dashboard de gestion]**
+Le système de signalement de travaux routiers est une plateforme full-stack composée de trois applications principales interconnectées. L'application mobile permet aux citoyens de signaler les problèmes routiers avec géolocalisation, l'application web offre une interface de gestion pour les managers municipaux et des fonctionnalités de base pour les citoyens avec modes offline et online via Firebase, et l'API backend centralise la logique métier et la persistance des données.
 
-### 2.3 Fonctionnalités Principales
+### 3.2 Schéma d'architecture
 
-#### 2.3.1 Gestion des Signalements
-
-**Cycle de vie complet:**
-```
-En attente → En cours → Résolu
-                    ↓
-                 Rejeté
-```
-
-**Fonctionnalités clés:**
-- **Création avec géolocalisation**: Utilisation de la position GPS du téléphone ou sélection manuelle sur la carte
-- **Estimation de surface**: Spécifiée manuellement dans le formulaire
-- **Historisation des états**: Traçabilité complète de tous les changements
-- **Filtrage avancé**: Par statut, date, localisation, type de travail
-
-**[Screenshot: Détail d'un signalement avec historique]**
-
-#### 2.3.2 Système d'Authentification Hybride
-
-L'application implémente une **architecture d'authentification duale**:
-
-**Mode En Ligne (Firebase Authentication):**
-- Utilisé quand une connexion internet est disponible
-- Authentification via Firebase Auth
-- Synchronisation automatique avec Firestore
-- Permet l'accès depuis n'importe où
-
-**Mode Local (PostgreSQL + JWT):**
-- Utilisé en mode hors ligne ou quand Firebase est indisponible
-- Authentification directe contre la base PostgreSQL locale
-- Génération de tokens JWT pour les sessions
-- Données stockées localement
-
-**Basculement automatique:**
-```javascript
-// Détection de connectivité
-if (isOnline && firebaseAvailable) {
-    // Utiliser Firebase
-} else {
-    // Utiliser PostgreSQL local
-}
-```
-
-**[Screenshot: Page de connexion avec indicateur de mode]**
-
-#### 2.3.3 Synchronisation Firebase-PostgreSQL
-
-**Mécanisme bidirectionnel:**
-
-**Tâche 31 - Firebase → PostgreSQL:**
-- Récupération des modifications depuis Firestore
-- Détection des conflits avec stratégie Last-Write-Wins
-- Mise à jour de la base locale
-- Traçabilité via table `synchronisation_firebase`
-
-**Tâche 32 - PostgreSQL → Firebase:**
-- Synchronisation complète (FULL SYNC)
-- Envoi de toutes les tables vers Firestore
-- Maintien de la cohérence des références
-- Gestion des erreurs et rollback
-
-**Collections synchronisées (12 tables):**
-1. `type_utilisateur` (référentiel)
-2. `utilisateurs` (données utilisateurs)
-3. `etat_signalement` (référentiel)
-4. `type_travail` (référentiel)
-5. `entreprise` (données entreprises)
-6. `statut_assignation` (référentiel)
-7. `signalements` (données principales)
-8. `entreprise_concerner` (assignations)
-9. `historique_etat_signalement` (audit)
-10. `historique_statut_assignation` (audit)
-11. `session` (sessions actives)
-12. `tentative_connexion` (sécurité)
-
-**[Screenshot: Interface de synchronisation avec logs]**
-
-#### 2.3.4 Gestion des Assignations
-
-**Workflow d'assignation:**
-```
-1. Manager sélectionne un signalement
-2. Choisit une entreprise partenaire
-3. Définit: date_debut, date_fin, montant estimé
-4. Statut initial: "En attente"
-5. Manager met à jour: Accepté ou Refusé
-6. Si accepté: Manager met à jour En cours → Terminé
-```
-
-**Historisation:**
-- Chaque changement de statut est enregistré dans `historique_statut_assignation`
-- Traçabilité complète: qui, quand, quel changement
-- Permet d'analyser les délais de traitement
-
-**[Screenshot: Interface d'assignation d'entreprise]**
-
-#### 2.3.5 Statistiques et Rapports (Tâche 33)
-
-**Données disponibles:**
-- Nombre total de signalements par statut
-- Nombre de signalements par type de travail
-- Taux de résolution par période
-- Performance des entreprises (délais moyens)
-- Zones géographiques les plus problématiques
-- Évolution temporelle des signalements
-
-**[Screenshot: Dashboard statistiques avec graphiques]**
-
-#### 2.3.6 Sécurité - Limitation des Tentatives
-
-**Mécanisme de protection:**
-- Maximum **3 tentatives de connexion** par défaut
-- Après 3 échecs consécutifs → Compte bloqué (`is_blocked = true`)
-- Historisation dans `tentative_connexion` (date, succès/échec)
-- Seuls les managers peuvent débloquer les comptes via API dédiée
-
-**Avantages:**
-- Protection contre les attaques par force brute
-- Traçabilité des tentatives d'intrusion
-- Gestion granulaire des déblocages
-
-### 2.4 Modes de Fonctionnement
-
-#### 2.4.1 Mode En Ligne
-
-**Application Mobile:**
-- Connexion via Firebase Authentication
-- Données synchronisées en temps réel avec Firestore
-- Accès à OpenStreetMap en ligne
-
-**Application Web:**
-- Authentification JWT via backend Spring Boot
-- Communication REST avec l'API centrale
-- Synchronisation manuelle/automatique avec Firebase
-
-#### 2.4.2 Mode Hors Ligne (Prévu pour évolution)
-
-**Fonctionnalité spécifique à l'application mobile** (l'application web gère déjà les modes en ligne/hors ligne via la synchronisation Firebase).
-
-**Objectif:** Permettre aux citoyens d'utiliser l'application même dans les zones sans connexion internet à Madagascar, où les coupures réseau sont fréquentes.
-
-**Capacités limitées:**
-- Authentification locale (PostgreSQL)
-- Création de signalements en cache
-- Utilisation de tuiles cartographiques pré-téléchargées
-- Synchronisation différée au retour de la connexion
-
----
-
-## 3. Architecture Générale
-
-### 3.1 Architecture Globale du Système
-
-Le système suit une **architecture microservices avec backend centralisé**:
+Le schéma d'architecture montre l'interaction entre les composants: applications mobiles et web communiquant avec Firebase et l'API Spring Boot, qui elle-même interagit avec PostgreSQL/PostGIS pour les données géospatiales.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         CLIENTS                                  │
+│                         CLIENTS                                 │
 ├────────────────────────────────┬────────────────────────────────┤
 │   Application Mobile           │     Application Web            │
 │   (Ionic Vue + Capacitor)      │     (React + TypeScript)       │
 │   - iOS / Android              │     - Desktop Browsers         │
 │   - Géolocalisation            │     - Gestion avancée          │
-│   - Mode Online (Offline prévu)│     - Statistiques             │
+│   - Mode Online                │     - Mode Online/Offline      │
+│                                │     - Statistiques             │
 └────────────────┬───────────────┴──────────────┬─────────────────┘
-                 │                               │
-                 │         HTTPS / REST API      │
-                 │                               │
-                 ├───────────────┬───────────────┤
-                 │               │               │
+                 │                              │
+                 │         HTTPS / REST API     │
+                 │                              │
+                 ├───────────────┬──────────────┤
+                 │              │               │
         ┌────────▼───────┐      │      ┌────────▼────────┐
         │  Firebase      │      │      │  Spring Boot    │
         │  Services      │      │      │  Backend API    │
@@ -291,1076 +166,518 @@ Le système suit une **architecture microservices avec backend centralisé**:
                      └─────────────────────┘
 ```
 
-**[Screenshot: Schéma d'architecture détaillé]**
+### 3.3 Technologies utilisées
 
-### 3.2 Communication entre Modules
+Le système utilise les technologies suivantes:
 
-#### 3.2.1 Mobile ↔ Firebase
+**Backend:**
+- **Spring Boot 3.2.1** avec Java 17 pour l'API REST
+- **PostgreSQL + PostGIS** pour la base de données géospatiale
+- **Firebase Admin SDK** pour la synchronisation
 
-**L'application mobile n'utilise pas directement le backend API.** Elle communique uniquement avec Firebase pour toutes ses opérations :
+**Frontend Web:**
+- **React 19.2.0 + TypeScript** pour les interfaces web (manager et citoyen)
+- **Vite** pour le build rapide
 
-**Protocole:** Firebase SDK (Firestore + Authentication)
+**Frontend Mobile:**
+- **Ionic 8.0 + Vue.js 3.3** pour l'application hybride
+- **Capacitor 8.0** pour l'accès natif
 
-**Opérations principales:**
-- **Authentification**: Firebase Authentication pour login/inscription
-- **Lecture données**: Récupération des signalements depuis Firestore
-- **Écriture données**: Création de nouveaux signalements directement dans Firestore
-- **Synchronisation temps réel**: Mise à jour automatique des données
+**Services Cloud:**
+- **Firebase Authentication & Firestore** pour l'authentification et la synchronisation
+- **OpenStreetMap** pour les cartes
 
-**Avantages de cette architecture:**
-- ✅ Mode offline natif avec cache local Firestore
-- ✅ Synchronisation temps réel entre utilisateurs
-- ✅ Pas de dépendance à une connexion backend continue
-- ✅ Performance optimale sur mobile
+**Containerisation:**
+- **Docker** pour l'environnement de déploiement
 
-#### 3.2.2 Web ↔ Backend
+**Outils de Développement:**
+- **GitHub** pour le contrôle de version et la collaboration
+- **GitHub Desktop** (optionnel) pour une interface graphique
+- **Excel** pour le suivi des tâches
 
-**L'application web communique exclusivement avec le backend Spring Boot:**
+### 3.4 Environnements
 
-**Protocole:** REST API (JSON)
+Le système est déployé dans les environnements suivants:
 
-**Endpoints principaux:**
-```
-POST   /api/auth/login             # Connexion (JWT)
-GET    /api/signalements           # Liste tous signalements
-PUT    /api/signalements/{id}/statut # Modifier statut
-POST   /api/assignations           # Assigner à entreprise
-PUT    /api/assignations/{id}/statut # Modifier statut assignation
-GET    /api/statistiques/recap     # Statistiques
-POST   /api/sync/from-firebase     # Sync Firebase → PostgreSQL
-POST   /api/sync/to-firebase       # Sync PostgreSQL → Firebase
-POST   /api/auth/debloquer/{id}    # Débloquer utilisateur
-```
+**Développement:**
+- Environnement local avec Docker Compose
+- Base de données PostgreSQL 
+- Firebase Emulator pour les tests
 
-**Format de réponse standardisé (ApiResponse):**
-```json
-{
-  "success": true,
-  "message": "Opération réussie",
-  "data": { ... }
-}
-```
-
-#### 3.2.3 Backend ↔ Firebase
-
-**Synchronisation bidirectionnelle déclenchée manuellement par le manager:**
-
-**Firebase → PostgreSQL (Tâche 31):**
-- Déclenchée par le manager via interface web
-- Récupération via Firebase Admin SDK
-- Transfert des données Firestore vers PostgreSQL
-- Stratégie Last-Write-Wins pour les conflits
-
-**PostgreSQL → Firebase (Tâche 32):**
-- Synchronisation complète (FULL SYNC)
-- Envoi de toutes les données PostgreSQL vers Firestore
-- Maintien de la cohérence des références
-- Traçabilité via table `synchronisation_firebase`
-- Conversion en documents Firestore
-- Envoi via Firebase Admin SDK (batch operations)
-- Traçabilité dans `synchronisation_firebase`
-
-#### 3.2.4 Applications ↔ Cartes
-
-**OpenStreetMap Integration:**
-- **Mobile**: Leaflet + Tuiles en ligne (OpenStreetMap)
-- **Web**: Leaflet + Tuiles serveur local (mode offline)
-- **Format des données**: Coordonnées individuelles (latitude/longitude)
-
-**[Screenshot: Carte interactive avec marqueurs]**
-
-### 3.3 Flux de Données Typiques
-
-#### Exemple: Création d'un Signalement par un Citoyen (Application Mobile)
-
-**Note:** L'application mobile communique directement avec Firebase Firestore et non avec l'API Spring Boot pour la création des signalements.
-
-```
-[Mobile App] ──1. Géolocalisation──► [Capacitor Geolocation]
-                                            │
-[Mobile App] ◄──2. Coordonnées GPS─────────┘
-      │
-      │ 3. Formulaire rempli
-      │    (titre, description, surface)
-      │
-      ├──4. Création directe──► [Firebase Firestore]
-      │    dans collection 'signalements'
-      │    + historique_etat_signalement
-      │
-      │ 5. Confirmation locale
-      │    (pas de réponse API)
-      │
-[Manager Web] ──6. Sync Firebase → PostgreSQL──► [Backend Spring Boot]
-                                        │
-                                        ├──7. Sauvegarde──► [PostgreSQL]
-                                        │
-                                        │ 8. Création automatique
-                                        │     historique état "NOUVEAU"
-                                        │
-                                        ◄──9. Confirmation─┤
-```
-
-**Différences clés avec l'application web:**
-- **Mobile**: Création directe dans Firebase (mode offline-first)
-- **Web**: Passage par l'API Spring Boot (validation côté serveur)
-- **Synchronisation**: Déclenchée manuellement par le manager pour transférer les données Firebase vers PostgreSQL
-
----
-
-## 4. Choix Technologiques
-
-### 4.1 Backend - Spring Boot
-
-**Technologie:** Spring Boot 3.2.1 avec Java 17
-
-**Pourquoi Spring Boot?**
-
-#### ✅ **Écosystème riche et mature**
-- Spring Data JPA pour l'abstraction de la couche persistance
-- Spring Security pour la gestion de la sécurité et JWT
-- Spring Boot DevTools pour le développement rapide
-- Large communauté et documentation extensive
-
-#### ✅ **Productivité accrue**
-- Configuration automatique (auto-configuration)
-- Serveur embarqué (Tomcat) - pas besoin de déploiement externe
-- Hot reload pour un développement itératif
-- Annotations déclaratives réduisant le code boilerplate
-
-#### ✅ **Gestion simplifiée des dépendances**
-- Maven avec gestion centralisée des versions
-- Spring Boot Starters pour regrouper les dépendances courantes
-- Compatibilité testée entre composants
-
-#### ✅ **Production-ready**
-- Métriques et health checks intégrés
-- Logging configuré par défaut
-- Gestion des profils (dev, prod)
-- Support natif de Docker
-
-**Dépendances clés:**
-```xml
-<dependencies>
-    <!-- Web + REST API -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-    
-    <!-- JPA + Hibernate pour ORM -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-jpa</artifactId>
-    </dependency>
-    
-    <!-- Validation des données -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-validation</artifactId>
-    </dependency>
-    
-    <!-- PostgreSQL Driver -->
-    <dependency>
-        <groupId>org.postgresql</groupId>
-        <artifactId>postgresql</artifactId>
-    </dependency>
-    
-    <!-- PostGIS pour données géospatiales -->
-    <dependency>
-        <groupId>org.hibernate.orm</groupId>
-        <artifactId>hibernate-spatial</artifactId>
-    </dependency>
-    
-    <!-- Firebase Admin SDK -->
-    <dependency>
-        <groupId>com.google.firebase</groupId>
-        <artifactId>firebase-admin</artifactId>
-        <version>9.2.0</version>
-    </dependency>
-    
-    <!-- Documentation API avec Swagger -->
-    <dependency>
-        <groupId>org.springdoc</groupId>
-        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-    </dependency>
-</dependencies>
-```
-
-**[Screenshot: Structure du projet Spring Boot]**
-
-### 4.2 Frontend Web - React + TypeScript
-
-**Technologie:** React 19.2.0 + TypeScript + Vite
-
-**Pourquoi React?**
-
-#### ✅ **Composants réutilisables**
-- Architecture modulaire facilitant la maintenance
-- Séparation claire des responsabilités
-- Composition de composants pour des interfaces complexes
-
-#### ✅ **Écosystème JavaScript moderne**
-- Vite pour un build ultra-rapide (HMR instantané)
-- TypeScript pour la sécurité de types
-- Large bibliothèque de composants tiers
-
-#### ✅ **Performance**
-- Virtual DOM pour des mises à jour optimisées
-- Code splitting automatique avec Vite
-- Lazy loading des routes et composants
-
-#### ✅ **Communauté et ressources**
-- Librairie la plus populaire pour les SPA
-- Documentation exhaustive
-- Nombreux outils de développement (React DevTools)
-
-**Bibliothèques principales:**
-```json
-{
-  "dependencies": {
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
-    // Autres: react-router, axios, leaflet, etc.
-  },
-  "devDependencies": {
-    "vite": "^7.2.4",
-    "typescript": "~5.9.3",
-    "@vitejs/plugin-react": "^5.1.1"
-  }
-}
-```
-
-**Structure de l'application:**
-```
-src/
-├── components/         # Composants réutilisables
-│   ├── Map/           # Carte Leaflet
-│   ├── SignalementCard/
-│   └── StatisticsChart/
-├── services/          # Services API
-│   ├── authService.ts
-│   ├── signalementService.ts
-│   └── syncService.ts
-├── types/             # Types TypeScript
-├── router/            # Configuration routing
-└── App.tsx            # Composant racine
-```
-
-**[Screenshot: Interface web React]**
-
-### 4.3 Frontend Mobile - Ionic Vue
-
-**Technologie:** Ionic 8.0 + Vue.js 3.3 + Capacitor 8.0
-
-**Pourquoi Ionic Vue?**
-
-#### ✅ **Cross-platform natif**
-- Un seul code pour iOS et Android
-- Accès aux fonctionnalités natives via Capacitor:
-  - Géolocalisation (`@capacitor/geolocation`)
-  - Caméra pour photos
-  - Stockage local
-- Build direct vers APK/IPA
-
-#### ✅ **UI/UX mobile native**
-- Composants Ionic adaptés à chaque plateforme
-- Animations et transitions fluides
-- Design Material (Android) et iOS natif
-- Support des gestures tactiles
-
-#### ✅ **Vue.js - Progressif et performant**
-- Courbe d'apprentissage douce
-- Réactivité fine avec Composition API
-- Léger et rapide (bundle size réduit)
-- Excellente intégration avec TypeScript
-
-#### ✅ **Développement rapide**
-- Hot reload sur émulateur et device physique
-- Debugging via Chrome DevTools
-- Live reload avec `ionic serve`
-
-**Dépendances clés:**
-```json
-{
-  "dependencies": {
-    "@ionic/vue": "^8.0.0",
-    "@ionic/vue-router": "^8.0.0",
-    "@capacitor/core": "8.0.1",
-    "@capacitor/android": "^8.0.1",
-    "@capacitor/geolocation": "^8.0.0",
-    "vue": "^3.3.0",
-    "firebase": "^12.8.0",
-    "leaflet": "^1.9.4"
-  }
-}
-```
-
-**Capacités natives utilisées:**
-- **Géolocalisation**: Position en temps réel pour les signalements
-- **Caméra**: Upload de photos des problèmes routiers
-- **Stockage**: Cache local pour mode offline
-- **Status Bar & Haptics**: Expérience utilisateur native
-
-**[Screenshot: Application mobile sur Android]**
-
-### 4.4 Base de Données - PostgreSQL + PostGIS
-
-**Technologie:** PostgreSQL 13 avec extension PostGIS 3.3
-
-**Pourquoi PostgreSQL?**
-
-#### ✅ **Base de données relationnelle robuste**
-- ACID complet (Atomicité, Cohérence, Isolation, Durabilité)
-- Intégrité référentielle stricte avec contraintes FK
-- Transactions fiables pour opérations critiques
-- Performance excellente même avec gros volumes
-
-#### ✅ **Extension PostGIS - Données géospatiales**
-- Types géométriques natifs (POINT, LINESTRING, POLYGON)
-- Fonctions spatiales (distance, contient, intersecte)
-- Indexation géographique (R-tree) pour requêtes rapides
-- Standard OGC (Open Geospatial Consortium)
-
-**Exemple d'utilisation PostGIS:**
-```sql
--- Stockage de la localisation
-CREATE TABLE signalement(
-   latitude NUMERIC(15,10),
-   longitude NUMERIC(15,10),
-   geom GEOGRAPHY  -- Type PostGIS pour calculs précis
-);
-
--- Requête: Trouver signalements dans un rayon de 1km
-SELECT * FROM signalement
-WHERE ST_DWithin(
-    geom,
-    ST_MakePoint(-18.8792, 47.5079)::geography,
-    1000  -- mètres
-);
-```
-
-#### ✅ **Open source et gratuit**
-- Aucune licence commerciale requise
-- Maturité prouvée (25+ ans de développement)
-- Communauté active et support communautaire
-
-#### ✅ **Intégration parfaite avec Spring Boot**
-- Driver JDBC natif
-- Support JPA/Hibernate complet
-- Hibernate Spatial pour PostGIS
+**Production:**
+- Serveur cloud avec Docker containers
+- Base de données PostgreSQL/PostGIS
+- Firebase Production
+- OpenStreetMap tiles server
 
 **Configuration Docker:**
-```yaml
-db:
-  image: postgis/postgis:13-3.3
-  environment:
-    POSTGRES_DB: signalement_db
-    POSTGRES_USER: signalement_user
-    POSTGRES_PASSWORD: signalement_password
-  volumes:
-    - db_data:/var/lib/postgresql/data
-    - ./base_de_donnee/script.sql:/docker-entrypoint-initdb.d/1-script.sql
+
+
+## 4. Description fonctionnelle
+
+La section Description fonctionnelle détaille les aspects opérationnels du système de signalement de travaux routiers. Elle couvre les cas d'utilisation principaux, les parcours utilisateur, et les règles de gestion métier.
+
+### 4.1 Cas d'utilisation
+
+Les cas d'utilisation décrivent les interactions entre les acteurs (citoyens, managers) et le système. Voici les cas d'utilisation principaux :
+
+#### CU1 : Inscription et Connexion Utilisateur
+**Acteur principal :** Citoyen ou Manager  
+**Préconditions :** Accès à l'application mobile ou web  
+**Postconditions :** Utilisateur authentifié et session créée  
+**Scénario nominal :**
+1. L'utilisateur ouvre l'application
+2. Il choisit "S'inscrire" ou "Se connecter"
+3. Pour inscription : saisit nom, prénom, email, mot de passe, confirme mot de passe
+4. Pour connexion : saisit email et mot de passe
+5. Le système vérifie les informations
+6. Session créée avec token JWT
+
+**Scénarios alternatifs :**
+- Mot de passe oublié : reset via email
+- Compte bloqué : message d'erreur après 3 tentatives
+
+#### CU2 : Création d'un Signalement
+**Acteur principal :** Citoyen  
+**Préconditions :** Utilisateur connecté, géolocalisation activée  
+**Postconditions :** Signalement créé dans Firebase et synchronisé  
+**Scénario nominal :**
+1. L'utilisateur sélectionne "Nouveau signalement" sur la carte
+2. Géolocalisation automatique ou manuelle
+3. Saisie du type de problème (nid-de-poule, affaissement, etc.)
+4. Description et estimation de surface
+5. Validation et envoi
+6. Confirmation locale immédiate
+
+**Scénarios alternatifs :**
+- Mode offline : signalement stocké localement
+
+#### CU3 : Consultation des Signalements
+**Acteur principal :** Citoyen ou Manager  
+**Préconditions :** Utilisateur connecté  
+**Postconditions :** Liste des signalements affichée  
+**Scénario nominal :**
+1. Accès à la liste des signalements
+2. Filtrage par statut et mes signalements (ceux créés par l'utilisateur connecté)
+3. Affichage sur carte avec marqueurs
+4. Détails d'un signalement sélectionné
+5. Historique des états
+
+#### CU4 : Gestion des Statuts de Signalement
+**Acteur principal :** Manager  
+**Préconditions :** Rôle MANAGER, signalement existant  
+**Postconditions :** Statut mis à jour avec historisation  
+**Scénario nominal :**
+1. Sélection d'un signalement
+2. Changement de statut (NOUVEAU → EN_EVALUATION → ASSIGNE)
+3. Saisie de commentaires
+4. Sauvegarde avec timestamp
+
+#### CU5 : Assignation à une Entreprise
+**Acteur principal :** Manager  
+**Préconditions :** Signalement en statut ASSIGNE  
+**Postconditions :** Assignation créée  
+**Scénario nominal :**
+1. Sélection du signalement
+2. Choix de l'entreprise
+3. Définition dates début/fin et montant
+4. Création de l'assignation
+5. Notification à l'entreprise (future)
+
+#### CU6 : Synchronisation des Données
+**Acteur principal :** Manager  
+**Préconditions :** Données dans Firebase à synchroniser  
+**Postconditions :** Données transférées vers PostgreSQL  
+**Scénario nominal :**
+1. Accès au panneau de synchronisation
+2. Sélection du type (Firebase → PostgreSQL)
+3. Lancement de la synchronisation
+4. Affichage du progrès et résultats
+5. Gestion des conflits (Last-Write-Wins)
+
+#### CU7 : Consultation des Statistiques
+**Acteur principal :** Manager  
+**Préconditions :** Rôle MANAGER  
+**Postconditions :** Graphiques et rapports affichés  
+**Scénario nominal :**
+1. Accès au tableau de bord
+2. Sélection de la période
+3. Affichage des KPIs (signalements par mois, taux de résolution)
+4. Export possible en PDF/Excel
+
+#### CU8 : Déblocage d'un Utilisateur
+**Acteur principal :** Manager  
+**Préconditions :** Compte utilisateur bloqué  
+**Postconditions :** Compte débloqué  
+**Scénario nominal :**
+1. Accès à la gestion des utilisateurs
+2. Recherche de l'utilisateur bloqué
+3. Sélection "Débloquer"
+4. Confirmation de l'action
+
+### 4.2 Parcours utilisateur
+
+Les parcours utilisateur décrivent les expériences complètes des acteurs principaux dans des scénarios typiques.
+
+#### Parcours Citoyen : Signalement d'un Problème Routier
+
+**Contexte :** Un citoyen remarque un nid-de-poule sur sa route quotidienne.
+
+**Étapes :**
+1. **Découverte :** Téléchargement de l'application mobile 
+2. **Inscription :** Création de compte avec nom, prénom, email et mot de passe
+3. **Connexion :** Authentification via Firebase
+4. **Navigation :** Ouverture de la carte centrée sur la position actuelle
+5. **Création :** Accès au formulaire de signalement, utilisation du bouton 'Localiser' pour afficher la carte, appui sur la carte à l'emplacement du problème ou utilisation du bouton 'Ma position'
+6. **Saisie :** Sélection du type "nid de poule", description "Dangereux pour les motos"
+7. **Validation :** Envoi du signalement
+8. **Confirmation :** Message de succès et marqueur apparu sur la carte
+9. **Suivi :** Consultation du statut dans "Mes signalements"
+10. **Notification :** (Future) alerte quand statut change
+
+**Points de douleur potentiels :**
+- Géolocalisation imprécise en zone urbaine dense
+- Connexion internet faible lors de l'envoi
+
+#### Parcours Manager : Gestion Quotidienne
+
+**Contexte :** Un manager municipal gère les signalements entrants.
+
+**Étapes :**
+1. **Connexion :** Accès à l'application web avec email/mot de passe
+2. **Vue d'ensemble :** Dashboard avec statistiques 
+3. **Tri :** Filtrage des signalements par priorité et zone
+4. **Évaluation :** Ouverture d'un signalement, vérification photos/localisation
+5. **Assignation :** Attribution à une entreprise avec dates et budget
+6. **Suivi :** Mise à jour des statuts selon avancement
+7. **Synchronisation :** Transfert des données Firebase vers base centrale
+8. **Reporting :** Génération de rapports hebdomadaires
+9. **Administration :** Déblocage de comptes utilisateurs si nécessaire
+
+**Points de douleur potentiels :**
+- Surcharge de signalements pendant saison des pluies
+- Coordination avec entreprises externes
+
+#### Parcours Citoyen : Consultation Web
+
+**Contexte :** Un citoyen veut voir l'état des travaux dans sa ville.
+
+**Étapes :**
+1. **Accès :** Navigation vers le site web 
+2. **Authentification :** Connexion avec compte existant
+3. **Exploration :** Carte interactive avec tous les signalements publics
+4. **Filtrage :** statut, type de travaux
+5. **Détails :** Clic sur un marqueur pour voir progression
+6. **Participation :** Possibilité de commenter ou signaler des erreurs
+
+### 4.3 Règles de gestion
+
+Les règles de gestion définissent les contraintes métier et les validations du système.
+
+#### RG1 : Authentification et Autorisation
+- Tout accès aux données nécessite une authentification valide
+- Les tokens JWT expirent après 24 heures
+- Les comptes sont bloqués après 3 tentatives de connexion échouées
+- Seuls les managers peuvent modifier les statuts des signalements
+- Seuls les managers peuvent assigner des entreprises
+- Seuls les managers peuvent consulter les statistiques globales
+
+#### RG2 : Gestion des Signalements
+- Un signalement doit obligatoirement avoir une localisation GPS
+- Le type de travaux est obligatoire parmi la liste prédéfinie
+- La description ne peut excéder 500 caractères
+- Les changements de statut sont historisés avec date et utilisateur
+- Un signalement doit passer par tous les statuts dans l'ordre
+
+#### RG3 : Assignations
+- Une assignation nécessite une entreprise valide
+- Les dates début/fin doivent être cohérentes (fin > début)
+- Le montant est estimé en Ariary
+- Le statut d'assignation suit : EN_ATTENTE → ACCEPTE → EN_COURS → TERMINE
+
+#### RG4 : Synchronisation
+- La synchronisation Firebase → PostgreSQL est déclenchée manuellement par manager
+- En cas de conflit, la dernière écriture l'emporte (Last-Write-Wins)
+- Toutes les opérations de sync sont tracées dans la table synchronisation_firebase
+- La synchronisation PostgreSQL → Firebase transfère toutes les données
+
+#### RG5 : Données Géospatiales
+- Les coordonnées sont stockées en WGS84 (latitude/longitude)
+
+#### RG6 : Sécurité des Données
+- Les mots de passe sont hashés avec BCrypt (future)
+- Les communications utilisent HTTPS/TLS
+- L'audit trail conserve l'historique
+
+## 5. Modélisation des Données
+
+### 5.1 Modèle Conceptuel de Données (MCD)
+
+Diagramme Entité-Association avec cardinalités (MCD):
+
+[Screenshot: Modèle Conceptuel de Données avec associations et cardinalités]
+
+### 5.2 Tables Principales
+
+#### 5.2.1 Table utilisateur
+Rôle: Stocke utilisateurs (citoyens, managers, entreprises)
+Champs clés: firebase_uid (lien Firebase), is_blocked (blocage auto), last_update (sync)
+Contraintes: Email unique, firebase_uid unique si présent, type utilisateur obligatoire
+
+#### 5.2.2 Table signalement
+Rôle: Cœur du système - signalements géolocalisés
+Champs géospatiaux: latitude/longitude (WGS84, précision 10 décimales), geom (PostGIS)
+Particularités: surface_metre_carree (priorisation), pas de statut direct (via historique)
+
+#### 5.2.3 Table historique_etat_signalement
+Rôle: Audit trail des changements d'état
+Avantages: Traçabilité complète, métriques performance, auditabilité
+Requête état actuel:
+
+#### 5.2.4 Table entreprise_concerner (Assignations)
+Rôle: Liens signalements-entreprises
+Workflow: Création par manager → mise à jour par entreprise → historisation
+Particularités: Plusieurs assignations possibles par signalement
+
+#### 5.2.5 Table session
+Rôle: Gestion sessions JWT
+Utilisation: Validation tokens, révocation, nettoyage auto
+
+#### 5.2.6 Table tentative_connexion
+Rôle: Audit sécurité et limitation tentatives
+Analyses: Détection intrusions, stats échecs
+
+### 5.3 Tables de Référence
+type_utilisateur: Visiteur, Manager
+etat_signalement: En attente, En cours, Résolu, Rejeté
+type_travail: Réparation de chaussée, Construction de route, Signalisation, Éclairage public, Maintenance
+statut_assignation: En attente, Accepté, Refusé, En cours, Terminé
+Avantages normalisation: Intégrité référentielle, facilité modifications, performances
+
+### 5.4 Table de Synchronisation
+synchronisation_firebase
+Traçabilité: Timestamp, statut, remarques (erreurs, nb enregistrements)
+
+## 6. Sécurité et Authentification
+
+### 6.1 Authentification / autorisation
+
+Le système implémente une authentification hybride adaptée aux différents clients et modes de fonctionnement :
+
+- **Application mobile** : Authentification directe via Firebase Authentication
+- **Application web** : Double possibilité selon le mode - Firebase Auth pour le mode online ou JWT via API REST pour le mode offline 
+
+**Flux d'authentification mobile :**
+```
+Mobile App → Firebase Auth → ID Token → Firestore Access → Synchronisation
 ```
 
-**[Screenshot: Diagramme ER de la base de données]**
-
-### 4.5 Firebase - Cloud Backend Services
-
-**Services utilisés:** Firebase Authentication + Firestore
-
-**Pourquoi Firebase?**
-
-#### ✅ **Firebase Authentication**
-- Gestion complète des utilisateurs (création, login, reset password)
-- Support multi-providers (email/password, Google, etc.)
-- Tokens JWT générés automatiquement
-- Sécurité renforcée avec règles d'accès
-
-#### ✅ **Firestore - Base NoSQL en temps réel**
-- Synchronisation temps réel entre devices
-- Structure flexible (documents/collections)
-- Scalabilité automatique
-- Mode offline intégré (cache local)
-- Règles de sécurité granulaires
-
-#### ✅ **Pourquoi une architecture hybride Firebase + PostgreSQL?**
-
-**Firebase**: 
-- Utilisé pour le **frontend mobile** en mode online
-- Synchronisation temps réel entre utilisateurs
-- Facilite le développement mobile rapide
-
-**PostgreSQL**:
-- Base de données **centrale et autoritaire**
-- Utilisé par le **backend Spring Boot**
-- Garantit la cohérence des données
-- Permet des requêtes complexes et rapports avancés
-- Historisation et audit trail
-
-**Synchronisation bidirectionnelle:**
-- Maintient la cohérence entre les deux systèmes
-- Permet le mode offline/online transparent
-- Stratégie Last-Write-Wins pour les conflits
-
-**[Screenshot: Console Firebase avec collections]**
-
-### 4.6 Cartographie - Leaflet + OpenStreetMap
-
-**Technologie:** Leaflet.js 1.9.4 + OpenStreetMap
-
-**Pourquoi Leaflet?**
-
-#### ✅ **Léger et performant**
-- Seulement 42KB minifié
-- Chargement rapide même sur mobile
-- Pas de dépendances lourdes
-
-#### ✅ **Open source et flexible**
-- Gratuit, pas de clé API requise avec OSM
-- Large écosystème de plugins
-- Customisation complète (markers, popups, layers)
-
-#### ✅ **Support mobile natif**
-- Touch gestures (pinch zoom, pan)
-- Géolocalisation intégrée
-- Responsive design
-
-#### ✅ **OpenStreetMap - Données libres**
-- Cartes mondiales gratuites
-- Données communautaires à jour
-- Support d'Antananarivo avec bon niveau de détail
-- Possibilité d'héberger un serveur de tuiles local (offline)
-
-**Utilisation dans le projet:**
-```javascript
-// Initialisation de la carte
-const map = L.map('map').setView([-18.8792, 47.5079], 13); // Antananarivo
-
-// Tuiles OpenStreetMap
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-}).addTo(map);
-
-// Marqueur de signalement
-const marker = L.marker([lat, lng], {
-    icon: customIcon  // Icône personnalisée selon statut
-}).addTo(map);
+**Flux d'authentification web (option 1 - Firebase) :**
+```
+Web App → Firebase Auth → ID Token → Backend API → Validation → Accès autorisé
 ```
 
-**Serveur de tuiles local (Tâche 34-36):**
-- Permet le mode offline complet
-- Téléchargement des tuiles d'Antananarivo
-- Configuration sur Docker
-
-**[Screenshot: Carte Leaflet avec marqueurs de signalements]**
-
-### 4.7 Containerisation - Docker
-
-**Pourquoi Docker?**
-
-#### ✅ **Environnement reproductible**
-- Même configuration dev, staging, production
-- Évite les "ça marche sur ma machine"
-- Isolation des dépendances
-
-#### ✅ **Déploiement simplifié**
-- One-command startup avec `docker-compose up`
-- Scalabilité horizontale facilitée
-- CI/CD simplifié
-
-#### ✅ **Architecture du docker-compose:**
-```yaml
-services:
-  db:           # PostgreSQL + PostGIS
-  backend:      # Spring Boot API
-  frontend-web: # React (optionnel)
-  tile-server:  # Serveur de tuiles OSM (optionnel)
+**Flux d'authentification web (option 2 - JWT) :**
+```
+Web App → API Login → JWT Token → Backend API → Validation JWT → Accès autorisé
 ```
 
-**[Screenshot: Architecture Docker]**
+**Gestion des sessions :** Les sessions utilisateur sont stockées en base de données avec un token unique, une date d'expiration et une référence à l'utilisateur. Un mécanisme de nettoyage automatique supprime les sessions expirées pour optimiser les performances. Les sessions permettent la révocation d'accès et le suivi des connexions actives.
 
----
-
-## 5. Sécurité et Authentification
-
-### 5.1 Architecture de Sécurité Globale
-
-Le système implémente une **approche multi-couches** de la sécurité:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  COUCHE 1: Authentification                                 │
-│  ├─ Firebase Auth (Mobile en ligne)                         │
-│  ├─ JWT Tokens (Web + API)                                  │
-│  └─ Sessions avec durée de vie (PostgreSQL)                 │
-└─────────────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────────────┐
-│  COUCHE 2: Autorisation basée sur les rôles                │
-│  ├─ VISITEUR: Créer/Consulter ses signalements             │
-│  └─ MANAGER: Gestion complète + Admin                      │
-└─────────────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────────────┐
-│  COUCHE 3: Protection contre attaques                       │
-│  ├─ Limitation tentatives de connexion (max 3)             │
-│  ├─ Blocage automatique des comptes                        │
-│  ├─ Validation des entrées (Spring Validation)             │
-│  └─ Protection CSRF (si applicable)                        │
-└─────────────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────────────┐
-│  COUCHE 4: Sécurité des données                            │
-│  ├─ Mots de passe hashés (jamais en clair)                │
-│  ├─ HTTPS/TLS pour communications                          │
-│  ├─ Validation des tokens JWT à chaque requête             │
-│  └─ Règles de sécurité Firestore                          │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 5.2 Authentification JWT (JSON Web Token)
-
-**Flux d'authentification complet:**
-
-```
-┌──────────┐                                    ┌──────────┐
-│  Client  │                                    │  Server  │
-│ (Web/App)│                                    │ (Spring) │
-└────┬─────┘                                    └────┬─────┘
-     │                                               │
-     │  1. POST /api/auth/login                     │
-     │     {email, password}                        │
-     ├──────────────────────────────────────────────►
-     │                                               │
-     │                                    2. Validation
-     │                                       - Vérif DB
-     │                                       - Check is_blocked
-     │                                       - Hash password
-     │                                               │
-     │                               3. Si succès:   │
-     │                                  - Créer Session
-     │                                  - Générer JWT
-     │                                  - Save tentative_connexion
-     │                                               │
-     │  4. Response 200 OK                          │
-     │     {                                        │
-     │       "token": "eyJhbGc...",                 │
-     │       "user": {...},                         │
-     │       "expiresIn": 3600                      │
-     │     }                                        │
-     ◄────────────────────────────────────────────────
-     │                                               │
-     │  5. Requêtes suivantes                       │
-     │     Header: Authorization: Bearer eyJhbGc... │
-     ├──────────────────────────────────────────────►
-     │                                               │
-     │                                   6. Validation JWT
-     │                                      - Vérif signature
-     │                                      - Check expiration
-     │                                      - Extract userId
-     │                                               │
-     │  7. Response avec données                    │
-     ◄────────────────────────────────────────────────
-```
-
-**Avantages du JWT:**
-- ✅ **Stateless**: Pas besoin de stocker les sessions côté serveur
-- ✅ **Scalable**: Facilite la distribution entre plusieurs serveurs
-- ✅ **Sécurisé**: Signature cryptographique empêche la falsification
-- ✅ **Portable**: Fonctionne entre différents domaines (CORS)
-
-### 5.3 Gestion des Rôles et Permissions
-
-**Implémentation dans Spring Boot:**
-
+**Protection des endpoints :** Chaque endpoint de l'API REST est protégé par des annotations de sécurité Spring qui vérifient les rôles de l'utilisateur avant d'autoriser l'accès. Les contrôleurs utilisent des annotations @PreAuthorize pour définir les permissions requises selon les fonctionnalités métier.
 ```java
-// Entité TypeUtilisateur
-@Entity
-public class TypeUtilisateur {
-    @Id
-    private Long idTypeUtilisateur;
-    
-    private String libelle; // "VISITEUR", "MANAGER"
-}
+@PreAuthorize("hasRole('VISITEUR') or hasRole('MANAGER')")
+public ResponseEntity<List<SignalementDTO>> getSignalements() { ... }
 ```
 
-**Matrice des permissions:**
+**Limitation des tentatives :** Blocage automatique après 3 échecs consécutifs, avec traçabilité des connexions dans la table `tentative_connexion`. Cette mesure protège contre les attaques par force brute tout en permettant aux managers de consulter les logs et de débloquer manuellement les comptes légitimes.
+
+### 6.2 Gestion des rôles et droits
+
+**Modèle RBAC :**
+- **VISITEUR** : Créer/consulter ses signalements
+- **MANAGER** : Gestion complète + statistiques
+
+**Matrice des permissions :**
 
 | Fonctionnalité | VISITEUR | MANAGER |
 |----------------|----------|---------|
-| Créer signalement | ✅ | ✅ |
-| Voir tous signalements | ✅ (lecture) | ✅ (lecture) |
-| Voir mes signalements | ✅ | ✅ |
-| Changer le statut de ces signalements | ✅ | ✅ |
-| Modifier signalement | ❌ | ✅ |
-| Assigner entreprise | ❌ | ✅ |
-| Mettre à jour assignation | ❌ | ✅ |
-| Débloquer utilisateur | ❌ | ✅ |
-| Synchroniser Firebase | ❌ | ✅ |
-| Voir statistiques | ❌ | ✅ |
-
-### 5.4 Limitation des Tentatives de Connexion
-
-**Mécanisme de protection contre force brute:**
-
-**Table de suivi:**
-```sql
-CREATE TABLE tentative_connexion(
-   Id_tentative SERIAL,
-   date_tentative TIMESTAMP NOT NULL,
-   success BOOLEAN NOT NULL,
-   last_update TIMESTAMP NOT NULL,
-   Id_utilisateur INTEGER NOT NULL,
-   PRIMARY KEY(Id_tentative),
-   FOREIGN KEY(Id_utilisateur) REFERENCES utilisateur(Id_utilisateur)
-);
-```
-
-**Logique d'implémentation:**
-
-**Processus de connexion avec limitation des tentatives:**
-
-1. **Recherche de l'utilisateur**: Le système recherche l'utilisateur par email dans la base de données
-2. **Vérification de blocage**: Si le compte est déjà bloqué, la connexion est refusée
-3. **Validation du mot de passe**: Comparaison du mot de passe fourni avec celui stocké
-4. **Enregistrement de la tentative**: Chaque tentative (réussie ou échouée) est enregistrée avec timestamp
-5. **Comptage des échecs récents**: Si échec, comptage des tentatives échouées dans les 30 dernières minutes
-6. **Blocage automatique**: Si 3 échecs ou plus, le compte est automatiquement bloqué
-7. **Connexion réussie**: Génération du token JWT et création de la session utilisateur
-
-**Gestion des messages d'erreur:**
-- Après 1 échec: "Mot de passe incorrect. 2 tentatives restantes"
-- Après 2 échecs: "Mot de passe incorrect. 1 tentative restante"  
-- Après 3 échecs: "Compte bloqué après 3 tentatives échouées"
-
-**API de déblocage (réservée aux managers):**
-
-**Fonctionnement:**
-- Endpoint accessible uniquement aux utilisateurs ayant le rôle MANAGER
-- Recherche de l'utilisateur par ID dans la base de données
-- Réinitialisation du flag `is_blocked` à `false`
-- Confirmation de succès avec message approprié
-
-**Sécurité:**
-- Vérification des permissions avant exécution
-- Gestion des erreurs si l'utilisateur n'existe pas
-- Traçabilité de l'action de déblocage
-
-**Avantages:**
-- 🔒 Protection efficace contre les attaques par dictionnaire
-- 📊 Traçabilité complète des tentatives d'intrusion
-- 🔧 Gestion administrative des déblocages
-- ⏱️ Possibilité d'étendre avec déblocage automatique après délai
-
-**[Screenshot: Logs de tentatives de connexion]**
-
-### 5.5 Règles de Sécurité Firebase
-
-**Firestore Security Rules:**
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    
-    // Authentification requise pour tout accès
-    match /{document=**} {
-      allow read, write: if request.auth != null;
-    }
-    
-    // Les citoyens ne peuvent modifier que leurs signalements
-    match /signalements/{signalementId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth.token.role == 'MANAGER' 
-                            || resource.data.userId == request.auth.uid;
-    }
-    
-    // Seuls les managers accèdent aux statistiques
-    match /statistiques/{doc} {
-      allow read: if request.auth.token.role == 'MANAGER';
-    }
-  }
-}
-```
-
-**[Screenshot: Configuration Firebase Security Rules]**
-
-### 5.6 Sessions avec Durée de Vie
-
-**Table de gestion des sessions:**
-```sql
-CREATE TABLE session(
-   Id_session SERIAL,
-   token VARCHAR(100) NOT NULL,
-   date_debut TIMESTAMP NOT NULL,
-   date_fin TIMESTAMP NOT NULL,
-   last_update TIMESTAMP NOT NULL,
-   Id_utilisateur INTEGER NOT NULL,
-   PRIMARY KEY(Id_session),
-   FOREIGN KEY(Id_utilisateur) REFERENCES utilisateur(Id_utilisateur)
-);
-```
+| Créer signalement | Oui | Oui |
+| Voir signalements | Oui  | Oui (tous) |
+| Modifier statut | non | Oui |
+| Assigner entreprise | Non | Oui |
+| Statistiques | Non | Oui |
 
-**Fonctionnalités:**
-- ⏰ **Expiration automatique**: Durée de vie configurable (ex: 24h)
-- 🔄 **Renouvellement**: Possible si non expiré
-- 🚪 **Déconnexion**: Invalidation manuelle de la session
-- 📊 **Audit**: Traçabilité des sessions actives
+### 6.4 Logs et traçabilité
 
----
+Le système maintient une traçabilité complète de toutes les opérations critiques à travers plusieurs tables dédiées :
 
-## 6. Modélisation des Données
+**Table synchronisation_firebase :** Enregistre toutes les opérations de synchronisation bidirectionnelle entre Firebase et PostgreSQL, incluant la date, le statut de succès et les remarques sur les erreurs ou le nombre d'enregistrements traités.
 
-### 6.1 Modèle Conceptuel de Données (MCD)
+**Table historique_etat_signalement :** Conserve l'historique complet des changements d'état des signalements (NOUVEAU → EN_EVALUATION → ASSIGNE, etc.), permettant de suivre l'évolution temporelle de chaque signalement et d'identifier les goulots d'étranglement dans le processus.
 
-**Diagramme Entité-Association avec cardinalités (MCD):**
+**Table historique_statut_assignation :** Trace tous les changements de statut des assignations d'entreprises (ASSIGNE → EN_COURS → TERMINE), facilitant le suivi des performances des entreprises et la génération de rapports d'activité.
 
-**[Screenshot: Modèle Conceptuel de Données avec associations et cardinalités]**
+**Table tentative_connexion :** Enregistre chaque tentative de connexion avec son résultat (succès/échec), permettant la détection d'attaques par force brute et l'analyse des patterns de connexion suspects.
 
-### 6.2 Tables Principales
+**Table session :** Gère les sessions utilisateur actives avec leurs dates de début et de fin, permettant la révocation d'accès et le nettoyage automatique des sessions expirées.
 
-#### 6.2.1 Table `utilisateur`
+Ces mécanismes de traçabilité assurent l'auditabilité complète du système, facilitent le débogage et respectent les exigences de conformité en matière de sécurité et de transparence.
 
-**Rôle:** Stocke tous les utilisateurs (citoyens, managers, entreprises)
+## 7. Installation et Déploiement
 
-**Champs clés:**
-- `firebase_uid`: Lien avec Firebase Authentication (NULL si utilisateur local uniquement)
-- `is_blocked`: Verrouillage automatique après 3 tentatives échouées
-- `last_update`: Timestamp pour synchronisation (Last-Write-Wins)
+Le système est conçu pour un déploiement simplifié grâce à la containerisation Docker. L'ensemble de l'infrastructure (backend, base de données, frontend web et serveur de cartes) peut être déployé en une seule commande.
 
-**Contraintes:**
-- Email unique (identifiant de connexion)
-- firebase_uid unique si présent
-- Type utilisateur obligatoire (FK vers table de référence)
+### 7.1 Prérequis système
 
-#### 6.2.2 Table `signalement`
+- **Docker** (version 20.10 ou supérieure)
+- **Docker Compose** (version 2.0 ou supérieure)
+- **4GB RAM minimum** (recommandé 8GB)
+- **10GB espace disque** pour les conteneurs et données
 
-**Rôle:** Cœur du système - Stocke tous les signalements de problèmes routiers
+### 7.2 Déploiement avec Docker Compose
 
-**Champs géospatiaux:**
-- `latitude`, `longitude`: Coordonnées décimales (précision 10 décimales = ~1cm)
-- `geom`: Type GEOGRAPHY de PostGIS pour calculs de distance précis
+1. **Cloner le repository :**
+   ```bash
+   git clone https://github.com/Nathanlovaniaina/Projet_Cloud_S5.git
+   cd projet-cloud-s5
+   ```
 
-**Particularités:**
-- `surface_metre_carree`: Estimation de la zone endommagée (aide à prioriser)
-- Pas de photos pour le moment (implémentation future)
-- Pas de statut direct → Géré via `historique_etat_signalement`
+2. **Configurer Firebase :**
+   Avant de lancer les services, configurez les clés API Firebase et le compte de service Firebase en suivant le guide dédié (voir annexe 9.1).
 
-#### 6.2.3 Table `historique_etat_signalement`
+3. **Lancer les services :**
+   ```bash
+   docker-compose up -d
+   ```
 
-**Rôle:** Audit trail de tous les changements d'état d'un signalement
+4. **Vérifier le déploiement :**
+   ```bash
+   docker-compose ps
+   ```
 
-**Avantages de l'historisation:**
-- 📊 Traçabilité complète (qui a changé quoi, quand)
-- 📈 Métriques de performance (temps moyen de résolution)
-- 🔍 Auditabilité pour conformité
-- 📉 Détection d'anomalies (ex: retour en arrière d'état)
+Cette commande démarre automatiquement :
+- **Base de données PostgreSQL + PostGIS** (port 5432)
+- **API Backend Spring Boot** (port 8080)
+- **Application Web React** (port 3000)
+- **Serveur de cartes OpenStreetMap** (port 8081)
 
-**Récupération de l'état actuel:**
-```sql
--- État actuel d'un signalement
-SELECT e.libelle, h.date_changement_etat
-FROM historique_etat_signalement h
-JOIN etat_signalement e ON h.Id_etat_signalement = e.Id_etat_signalement
-WHERE h.Id_signalement = 42
-ORDER BY h.date_changement_etat DESC
-LIMIT 1;
-```
+### 7.3 Accès aux applications
 
-#### 6.2.4 Table `entreprise_concerner` (Assignations)
+- **Application Web Manager :** http://localhost:3000
+- **API Backend :** http://localhost:8080
+- **Base de données :** localhost:5432 (signalement_db)
+- **Cartes :** http://localhost:8081
 
-**Rôle:** Lien entre signalements et entreprises chargées des travaux
+### 7.4 Application Mobile
 
-**Workflow:**
-1. Manager crée assignation: `date_debut`, `date_fin`, `montant`
-2. Statut initial: "Assigné"
-3. Entreprise met à jour: "En cours" → "Terminé"
-4. Historisation via `historique_statut_assignation`
+L'application mobile n'est pas incluse dans le déploiement Docker car elle nécessite une installation native sur les appareils.
 
-**Particularités:**
-- Un signalement peut avoir plusieurs assignations (historique des entreprises)
-- `montant`: Peut être estimé ou réel selon avancement
+**Installation :**
+- Téléchargez l'APK depuis le lien Google Drive fourni (voir annexe 9.1)
+- Installez l'application sur votre appareil
+- L'application se connecte automatiquement à Firebase
 
-#### 6.2.5 Table `session`
+**Note :** Assurez-vous que l'application mobile peut accéder à Firebase (connexion internet requise).
 
-**Rôle:** Gestion des sessions utilisateurs (JWT)
+### 7.5 Configuration Firebase
 
-**Utilisation:**
-- Vérification de validité des tokens
-- Révocation manuelle (logout)
-- Nettoyage automatique des sessions expirées
+Avant le premier lancement, configurez les clés Firebase dans les fichiers de configuration appropriés pour activer la synchronisation et l'authentification.
 
-#### 6.2.6 Table `tentative_connexion`
+### 7.6 Dépannage
 
-**Rôle:** Audit de sécurité et limitation des tentatives
-
-**Analyses possibles:**
-- Détection de tentatives d'intrusion
-- Statistiques d'échecs de connexion
-- Identification d'utilisateurs ayant besoin d'assistance
-
-### 6.3 Tables de Référence
-
-Ces tables stockent les **données métier stables** (rarement modifiées):
-
-#### `type_utilisateur`
-- Valeurs: VISITEUR, MANAGER
-
-#### `etat_signalement`
-- Valeurs: NOUVEAU, EN_EVALUATION, ASSIGNE, EN_COURS, TERMINE, VALIDE, REJETE
-
-#### `type_travail`
-- Valeurs: NID_DE_POULE, AFFAISSEMENT, FISSURE, ROUTE_INONDEE, PERTE_REVEILLE, AUTRE
-
-#### `statut_assignation`
-- Valeurs: ASSIGNE, EN_COURS, TERMINE, VALIDE, ANNULE
-
-**Avantages de la normalisation:**
-- ✅ Intégrité référentielle
-- ✅ Facilite les modifications globales (ex: renommer un état)
-- ✅ Performances (index sur ID au lieu de chaînes)
-
-### 6.4 Table de Synchronisation
-
-#### `synchronisation_firebase`
-
-**Traçabilité des synchronisations:**
-- Timestamp de chaque opération
-- Statut (succès/échec)
-- Remarques (erreurs, nombre d'enregistrements synchronisés)
-
-**[Screenshot: Table synchronisation_firebase avec exemples]**
-
----
-
-## 7. Carte et Géolocalisation
-
-### 7.1 Architecture de la Cartographie
-
-### 7.2 Intégration de Leaflet
-
-### 7.3 Affichage des Signalements
-
-### 7.4 Géolocalisation en Temps Réel
-
-### 7.5 Création de Signalement sur Carte
-
-### 7.6 OpenStreetMap - Données et Tuiles
-
-### 7.7 Serveur de Tuiles Local (Offline)
-
-### 7.8 Fonctionnalités Cartographiques Avancées
-
-### 7.9 Optimisations Performance
-
----
+- **Ports occupés :** Modifiez les ports dans docker-compose.yml si nécessaire
+- **Mémoire insuffisante :** Augmentez la RAM allouée à Docker
+- **Problèmes de réseau :** Vérifiez que tous les conteneurs sont sur le même réseau Docker
 
 ## 8. Conclusion et Améliorations
 
-### 8.1 Synthèse du Projet
+### 8.1 Bilan du Projet
 
-Le système de **Signalement de Travaux Routiers** développé constitue une solution complète et moderne pour la gestion collaborative des infrastructures routières. En combinant des technologies éprouvées (Spring Boot, React, Ionic) avec des services cloud innovants (Firebase, OpenStreetMap), le projet démontre une maîtrise technique approfondie et des choix architecturaux réfléchis.
+Le système de signalement de travaux routiers représente une solution complète et moderne pour la gestion collaborative des infrastructures routières à Madagascar. L'architecture full-stack développée démontre une maîtrise technique solide des technologies contemporaines, avec une intégration réussie de services cloud (Firebase), de bases de données géospatiales (PostGIS), et d'interfaces multi-plateformes (mobile/web).
 
-**Points forts de la solution:**
+Les choix technologiques open-source et la containerisation Docker assurent une évolutivité et une maintenabilité optimales. Le système répond efficacement aux problématiques identifiées : signalements citoyens géolocalisés, gestion municipale centralisée, et traçabilité complète des interventions.
 
-#### ✅ **Architecture Solide et Scalable**
-- Séparation claire frontend/backend (API REST)
-- Microservices potentiellement distribuables
-- Containerisation Docker pour déploiement facile
-- Base de données relationnelle robuste avec PostGIS
+### 8.2 Fonctionnalités Réalisées
 
-#### ✅ **Expérience Utilisateur Optimale**
-- Application mobile native (iOS/Android) avec Ionic
-- Interface web responsive pour managers
-- Géolocalisation précise et cartes interactives
-- Mode online/offline transparent
-
-#### ✅ **Sécurité Multi-Niveaux**
 - Authentification hybride (Firebase + JWT)
-- Gestion granulaire des rôles et permissions
-- Protection contre force brute (limitation tentatives)
-- Audit trail complet (historisation)
+- Signalements géolocalisés avec cartes interactives
+- Gestion des rôles et permissions (RBAC)
+- Synchronisation bidirectionnelle Firebase ↔ PostgreSQL
+- Historisation complète des opérations
+- Interface web de gestion pour managers
+- Application mobile pour citoyens
+- Statistiques et tableaux de bord
+- Sécurité avancée
+- Déploiement containerisé simplifié
 
-#### ✅ **Synchronisation Firebase-PostgreSQL**
-- Mécanisme bidirectionnel robuste
-- Gestion des conflits (Last-Write-Wins)
-- Traçabilité des opérations de sync
-- Support de 12 collections/tables
+### 8.3 Améliorations Futures
 
-#### ✅ **Cartographie Avancée**
-- Intégration Leaflet + OpenStreetMap
-- Géolocalisation temps réel (GPS)
-- Serveur de tuiles local pour mode offline
-- Requêtes géospatiales optimisées (PostGIS)
+#### Améliorations Fonctionnelles
+- **Notifications push :** Alertes en temps réel pour les citoyens sur l'évolution de leurs signalements
+- **Intégration GPS avancée :** Calculs d'itinéraires alternatifs et optimisation des interventions
+- **Système de notation :** Évaluation des entreprises par les citoyens
+- **API publique :** Exposition d'APIs pour intégrations tierces
 
-### 8.2 Résultats Atteints
+#### Améliorations Techniques
+- **Cache distribué :** Redis pour améliorer les performances des requêtes fréquentes
+- **Monitoring avancé :** Intégration Prometheus/Grafana pour métriques système
+- **Tests automatisés :** Couverture complète avec CI/CD pipeline
+- **Performance mobile :** Optimisation PWA et mode offline
 
-**68 tâches complétées** couvrant:
-- ✅ Infrastructure et DevOps (Docker, PostgreSQL, Git)
-- ✅ Backend complet (33 tâches - API REST, auth, sync, statistiques)
-- ✅ Frontend Web (18 tâches - React, cartes, gestion)
-- ✅ Frontend Mobile (11 tâches - Ionic Vue, géolocalisation, APK)
-- ✅ Documentation technique exhaustive
+#### Évolutivité
+- **Internationalisation :** Support multi-langues pour déploiement dans d'autres régions
+- **API Gateway :** Gestion centralisée des APIs avec rate limiting et caching
 
-**Fonctionnalités clés opérationnelles:**
-- Inscription et connexion (online/offline)
-- Création de signalements avec GPS
-- Visualisation carte avec marqueurs dynamiques
-- Gestion complète pour managers (statuts, assignations)
-- Synchronisation Firebase automatique/manuelle
-- Statistiques et rapports
-- Déblocage d'utilisateurs
-- Historisation complète des états
+### 8.4 Impact et Valeur Ajoutée
 
-### 8.3 Limites Actuelles
+Ce système apporte une valeur significative à la gestion des infrastructures routières malgaches en :
+- **Améliorant la transparence** : Traçabilité complète des interventions
+- **Optimisant les ressources** : Priorisation intelligente des travaux
+- **Renforçant la participation citoyenne** : Implication active de la population
+- **Réduisant les coûts** : Maintenance préventive et planification efficace
+- **Modernisant l'administration** : Digitalisation des processus municipaux
 
-Malgré la solidité du système, certaines limites sont identifiées:
+Le projet démontre comment les technologies cloud et mobiles peuvent transformer les services publics, créant un écosystème collaboratif entre citoyens et administration.
 
-#### 🔸 **Mode Offline Incomplet**
-- **Problème**: Mode offline surtout prévu, pas totalement implémenté
-- **Impact**: Application mobile nécessite connexion pour la plupart des actions
-- **Workaround actuel**: Utilisation de Firebase qui a un cache local
+## 9. Annexes
 
-#### 🔸 **Gestion des Photos**
-- **Problème**: Aucun système de gestion des photos implémenté pour le moment
-- **Impact**: Les signalements ne peuvent pas inclure de photos actuellement
-- **Solution future**: Implémentation Firebase Storage + compression locale
+### 9.1 Liens et Ressources
 
-#### 🔸 **Performance avec Gros Volumes**
-- **Problème**: Pas de pagination automatique des signalements sur la carte
-- **Impact**: Potentielle lenteur avec 1000+ marqueurs affichés
-- **Solution temporaire**: Filtrage par statut/date réduit le nombre
+**Repository GitHub :**
+- URL : https://github.com/Nathanlovaniaina/Projet_Cloud_S5.git
+- Contient : Code source complet, documentation, scripts de déploiement
 
-#### 🔸 **Tests Automatisés**
-- **Problème**: Peu de tests unitaires/intégration
-- **Impact**: Risque de régressions lors de modifications
-- **Recommandation**: Implémenter JUnit (backend) et Vitest (frontend)
+**Application Mobile (APK) :**
+- Lien Google Drive : https://drive.google.com/file/d/1EXAMPLE_LINK/view?usp=sharing
+- Version : 1.0.0
+- Plateformes : Android 
 
-#### 🔸 **CI/CD**
-- **Problème**: Pas de pipeline de déploiement automatisé
-- **Impact**: Déploiement manuel source d'erreurs
-- **Amélioration**: GitHub Actions ou GitLab CI
+**Document de Configuration Firebase :**
+- Lien Google Drive : https://drive.google.com/file/d/1FIREBASE_CONFIG_LINK/view?usp=sharing
+- Contient : Guide de configuration des clés API Firebase et du compte de service Firebase
 
-### 8.4 Améliorations Futures
+### 9.2 Technologies et Versions
 
-#### 🚀 **Court Terme (1-3 mois)**
+| Composant | Technologie | Version |
+|-----------|-------------|---------|
+| Backend API | Spring Boot | 3.2.1 |
+| Base de données | PostgreSQL + PostGIS | 13.3 |
+| Frontend Web | React + TypeScript | 19.2.0 |
+| Frontend Mobile | Ionic + Vue.js | 8.0 / 3.3 |
+| Authentification | Firebase | Latest |
+| Containerisation | Docker | 20.10+ |
+| Orchestration | Docker Compose | 2.0+ |
 
-**1. Mode Offline Complet (Mobile)**
-- Implémentation de IndexedDB pour cache local
-- Queue de synchronisation différée
-- Détection automatique de reconnexion
+### 9.6 Contacts et Support
 
-**2. Notifications Push**
-- Firebase Cloud Messaging (FCM)
-- Alertes pour changements d'état des signalements
+**Équipe de Développement :**
+- ETU003241 : Base de Données & Géospatial
+- ETU003346 : Frontend Web & UI/UX
+- ETU003337 : Lead Backend & Architecture
+- ETU003358 : Mobile & Intégration
 
-#### 🎯 **Moyen Terme (3-6 mois)**
+**Support Technique :**
+- Email : laurentrandri@gmail.com
+- Documentation : [Lien vers la doc utilisateur]
 
-**3. Tableau de Bord Avancé**
-- Graphiques interactifs pour les statistiques
-- KPIs en temps réel (taux de résolution, délais moyens)
-
-**4. Gestion Avancée des Entreprises**
-- Portail dédié pour entreprises
-- Calendrier d'interventions et suivi des travaux
-
-#### 🌟 **Long Terme (6-12 mois)**
-
-**5. Intelligence Artificielle Basique**
-- Classification automatique des types de travaux via analyse d'image
-- Priorisation intelligente des signalements
-
-**6. Plateforme Multi-Villes**
-- Support de plusieurs municipalités
-- Architecture multi-tenant pour expansion régionale
-
-### 8.5 Impact Sociétal
-
-Au-delà des aspects techniques, ce projet a un **impact positif concret**:
-
-✅ **Amélioration de la qualité de vie**
-- Routes plus sûres pour tous
-- Réduction des accidents liés aux infrastructures
-- Meilleure mobilité urbaine
-
-✅ **Transparence et participation citoyenne**
-- Les citoyens deviennent acteurs de leur ville
-- Renforce la confiance envers les autorités
-- Démocratisation de la gestion urbaine
-
-✅ **Efficacité administrative**
-- Centralisation de l'information
-- Traçabilité complète des interventions
-- Optimisation des budgets de réparation
-
-✅ **Création d'emplois**
-- Opportunités pour développeurs locaux
-- Emplois dans les entreprises de travaux publics
-- Maintenance et support du système
-
-### 8.6 Conclusion Finale
-
-Le **Système de Signalement de Travaux Routiers** représente bien plus qu'un simple projet technique : c'est une solution concrète à un problème réel touchant la vie quotidienne des citoyens malgaches. 
-
-L'architecture hybride (Firebase + PostgreSQL), l'authentification sécurisée multi-niveaux, la géolocalisation précise et la synchronisation bidirectionnelle démontrent une maturité technique rare pour un projet académique.
-
-Les **68 tâches achevées** couvrent l'intégralité du cycle de développement : de la conception de la base de données à la génération de l'APK mobile, en passant par une API REST complète et documentée. Les choix technologiques (Spring Boot, React, Ionic, PostgreSQL/PostGIS) sont justifiés et alignés avec les standards industriels modernes.
-
-Les **améliorations futures** identifiées offrent un chemin clair pour l'évolution du système, assurant sa pérennité et son adoption à grande échelle.
-
-Ce projet est **production-ready** et peut être déployé immédiatement pour servir une municipalité réelle. Avec les améliorations recommandées, il a le potentiel de devenir une plateforme SaaS complète desservant plusieurs villes à Madagascar et au-delà.
-
-**Le code ne ment pas. L'architecture est solide. Les fondations sont posées. L'avenir est prometteur.**
-
----
-
-## Annexes
-
-### A. Glossaire
-
-- **API REST**: Architecture logicielle pour services web (Representational State Transfer)
-- **APK**: Android Package Kit (fichier d'installation Android)
-- **CRUD**: Create, Read, Update, Delete (opérations de base de données)
-- **DTO**: Data Transfer Object (objet de transfert de données)
-- **ERD**: Entity-Relationship Diagram (diagramme entité-association)
-- **FCM**: Firebase Cloud Messaging (notifications push)
-- **JWT**: JSON Web Token (standard d'authentification)
-- **ORM**: Object-Relational Mapping (Hibernate)
-- **PostGIS**: Extension géospatiale de PostgreSQL
-- **SPA**: Single Page Application (application web monopage)
-- **Tile**: Tuile cartographique (image 256x256 pixels)
-
-### B. Références
-
-**Documentation officielle:**
-- Spring Boot: https://spring.io/projects/spring-boot
-- React: https://react.dev/
-- Ionic: https://ionicframework.com/
-- Firebase: https://firebase.google.com/docs
-- Leaflet: https://leafletjs.com/
-- PostGIS: https://postgis.net/
-- OpenStreetMap: https://www.openstreetmap.org/
-
-**Ressources externes:**
-- JWT Introduction: https://jwt.io/introduction
-- REST API Best Practices: https://restfulapi.net/
-- Docker Documentation: https://docs.docker.com/
-
-### C. Équipe de Développement
-
-| Étudiant | Rôles Principaux | Tâches |
-|----------|-----------------|--------|
-| **ETU003241** | Backend Auth, Sync Firebase, Frontend Manager | 1, 2, 11-13, 15, 31, 32, 41-43, 49, 61, 62 |
-| **ETU003346** | DB Design, Documentation, Backend Misc | 3, 4, 16-18, 25, 47, 48, 51, 55, 59, 63, 67 |
-| **ETU003337** | Backend Setup, API, Frontend Web | 8-10, 14, 22-24, 27, 28, 33, 37-40, 50, 53, 54, 58, 65, 66 |
-| **ETU003358** | DB Tables, Backend Signalements, Frontend Carte | 5-7, 19-21, 29, 30, 44-46, 52, 56, 57, 60, 64, 68 |
-
-**Total:** 68 tâches collaboratives
-
----
-
-**FIN DU DOCUMENT TECHNIQUE**
-
-*Ce document est un livrable vivant et sera mis à jour au fil des évolutions du système.*
-
-**[Screenshot final: Vue d'ensemble du système en production]**
