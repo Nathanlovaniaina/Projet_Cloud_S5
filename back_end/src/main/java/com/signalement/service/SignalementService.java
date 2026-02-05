@@ -315,6 +315,48 @@ public class SignalementService {
         
         return reloadedSignalement;
     }
+
+    /**
+     * Mettre à jour le statut d'un signalement et retourner les devices notifiés
+     * @param id ID du signalement
+     * @param etatId ID du nouvel état
+     * @param dateChangement Date du changement (optionnel)
+     * @param utilisateur Utilisateur (doit être manager)
+     * @return Map contenant "signalement" et "devicesNotified"
+     */
+    public Map<String, Object> updateSignalementStatusWithNotificationTracking(Integer id, Integer etatId, LocalDateTime dateChangement, Utilisateur utilisateur) 
+            throws IllegalAccessException {
+        // Vérifier que l'utilisateur est manager
+        if (!isManager(utilisateur)) {
+            throw new IllegalAccessException("Seuls les managers peuvent modifier le statut");
+        }
+        
+        Signalement signalement = signalementRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé avec l'ID: " + id));
+        
+        EtatSignalement etat = etatSignalementRepository.findById(etatId)
+            .orElseThrow(() -> new IllegalArgumentException("État non trouvé avec l'ID: " + etatId));
+        
+        // ✅ NOUVELLE VALIDATION MÉTIER (Tâche 29)
+        canTransitionToState(id, etatId);
+        
+        // Create historique entry instead of setting direct FK
+        createHistoriqueEtat(signalement, etat, dateChangement);
+        
+        // Reload signalement to ensure fresh state for DTO conversion
+        Signalement reloadedSignalement = signalementRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé avec l'ID: " + id));
+        
+        // 📲 ENVOYER NOTIFICATION À L'UTILISATEUR CRÉATEUR (Tâche 34)
+        // Capture les devices qui ont reçu la notification
+        List<String> devicesNotified = notificationService.notifySignalementStatusChange(id, etat.getLibelle());
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("signalement", reloadedSignalement);
+        result.put("devicesNotified", devicesNotified);
+        
+        return result;
+    }
     
     /**
      * Vérifier si un signalement peut passer à un nouvel état

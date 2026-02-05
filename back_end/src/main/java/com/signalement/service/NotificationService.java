@@ -27,8 +27,9 @@ public class NotificationService {
      * 
      * @param signalementId ID du signalement dont le statut a changé
      * @param newEtatLibelle Nouveau statut (ex: "En cours", "Résolu")
+     * @return Liste des device_name qui ont reçu la notification
      */
-    public void notifySignalementStatusChange(Integer signalementId, String newEtatLibelle) {
+    public List<String> notifySignalementStatusChange(Integer signalementId, String newEtatLibelle) {
         try {
             // Récupérer le signalement
             Signalement signalement = signalementRepository.findById(signalementId)
@@ -37,7 +38,7 @@ public class NotificationService {
             // Récupérer l'utilisateur créateur
             if (signalement.getUtilisateur() == null) {
                 log.warn("Signalement {} n'a pas d'utilisateur associé", signalementId);
-                return;
+                return List.of();
             }
 
             Integer userId = signalement.getUtilisateur().getIdUtilisateur();
@@ -49,7 +50,7 @@ public class NotificationService {
             if (fcmTokens.isEmpty()) {
                 log.info("Aucun token FCM activé trouvé pour l'utilisateur {} du signalement {}", 
                         userId, signalementId);
-                return;
+                return List.of();
             }
 
             // Construire le titre avec le type de travail
@@ -61,18 +62,23 @@ public class NotificationService {
                     signalementId, typeTravauxLibelle);
             String body = String.format("Votre signalement est maintenant %s", newEtatLibelle);
 
-            // Envoyer la notification à chaque device de l'utilisateur
+            // Envoyer la notification à chaque device de l'utilisateur et collecter les device_name
+            List<String> devicesSent = new java.util.ArrayList<>();
             for (UtilisateurFcmTokens tokenObj : fcmTokens) {
                 sendNotificationToDevice(tokenObj.getFcmToken(), title, body);
+                devicesSent.add(tokenObj.getDeviceName());
             }
 
-            log.info("Notification envoyée à {} device(s) pour le signalement {}", 
-                    fcmTokens.size(), signalementId);
+            log.info("Notification envoyée à {} device(s) pour le signalement {}: {}", 
+                    fcmTokens.size(), signalementId, devicesSent);
+            
+            return devicesSent;
 
         } catch (Exception e) {
             log.error("Erreur lors de l'envoi de la notification pour le signalement {}: {}", 
                     signalementId, e.getMessage(), e);
             // Ne pas lever d'exception pour ne pas bloquer la mise à jour du signalement
+            return List.of();
         }
     }
 
