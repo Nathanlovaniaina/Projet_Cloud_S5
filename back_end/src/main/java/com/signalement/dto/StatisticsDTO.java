@@ -44,6 +44,7 @@ public class StatisticsDTO implements Serializable {
     // ========== TAUX ET MOYENNES ==========
     private Double tauxCompletionMoyen;
     private Double tauxPonctualiteMoyen;
+    private Double delaiTraitementMoyenJours;
 
     // ========== RÉPARTITIONS ==========
     private Map<String, Integer> signalementsParType;
