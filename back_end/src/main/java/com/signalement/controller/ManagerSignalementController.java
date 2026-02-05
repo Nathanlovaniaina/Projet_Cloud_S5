@@ -268,9 +268,17 @@ public class ManagerSignalementController {
             @Valid @RequestBody UpdateSignalementStatusRequest request) {
         try {
             Utilisateur manager = validateManagerAccess(token);
-            Signalement updated = signalementService.updateSignalementStatus(id, request.getEtatId(), request.getDateChangement(), manager);
+            java.util.Map<String, Object> result = signalementService.updateSignalementStatusWithNotificationTracking(id, request.getEtatId(), request.getDateChangement(), manager);
+            
+            Signalement updated = (Signalement) result.get("signalement");
+            java.util.List<String> devicesNotified = (java.util.List<String>) result.get("devicesNotified");
+            
             SignalementDTO dto = signalementService.convertToEnrichedDTO(updated);
-            return ResponseEntity.ok(new com.signalement.dto.ApiResponse(true, "État modifié", dto));
+            
+            // Créer la réponse avec signalement et devices notifiés
+            com.signalement.dto.SignalementStatusChangeResponse response = new com.signalement.dto.SignalementStatusChangeResponse(dto, devicesNotified);
+            
+            return ResponseEntity.ok(new com.signalement.dto.ApiResponse(true, "État modifié", response));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
