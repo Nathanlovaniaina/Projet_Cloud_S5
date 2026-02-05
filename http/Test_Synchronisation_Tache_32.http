@@ -4,7 +4,7 @@
 
 ### Configuration
 @baseUrl = http://localhost:8080/api
-@tokenManager = 6d54dd20-e226-4da0-8169-13b677aa0c26
+@tokenManager = 21113264-a176-4618-8578-1d0dae6660da
 
 ### T32-1: Lancer la synchronisation vers Firebase (Manager)
 POST {{baseUrl}}/sync/to-firebase

@@ -45,12 +45,16 @@ L.Icon.Default.mergeOptions({
 onMounted(async () => {
   if (!mapContainer.value) return;
 
-  // Initialiser la carte
-  map = L.map(mapContainer.value, {
-    center: [-18.8792, 47.5079],
-    zoom: 13,
-    zoomControl: true,
-  });
+  try {
+    // Récupérer la position de l'utilisateur
+    const userPos = await getCurrentPosition();
+
+    // Initialiser la carte
+    map = L.map(mapContainer.value, {
+      center: [-18.8792, 47.5079],
+      zoom: 13,
+      zoomControl: true,
+    });
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
@@ -58,7 +62,6 @@ onMounted(async () => {
   }).addTo(map);
 
   // Centrer sur la position de l'utilisateur
-  const userPos = await getCurrentPosition();
   if (userPos && map) {
     map.setView([userPos.lat, userPos.lng], 15);
     
@@ -91,6 +94,9 @@ onMounted(async () => {
   setTimeout(() => {
     if (map) map.invalidateSize();
   }, 100);
+  } catch (err: any) {
+    console.error('❌ Erreur lors de l\'initialisation MapSelector:', err);
+  }
 });
 
 function confirmLocation() {

@@ -9,7 +9,7 @@
       <div class="login-container">
         <!-- Welcome Text -->
         <div class="welcome-section">
-          <h1 class="welcome-title">Content de vous revoir ev!</h1>
+          <h1 class="welcome-title">Content de vous revoir v7!</h1>
         </div>
 
         <!-- Login Form -->

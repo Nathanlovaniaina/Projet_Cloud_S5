@@ -2,7 +2,7 @@
 @managerToken = 21113264-a176-4618-8578-1d0dae6660da
 
 ### Mettre à jour le statut d'un signalement (exemple avec l'ID 1)
-PATCH {{baseUrl}}/manager/signalements/4/status
+PATCH {{baseUrl}}/manager/signalements/6/status
 Authorization: Bearer {{managerToken}}
 Content-Type: application/json
 
@@ -11,8 +11,8 @@ Content-Type: application/json
   "dateChangement": "2026-02-01T10:30:00"
 }
 
-### Obtenir la progression d'un signalement (exemple avec l'ID 4)
-GET {{baseUrl}}/signalements/1/progress?date=2026-01-15T10:30:00
+### Obtenir la progression d'un signalement (exemple avec l'ID 6)
+GET {{baseUrl}}/signalements/6/progress?date=2026-01-15T10:30:00
 Authorization: Bearer {{managerToken}}
 
 
