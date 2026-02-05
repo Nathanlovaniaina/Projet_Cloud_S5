@@ -17,7 +17,7 @@ Authorization: Bearer 11111111-1111-1111-1111-111111111111
 
 ### GET - Get all signalements (Task 20)
 GET http://localhost:8080/api/signalements
-Authorization: Bearer 1111111-11111
+Authorization: Bearer 11111111-1111-1111-1111-111111111111
 
 ###
 

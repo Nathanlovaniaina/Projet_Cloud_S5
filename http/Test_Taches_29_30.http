@@ -5,14 +5,14 @@
 
 ### Configuration
 @baseUrl = http://localhost:8080/api
-@tokenManager = 21113264-a176-4618-8578-1d0dae6660da
+@tokenManager = 0e9d9824-696e-4535-865e-321d05cf209e
 
 ### ============================================================
 ### TÂCHE 30 - Récupérer toutes les assignations d'un signalement
 ### ============================================================
 
 ### T30-1: Récupérer les assignations d'un signalement avec assignations
-GET {{baseUrl}}/signalements/1/assignations
+GET {{baseUrl}}/signalements/3/assignations
 Content-Type: application/json
 
 ###
@@ -52,7 +52,7 @@ Content-Type: application/json
 
 ### T29-1: Tenter de passer en "En cours" (ID 2) sans assignation acceptée
 ### ❌ DEVRAIT ÉCHOUER: "Au moins une entreprise doit avoir accepté le projet"
-@signalementId = 1
+@signalementId = 5
 PATCH {{baseUrl}}/signalements/{{signalementId}}/status
 Authorization: Bearer {{tokenManager}}
 Content-Type: application/json
@@ -69,10 +69,10 @@ Authorization: Bearer {{tokenManager}}
 Content-Type: application/json
 
 {
-  "idEntreprise": 1,
-  "montant": 50000.00,
-  "dateDebut": "2026-01-20",
-  "dateFin": "2026-12-20",
+  "entrepriseId": 1,
+  "montant": 5000.00,
+  "dateDebut": "2024-11-20",
+  "dateFin": "2024-12-20",
   "description": "Assignation test"
 }
 

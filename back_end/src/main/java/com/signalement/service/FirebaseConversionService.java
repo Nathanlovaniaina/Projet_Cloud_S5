@@ -96,30 +96,4 @@ public class FirebaseConversionService {
             return null;
         }
     }
-
-    /**
-     * Récupère un booléen depuis Firebase
-     */
-    public Boolean getBooleanValue(DocumentSnapshot doc, String fieldName) {
-        try {
-            Object value = doc.get(fieldName);
-            if (value == null) {
-                log.debug("Le champ {} est null", fieldName);
-                return null;
-            }
-
-            if (value instanceof Boolean) {
-                return (Boolean) value;
-            }
-            if (value instanceof String) {
-                return Boolean.parseBoolean((String) value);
-            }
-
-            log.warn("Type non reconnu pour {} : {}", fieldName, value.getClass().getSimpleName());
-            return null;
-        } catch (Exception e) {
-            log.warn("Erreur lors de la conversion de {} en Boolean: {}", fieldName, e.getMessage());
-            return null;
-        }
-    }
 }

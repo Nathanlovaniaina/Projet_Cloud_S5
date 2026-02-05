@@ -158,9 +158,7 @@ CREATE TABLE utilisateur_fcm_tokens(
    device_name VARCHAR(100) NOT NULL,
    date_creation DATE NOT NULL,
    last_update TIMESTAMP NOT NULL,
-   enable BOOLEAN NOT NULL,
    Id_utilisateur INTEGER NOT NULL,
    PRIMARY KEY(Id_utilisateur_fcm_tokens),
    FOREIGN KEY(Id_utilisateur) REFERENCES utilisateur(Id_utilisateur)
 );
-

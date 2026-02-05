@@ -65,10 +65,6 @@ public class UtilisateurFcmTokensService {
                         token.setDateCreation(dateCreation);
                     }
                     
-                    // Récupérer le champ enable
-                    Boolean enable = (Boolean) doc.get("enable");
-                    token.setEnable(enable != null ? enable : true);
-                    
                     // Récupérer l'utilisateur associé
                     Integer utilisateurId = firebaseConversionService.getLongAsInteger(doc, "id_utilisateur");
                     if (utilisateurId != null) {
@@ -98,7 +94,6 @@ public class UtilisateurFcmTokensService {
             Map<String, Object> data = new HashMap<>();
             data.put("fcm_token", token.getFcmToken());
             data.put("device_name", token.getDeviceName());
-            data.put("enable", token.getEnable());
             
             if (token.getDateCreation() != null) {
                 data.put("date_creation", token.getDateCreation().atStartOfDay()
@@ -131,16 +126,6 @@ public class UtilisateurFcmTokensService {
     }
 
     /**
-     * Récupérer tous les tokens ACTIVÉS d'un utilisateur pour lui envoyer des notifications
-     * @param idUtilisateur ID de l'utilisateur
-     * @return Liste des tokens FCM activés (enable = true) de cet utilisateur
-     */
-    @Transactional(readOnly = true)
-    public List<UtilisateurFcmTokens> getEnabledTokensByUtilisateur(Integer idUtilisateur) {
-        return utilisateurFcmTokensRepository.findByUtilisateur_IdUtilisateurAndEnableTrue(idUtilisateur);
-    }
-
-    /**
      * Enregistrer un nouveau token FCM pour un utilisateur
      * @param idUtilisateur ID de l'utilisateur
      * @param fcmToken Token FCM du device
@@ -164,7 +149,6 @@ public class UtilisateurFcmTokensService {
         newToken.setUtilisateur(utilisateur);
         newToken.setDateCreation(LocalDate.now());
         newToken.setLastUpdate(LocalDateTime.now());
-        newToken.setEnable(true);  // Activé par défaut
 
         return utilisateurFcmTokensRepository.save(newToken);
     }

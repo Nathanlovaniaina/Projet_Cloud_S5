@@ -6,7 +6,7 @@
 
 ### Variables
 @baseUrl = http://localhost:8080/api
-@managerToken = aa5dec2e-e6fe-4aa4-a061-3580f1426d48
+@managerToken = 9b120b00-81ce-44bc-8fc9-5d035bef7b4b
 @citoyenToken = 267322dd-e34e-4910-89e4-9cfbce008804
 
 ### ============================================

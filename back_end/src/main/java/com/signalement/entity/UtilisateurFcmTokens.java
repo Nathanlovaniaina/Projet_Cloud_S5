@@ -31,9 +31,6 @@ public class UtilisateurFcmTokens {
     @Column(name = "last_update", nullable = false)
     private LocalDateTime lastUpdate;
 
-    @Column(name = "enable", nullable = false)
-    private Boolean enable;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_utilisateur", nullable = false)
     private Utilisateur utilisateur;
