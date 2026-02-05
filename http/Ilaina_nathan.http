@@ -1,0 +1,27 @@
+@baseUrl = http://localhost:8080/api
+@managerToken = 21113264-a176-4618-8578-1d0dae6660da
+
+### Mettre à jour le statut d'un signalement (exemple avec l'ID 1)
+PATCH {{baseUrl}}/manager/signalements/4/status
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+  "etatId": 2,
+  "dateChangement": "2026-02-01T10:30:00"
+}
+
+### Obtenir la progression d'un signalement (exemple avec l'ID 4)
+GET {{baseUrl}}/signalements/1/progress?date=2026-01-15T10:30:00
+Authorization: Bearer {{managerToken}}
+
+
+### Obtenir les statistiques globales avec délai de traitement moyen
+GET {{baseUrl}}/statistics/summary
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+### Récupérer toutes les entreprises
+GET {{baseUrl}}/enterprises
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json

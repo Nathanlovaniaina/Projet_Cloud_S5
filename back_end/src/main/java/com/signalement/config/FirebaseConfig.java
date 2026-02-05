@@ -4,6 +4,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.cloud.firestore.Firestore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,5 +30,14 @@ public class FirebaseConfig {
         }
 
         return FirestoreClient.getFirestore();
+    }
+
+    /**
+     * Bean pour Firebase Messaging (utilisé pour envoyer des notifications push)
+     * Tâche 34 - Notifications push
+     */
+    @Bean
+    public FirebaseMessaging firebaseMessaging() {
+        return FirebaseMessaging.getInstance(FirebaseApp.getInstance());
     }
 }
