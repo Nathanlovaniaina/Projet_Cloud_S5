@@ -54,13 +54,14 @@ CREATE TABLE utilisateur(
    nom VARCHAR(50) NOT NULL,
    prenom VARCHAR(50) NOT NULL,
    email VARCHAR(50) NOT NULL,
+   firebase_uid VARCHAR(255) NOT NULL,
    mot_de_passe VARCHAR(50) NOT NULL,
-   firebase_uid VARCHAR(255) UNIQUE,
    is_blocked BOOLEAN NOT NULL,
    last_update TIMESTAMP NOT NULL,
    Id_type_utilisateur INTEGER NOT NULL,
    PRIMARY KEY(Id_utilisateur),
    UNIQUE(email),
+   UNIQUE(firebase_uid),
    FOREIGN KEY(Id_type_utilisateur) REFERENCES type_utilisateur(Id_type_utilisateur)
 );
 
@@ -149,4 +150,15 @@ CREATE TABLE photo_signalement(
    PRIMARY KEY(Id_photo_signalement),
    UNIQUE(url_photo),
    FOREIGN KEY(Id_signalement) REFERENCES signalement(Id_signalement)
+);
+
+CREATE TABLE utilisateur_fcm_tokens(
+   Id_utilisateur_fcm_tokens SERIAL,
+   fcm_token VARCHAR(255) NOT NULL,
+   device_name VARCHAR(100) NOT NULL,
+   date_creation DATE NOT NULL,
+   last_update TIMESTAMP NOT NULL,
+   Id_utilisateur INTEGER NOT NULL,
+   PRIMARY KEY(Id_utilisateur_fcm_tokens),
+   FOREIGN KEY(Id_utilisateur) REFERENCES utilisateur(Id_utilisateur)
 );
