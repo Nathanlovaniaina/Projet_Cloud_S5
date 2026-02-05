@@ -131,7 +131,6 @@ public class SignalementService {
         dto.setLongitude(s.getLongitude());
         dto.setSurfaceMetreCarree(s.getSurfaceMetreCarree());
         dto.setDateCreation(s.getDateCreation());
-        dto.setUrlPhoto(s.getUrlPhoto());
         // synced and lastSync removed from schema
         
         try {
@@ -167,7 +166,6 @@ public class SignalementService {
         signalement.setLatitude(request.getLatitude());
         signalement.setLongitude(request.getLongitude());
         signalement.setSurfaceMetreCarree(request.getSurfaceMetreCarree());
-        signalement.setUrlPhoto(request.getUrlPhoto());
         signalement.setUtilisateur(utilisateur);
         signalement.setDateCreation(LocalDateTime.now());
         // synced field removed
@@ -228,7 +226,6 @@ public class SignalementService {
                     existing.setLongitude(signalement.getLongitude());
                     // etatActuel managed via historique - use updateSignalementStatus() instead
                     existing.setTypeTravail(signalement.getTypeTravail());
-                    existing.setUrlPhoto(signalement.getUrlPhoto());
                     return signalementRepository.save(existing);
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé avec l'ID: " + id));
@@ -274,8 +271,6 @@ public class SignalementService {
                 .orElseThrow(() -> new IllegalArgumentException("Type de travail non trouvé"));
             signalement.setTypeTravail(typeTravail);
         }
-        
-        signalement.setUrlPhoto(request.getUrlPhoto());
         // synced field removed
         
         return signalementRepository.save(signalement);
@@ -390,7 +385,6 @@ public class SignalementService {
         dto.setLongitude(s.getLongitude());
         dto.setSurfaceMetreCarree(s.getSurfaceMetreCarree());
         dto.setDateCreation(s.getDateCreation());
-        dto.setUrlPhoto(s.getUrlPhoto());
 
         // Current état
         EtatSignalement current = getCurrentEtat(s.getIdSignalement());
@@ -611,7 +605,6 @@ public class SignalementService {
                     signalement.setIdSignalement(id);
                     signalement.setTitre(doc.getString("titre"));
                     signalement.setDescription(doc.getString("description"));
-                    signalement.setUrlPhoto(doc.getString("url_photo"));
                     
                     Double latitude = doc.getDouble("latitude");
                     Double longitude = doc.getDouble("longitude");
@@ -668,7 +661,6 @@ public class SignalementService {
             data.put("id", signalement.getIdSignalement());
             data.put("titre", signalement.getTitre());
             data.put("description", signalement.getDescription());
-            data.put("url_photo", signalement.getUrlPhoto());
             
             if (signalement.getLatitude() != null) {
                 data.put("latitude", signalement.getLatitude().doubleValue());

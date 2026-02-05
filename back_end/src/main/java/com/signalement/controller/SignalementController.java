@@ -96,7 +96,6 @@ public class SignalementController {
         dto.setLongitude(s.getLongitude());
         dto.setSurfaceMetreCarree(s.getSurfaceMetreCarree());
         dto.setDateCreation(s.getDateCreation());
-        dto.setUrlPhoto(s.getUrlPhoto());
         // synced and lastSync removed from schema
         
         // État managed via historique - will be set by service layer
