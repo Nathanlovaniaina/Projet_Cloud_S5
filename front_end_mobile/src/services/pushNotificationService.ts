@@ -1,6 +1,7 @@
 import { PushNotifications } from '@capacitor/push-notifications';
-import { getFirestore, collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, getDocs, query, orderBy, limit, where, updateDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { currentUser } from '@/composables/useAuth';
 
 /**
  * Service pour gérer les Push Notifications avec Firebase Cloud Messaging
@@ -106,41 +107,71 @@ export const pushNotificationService = {
 
       if (!user) {
         console.warn('⚠️ Utilisateur non authentifié. Token sauvegardé en local.');
-        // Sauvegarder temporairement et l'envoyer après authentification
         sessionStorage.setItem('pendingFcmToken', fcmToken);
         return;
       }
 
       const firestore = getFirestore();
       const deviceName = this.getDeviceName();
-      const now = new Date();
+      const now = Date.now(); // Timestamp en millisecondes
 
-      const tokenData: FcmTokenData = {
-        fcmToken,
-        deviceName,
-        dateCreation: now,
-        lastUpdate: now,
-        idUtilisateur: null, // Sera rempli par le backend lors du sync
-      };
+      // Récupérer le prochain ID
+      const nextId = await this.getNextFcmTokenId();
 
-      // Sauvegarder dans la collection utilisateur_fcm_tokens
-      // Document ID = le token FCM lui-même
+      // Récupérer l'ID utilisateur PostgreSQL (comme dans AddSignalementPage)
+      const idUtilisateur = currentUser.value?.id || null;
+
+      // Document ID = l'ID numérique (1, 2, 3, etc.)
       const tokenDocRef = doc(
         firestore,
         'utilisateur_fcm_tokens',
-        fcmToken
+        nextId.toString()
       );
 
       await setDoc(tokenDocRef, {
-        ...tokenData,
-        dateCreation: serverTimestamp(),
-        lastUpdate: serverTimestamp(),
+        id: nextId,
+        fcm_token: fcmToken,
+        device_name: deviceName,
+        date_creation: now,
+        last_update: now,
+        enable: true, // Activé par défaut
+        id_utilisateur: idUtilisateur,
       });
 
-      console.log('✅ FCM Token sauvegardé dans Firestore');
+      // Sauvegarder le token en localStorage aussi
+      localStorage.setItem('fcmToken', fcmToken);
+      localStorage.setItem('fcmTokenTimestamp', new Date().toISOString());
+
+      console.log('✅ FCM Token sauvegardé dans Firestore avec ID:', nextId);
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde du token à Firestore:', error);
       throw error;
+    }
+  },
+
+  /**
+   * Obtenir le prochain ID pour un FCM token
+   */
+  async getNextFcmTokenId(): Promise<number> {
+    try {
+      const firestore = getFirestore();
+      const querySnapshot = await getDocs(
+        query(
+          collection(firestore, 'utilisateur_fcm_tokens'),
+          orderBy('id', 'desc'),
+          limit(1)
+        )
+      );
+
+      if (querySnapshot.docs.length === 0) {
+        return 1;
+      }
+
+      const lastDoc = querySnapshot.docs[0];
+      return (lastDoc.data().id || 0) + 1;
+    } catch (error) {
+      console.error('⚠️ Erreur récupération ID FCM token (collection vide?):', error);
+      return 1;
     }
   },
 
@@ -248,11 +279,134 @@ export const pushNotificationService = {
   },
 
   /**
+   * Vérifier le statut du token FCM (enable ou disable)
+   * @returns true si enable, false si disable, null si pas de token trouvé
+   */
+  async checkFcmTokenStatus(): Promise<boolean | null> {
+    try {
+      const fcmToken = this.getSavedFcmToken();
+      
+      if (!fcmToken) {
+        console.warn('⚠️ Aucun token FCM sauvegardé localement');
+        return null;
+      }
+
+      const firestore = getFirestore();
+
+      // Chercher le document par fcm_token
+      const querySnapshot = await getDocs(
+        query(
+          collection(firestore, 'utilisateur_fcm_tokens'),
+          where('fcm_token', '==', fcmToken)
+        )
+      );
+
+      if (querySnapshot.docs.length === 0) {
+        console.warn('⚠️ Token FCM non trouvé dans Firestore');
+        return null;
+      }
+
+      const tokenDoc = querySnapshot.docs[0];
+      const enableStatus = tokenDoc.data().enable;
+      
+      console.log('🔍 Statut du token FCM:', enableStatus ? 'Activé' : 'Désactivé');
+      return enableStatus;
+    } catch (error) {
+      console.error('❌ Erreur lors de la vérification du statut du token:', error);
+      return null;
+    }
+  },
+
+  /**
    * Supprimer le token FCM sauvegardé
    */
   clearSavedFcmToken(): void {
     localStorage.removeItem('fcmToken');
     localStorage.removeItem('fcmTokenTimestamp');
+  },
+
+  /**
+   * Désactiver le token FCM (enable = false)
+   * @param idUtilisateur ID de l'utilisateur (non utilisé, cherche par token)
+   */
+  async disableFcmToken(idUtilisateur: number): Promise<void> {
+    try {
+      const fcmToken = this.getSavedFcmToken();
+      
+      if (!fcmToken) {
+        console.warn('⚠️ Aucun token FCM sauvegardé localement');
+        return;
+      }
+
+      const firestore = getFirestore();
+
+      // Chercher le document par fcm_token (unique)
+      const querySnapshot = await getDocs(
+        query(
+          collection(firestore, 'utilisateur_fcm_tokens'),
+          where('fcm_token', '==', fcmToken)
+        )
+      );
+
+      if (querySnapshot.docs.length === 0) {
+        console.warn('⚠️ Token FCM non trouvé dans Firestore');
+        return;
+      }
+
+      // Mettre à jour le document pour désactiver le token
+      const docToUpdate = querySnapshot.docs[0];
+      await updateDoc(docToUpdate.ref, {
+        enable: false,
+        last_update: Date.now()
+      });
+
+      console.log('✅ Token FCM désactivé');
+    } catch (error) {
+      console.error('❌ Erreur lors de la désactivation du token FCM:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Activer le token FCM (enable = true)
+   * @param idUtilisateur ID de l'utilisateur (non utilisé, cherche par token)
+   */
+  async enableFcmToken(idUtilisateur: number): Promise<void> {
+    try {
+      const fcmToken = this.getSavedFcmToken();
+      
+      if (!fcmToken) {
+        console.warn('⚠️ Aucun token FCM sauvegardé localement');
+        return;
+      }
+
+      const firestore = getFirestore();
+
+      // Chercher le document par fcm_token (unique)
+      const querySnapshot = await getDocs(
+        query(
+          collection(firestore, 'utilisateur_fcm_tokens'),
+          where('fcm_token', '==', fcmToken)
+        )
+      );
+
+      if (querySnapshot.docs.length === 0) {
+        console.warn('⚠️ Token FCM non trouvé dans Firestore');
+        return;
+      }
+
+      // Mettre à jour le document pour activer le token
+      const docToUpdate = querySnapshot.docs[0];
+      await updateDoc(docToUpdate.ref, {
+        enable: true,
+        last_update: Date.now()
+      });
+
+      console.log('✅ Token FCM activé');
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'activation du token FCM:', error);
+      throw error;
+    }
   },
 };
 

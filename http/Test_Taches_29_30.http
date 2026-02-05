@@ -52,7 +52,7 @@ Content-Type: application/json
 
 ### T29-1: Tenter de passer en "En cours" (ID 2) sans assignation acceptée
 ### ❌ DEVRAIT ÉCHOUER: "Au moins une entreprise doit avoir accepté le projet"
-@signalementId = 1
+@signalementId = 6
 PATCH {{baseUrl}}/signalements/{{signalementId}}/status
 Authorization: Bearer {{tokenManager}}
 Content-Type: application/json

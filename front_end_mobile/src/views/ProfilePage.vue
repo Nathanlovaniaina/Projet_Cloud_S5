@@ -49,6 +49,40 @@
           </div>
         </div>
 
+        <!-- Notifications Settings -->
+        <div class="settings-section">
+          <h2 class="section-title">Paramètres</h2>
+          <div class="settings-card">
+            <div class="settings-item">
+              <div class="settings-content">
+                <span class="settings-label">Notifications</span>
+                <span class="settings-description">Recevoir des notifications de changement d'état</span>
+              </div>
+              <ion-toggle
+                v-model="notificationsEnabled"
+                @ionChange="handleNotificationsToggle"
+                class="settings-toggle"
+              ></ion-toggle>
+            </div>
+          </div>
+        </div>
+
+        <!-- FCM Token Display -->
+        <div class="fcm-token-section">
+          <h2 class="section-title">Informations Notifications</h2>
+          <div class="fcm-token-card">
+            <div class="fcm-token-content">
+              <span class="fcm-token-label">FCM Token:</span>
+              <span class="fcm-token-value" v-if="fcmToken">
+                {{ fcmToken.substring(0, 50) }}...
+              </span>
+              <span class="fcm-token-empty" v-else>
+                Aucun token disponible
+              </span>
+            </div>
+          </div>
+        </div>
+
         <!-- Action Buttons -->
         <div class="action-section">
           <ion-button 
@@ -84,6 +118,7 @@ import {
   IonContent,
   IonButton,
   IonIcon,
+  IonToggle,
   alertController
 } from '@ionic/vue';
 import {
@@ -97,6 +132,8 @@ import {
   checkmarkCircle as checkmarkCircleIcon
 } from 'ionicons/icons';
 import { logout, currentUser, loadUserFromStorage } from '@/composables/useAuth';
+import { usePushNotifications } from '@/composables/usePushNotifications';
+import { pushNotificationService } from '@/services/pushNotificationService';
 import { db } from '@/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
@@ -113,6 +150,9 @@ interface User {
 const router = useRouter();
 const user = ref<User | null>(null);
 const typeUtilisateurLabel = ref('Utilisateur');
+const notificationsEnabled = ref(false);
+const fcmToken = ref<string | null>(null);
+const { initializePushNotifications } = usePushNotifications();
 
 onMounted(async () => {
   loadUserFromStorage();
@@ -120,7 +160,19 @@ onMounted(async () => {
   
   if (user.value) {
     await loadTypeUtilisateur();
+    
+    // Vérifier le statut du token FCM dans Firestore
+    const fcmStatus = await pushNotificationService.checkFcmTokenStatus();
+    if (fcmStatus !== null) {
+      notificationsEnabled.value = fcmStatus;
+    } else {
+      // Si pas de token trouvé, vérifier localStorage
+      notificationsEnabled.value = localStorage.getItem('notificationsEnabled') === 'true';
+    }
   }
+  
+  // Récupérer le FCM token sauvegardé
+  fcmToken.value = localStorage.getItem('fcmToken');
 });
 
 // Récupérer le libellé du type d'utilisateur
@@ -164,6 +216,57 @@ async function handleLogout() {
   });
 
   await alert.present();
+}
+
+async function handleNotificationsToggle(event: any) {
+  const isEnabled = event.detail.checked;
+  
+  if (isEnabled) {
+    // Activer les notifications
+    try {
+      const idUtilisateur = user.value?.id;
+      
+      if (!idUtilisateur) {
+        console.warn('⚠️ ID utilisateur non trouvé');
+        notificationsEnabled.value = false;
+        return;
+      }
+
+      // Activer le token dans Firestore
+      await pushNotificationService.enableFcmToken(Number(idUtilisateur));
+      
+      // Si pas de token, initialiser les notifications
+      const savedToken = pushNotificationService.getSavedFcmToken();
+      if (!savedToken) {
+        await initializePushNotifications();
+      }
+      
+      localStorage.setItem('notificationsEnabled', 'true');
+      console.log('✅ Notifications activées');
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'activation des notifications:', error);
+      notificationsEnabled.value = false;
+    }
+  } else {
+    // Désactiver les notifications
+    try {
+      const idUtilisateur = user.value?.id;
+      
+      if (!idUtilisateur) {
+        console.warn('⚠️ ID utilisateur non trouvé');
+        return;
+      }
+
+      // Désactiver le token dans Firestore
+      await pushNotificationService.disableFcmToken(Number(idUtilisateur));
+      
+      localStorage.setItem('notificationsEnabled', 'false');
+      console.log('✅ Notifications désactivées');
+    } catch (error) {
+      console.error('❌ Erreur lors de la désactivation des notifications:', error);
+      notificationsEnabled.value = true;
+    }
+  }
 }
 
 function goToLogin() {
@@ -337,6 +440,56 @@ function goToLogin() {
   font-size: 13px;
   color: #6B7280;
   font-weight: 500;
+}
+
+.settings-section {
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.settings-card {
+  background: #F9FAFB;
+  border-radius: 16px;
+  border: 1px solid #E5E7EB;
+  overflow: hidden;
+}
+
+.settings-item {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.settings-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.settings-description {
+  font-size: 13px;
+  color: #6B7280;
+}
+
+.settings-toggle {
+  flex-shrink: 0;
 }
 
 .action-section {
