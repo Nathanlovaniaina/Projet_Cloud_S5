@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -111,6 +112,9 @@ public class StatisticsService {
                 .limit(5)
                 .collect(Collectors.toList());
 
+        // Calculer le délai de traitement moyen
+        Double delaiMoyen = calculateAverageProcessingTimeInDays();
+
         return StatisticsDTO.builder()
                 .totalSignalements(allSignalements.size())
                 .signalementsEnAttente(countByEtat.getOrDefault("en attente", 0))
@@ -128,6 +132,7 @@ public class StatisticsService {
                 .assignationsTerminees(assignationsTerminees)
                 .tauxCompletionMoyen(tauxCompletionMoyen)
                 .tauxPonctualiteMoyen(tauxPonctualiteMoyen)
+                .delaiTraitementMoyenJours(delaiMoyen)
                 .top5Entreprises(top5)
                 .dateCalcul(LocalDateTime.now())
                 .build();
@@ -299,5 +304,65 @@ public class StatisticsService {
                 .filter(perf -> perf.getTachesAssignees() > 0) // Ne garder que les entreprises avec des tâches
                 .sorted(Comparator.comparing(StatisticsDTO.EntreprisePerformanceDTO::getTauxCompletion).reversed())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Calcule le délai de traitement moyen (en jours) pour les signalements résolus
+     * @return délai moyen en jours, ou 0.0 s'il n'y a aucun signalement résolu
+     */
+    private Double calculateAverageProcessingTimeInDays() {
+        List<Signalement> allSignalements = signalementRepository.findAll();
+
+        // Récupérer tous les signalements résolus (état = "Résolu" ou "terminé")
+        List<Signalement> resolvedSignalements = new ArrayList<>();
+
+        for (Signalement signalement : allSignalements) {
+            // Récupérer l'état actuel du signalement
+            Optional<HistoriqueEtatSignalement> latestHistorique = 
+                    historiqueEtatSignalementRepository.findLatestBySignalement(signalement);
+
+            if (latestHistorique.isPresent()) {
+                EtatSignalement etat = latestHistorique.get().getEtatSignalement();
+                if (etat != null && ("Résolu".equalsIgnoreCase(etat.getLibelle()) || 
+                                     "terminé".equalsIgnoreCase(etat.getLibelle()))) {
+                    resolvedSignalements.add(signalement);
+                }
+            }
+        }
+
+        // Si aucun signalement résolu, retourner 0.0
+        if (resolvedSignalements.isEmpty()) {
+            return 0.0;
+        }
+
+        // Calculer le délai pour chaque signalement résolu
+        double totalJours = 0;
+        int count = 0;
+
+        for (Signalement signalement : resolvedSignalements) {
+            // Trouver l'historique avec l'état "Résolu"
+            List<HistoriqueEtatSignalement> historiques = historiqueEtatSignalementRepository
+                    .findBySignalement_IdSignalementOrderByDateChangementDesc(signalement.getIdSignalement());
+
+            for (HistoriqueEtatSignalement historique : historiques) {
+                EtatSignalement etat = historique.getEtatSignalement();
+                if (etat != null && ("Résolu".equalsIgnoreCase(etat.getLibelle()) || 
+                                     "terminé".equalsIgnoreCase(etat.getLibelle()))) {
+                    // Calculer la durée en jours
+                    long jours = ChronoUnit.DAYS.between(signalement.getDateCreation(), historique.getDateChangement());
+                    totalJours += jours;
+                    count++;
+                    break; // Prendre seulement la première résolution
+                }
+            }
+        }
+
+        // Calculer la moyenne
+        if (count == 0) {
+            return 0.0;
+        }
+
+        double moyenne = totalJours / count;
+        return Math.round(moyenne * 100.0) / 100.0;
     }
 }
