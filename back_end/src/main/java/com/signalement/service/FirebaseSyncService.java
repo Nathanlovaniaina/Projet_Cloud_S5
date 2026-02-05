@@ -36,6 +36,8 @@ public class FirebaseSyncService {
     private final HistoriqueStatutAssignationService historiqueStatutService;
     private final SessionService sessionService;
     private final TentativeConnexionService tentativeConnexionService;
+    private final PhotoSignalementService photoSignalementService;
+    private final UtilisateurFcmTokensService utilisateurFcmTokensService;
 
     /**
      * TÂCHE 31: Synchroniser depuis Firebase vers PostgreSQL
@@ -102,6 +104,14 @@ public class FirebaseSyncService {
             int tentativesConnexionSynced = tentativeConnexionService.syncFromFirebase(lastSyncDate);
             stats.put("tentative_connexion", tentativesConnexionSynced);
             totalSynced += tentativesConnexionSynced;
+
+            int photoSignalementSynced = photoSignalementService.syncFromFirebase(lastSyncDate);
+            stats.put("photo_signalement", photoSignalementSynced);
+            totalSynced += photoSignalementSynced;
+
+            int utilisateurFcmTokensSynced = utilisateurFcmTokensService.syncFromFirebase(lastSyncDate);
+            stats.put("utilisateur_fcm_tokens", utilisateurFcmTokensSynced);
+            totalSynced += utilisateurFcmTokensSynced;
 
             // 3. Enregistrer la synchronisation réussie
             SynchronisationFirebase sync = new SynchronisationFirebase();
@@ -205,6 +215,14 @@ public class FirebaseSyncService {
             stats.put("tentative_connexion", tentativesConnexionCount);
             totalSynced += tentativesConnexionCount;
 
+            int photoSignalementCount = photoSignalementService.syncAllToFirebase();
+            stats.put("photo_signalement", photoSignalementCount);
+            totalSynced += photoSignalementCount;
+
+            int utilisateurFcmTokensCount = utilisateurFcmTokensService.syncAllToFirebase();
+            stats.put("utilisateur_fcm_tokens", utilisateurFcmTokensCount);
+            totalSynced += utilisateurFcmTokensCount;
+
             // 3. Enregistrer la synchronisation réussie
             SynchronisationFirebase sync = new SynchronisationFirebase();
             sync.setDateSynchronisation(syncStartTime);
@@ -254,7 +272,7 @@ public class FirebaseSyncService {
             "signalements", "utilisateurs", "etat_signalement", 
             "type_travail", "type_utilisateur", "entreprise", "statut_assignation",
             "entreprise_concerner", "historique_etat_signalement", "historique_statut_assignation",
-            "session", "tentative_connexion"
+            "session", "tentative_connexion", "photo_signalement", "utilisateur_fcm_tokens"
         };
 
         for (String collectionName : collections) {

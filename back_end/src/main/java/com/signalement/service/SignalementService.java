@@ -62,6 +62,7 @@ public class SignalementService {
     private final FirebaseConversionService firebaseConversionService;
     private final UtilisateurRepository utilisateurRepository;
     private final HistoriqueStatutAssignationRepository historiqueStatutAssignationRepository;
+    private final NotificationService notificationService;
     private final Firestore firestore;
     private static final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
@@ -306,8 +307,13 @@ public class SignalementService {
         createHistoriqueEtat(signalement, etat, dateChangement);
         
         // Reload signalement to ensure fresh state for DTO conversion
-        return signalementRepository.findById(id)
+        Signalement reloadedSignalement = signalementRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé avec l'ID: " + id));
+        
+        // 📲 ENVOYER NOTIFICATION À L'UTILISATEUR CRÉATEUR (Tâche 34)
+        notificationService.notifySignalementStatusChange(id, etat.getLibelle());
+        
+        return reloadedSignalement;
     }
     
     /**
