@@ -42,12 +42,12 @@ public class NotificationService {
 
             Integer userId = signalement.getUtilisateur().getIdUtilisateur();
 
-            // Récupérer tous les tokens FCM de l'utilisateur
+            // Récupérer seulement les tokens FCM ACTIVÉS de l'utilisateur
             List<UtilisateurFcmTokens> fcmTokens = utilisateurFcmTokensService
-                    .getTokensByUtilisateur(userId);
+                    .getEnabledTokensByUtilisateur(userId);
 
             if (fcmTokens.isEmpty()) {
-                log.info("Aucun token FCM trouvé pour l'utilisateur {} du signalement {}", 
+                log.info("Aucun token FCM activé trouvé pour l'utilisateur {} du signalement {}", 
                         userId, signalementId);
                 return;
             }

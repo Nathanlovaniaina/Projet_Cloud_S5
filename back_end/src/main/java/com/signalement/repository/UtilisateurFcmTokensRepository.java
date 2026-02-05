@@ -29,4 +29,6 @@ public interface UtilisateurFcmTokensRepository extends JpaRepository<Utilisateu
      * Supprimer un token spécifique
      */
     void deleteByFcmToken(String fcmToken);
+
+    List<UtilisateurFcmTokens> findByUtilisateur_IdUtilisateurAndEnableTrue(Integer idUtilisateur);
 }
