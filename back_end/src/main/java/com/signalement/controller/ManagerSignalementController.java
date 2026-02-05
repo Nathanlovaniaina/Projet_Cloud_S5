@@ -268,7 +268,7 @@ public class ManagerSignalementController {
             @Valid @RequestBody UpdateSignalementStatusRequest request) {
         try {
             Utilisateur manager = validateManagerAccess(token);
-            Signalement updated = signalementService.updateSignalementStatus(id, request.getEtatId(), manager);
+            Signalement updated = signalementService.updateSignalementStatus(id, request.getEtatId(), request.getDateChangement(), manager);
             SignalementDTO dto = signalementService.convertToEnrichedDTO(updated);
             return ResponseEntity.ok(new com.signalement.dto.ApiResponse(true, "État modifié", dto));
         } catch (IllegalArgumentException e) {

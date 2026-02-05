@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 
 /**
  * DTO pour la modification du statut d'un signalement (Tâche 23)
@@ -16,4 +17,6 @@ public class UpdateSignalementStatusRequest {
     
     @NotNull(message = "L'état est obligatoire")
     private Integer etatId;
+    
+    private LocalDateTime dateChangement;
 }
