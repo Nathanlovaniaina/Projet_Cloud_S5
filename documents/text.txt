@@ -6,3 +6,6 @@ const firebaseConfig = {
   messagingSenderId: "116450123240",
   appId: "1:116450123240:web:54d98bc8ecb609926a185d"
 };
+
+swagger (doc tech)
+supp session donnee (cote back end)
