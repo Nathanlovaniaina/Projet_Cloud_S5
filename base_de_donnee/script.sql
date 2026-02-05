@@ -72,7 +72,6 @@ CREATE TABLE signalement(
    description TEXT,
    surface_metre_carree NUMERIC(15,2) NOT NULL,
    date_creation TIMESTAMP NOT NULL,
-   url_photo VARCHAR(250),
    geom GEOGRAPHY,
    last_update TIMESTAMP NOT NULL,
    Id_type_travail INTEGER NOT NULL,
@@ -139,4 +138,15 @@ CREATE TABLE historique_etat_signalement(
    PRIMARY KEY(Id_historique),
    FOREIGN KEY(Id_signalement) REFERENCES signalement(Id_signalement),
    FOREIGN KEY(Id_etat_signalement) REFERENCES etat_signalement(Id_etat_signalement)
+);
+
+CREATE TABLE photo_signalement(
+   Id_photo_signalement SERIAL,
+   url_photo VARCHAR(250) NOT NULL,
+   date_ajout DATE NOT NULL,
+   lats_update TIMESTAMP NOT NULL,
+   Id_signalement INTEGER NOT NULL,
+   PRIMARY KEY(Id_photo_signalement),
+   UNIQUE(url_photo),
+   FOREIGN KEY(Id_signalement) REFERENCES signalement(Id_signalement)
 );

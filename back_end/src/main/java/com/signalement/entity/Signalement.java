@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.locationtech.jts.geom.Point;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "signalement")
@@ -43,8 +44,9 @@ public class Signalement {
     @JoinColumn(name = "id_type_travail", nullable = false)
     private TypeTravail typeTravail;
 
-    @Column(name = "url_photo", length = 250)
-    private String urlPhoto;
+    @OneToMany(mappedBy = "signalement", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<PhotoSignalement> photos;
 
     @Column(name = "geom", columnDefinition = "geography")
     private Point geom;
