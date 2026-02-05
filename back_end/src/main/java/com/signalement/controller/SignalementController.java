@@ -31,6 +31,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -359,7 +360,7 @@ public class SignalementController {
         return sessionService.getUtilisateurByToken(token)
             .map(utilisateur -> {
                 try {
-                    Signalement updated = signalementService.updateSignalementStatus(id, request.getEtatId(), utilisateur);
+                    Signalement updated = signalementService.updateSignalementStatus(id, request.getEtatId(), request.getDateChangement(), utilisateur);
                     com.signalement.dto.SignalementDTO dto = signalementService.convertToEnrichedDTO(updated);
                     return ResponseEntity.ok(
                         new com.signalement.dto.ApiResponse(true, "Statut modifié avec succès", dto));
@@ -486,4 +487,56 @@ public class SignalementController {
                 .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
         }
     }
+
+    @Operation(
+        summary = "Récupérer l'avancement d'un signalement",
+        description = "Retourne le pourcentage d'avancement d'un signalement en fonction de son état. Support du paramètre ?date= pour vérifier l'avancement à une date passée."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Avancement retourné avec succès",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = com.signalement.dto.SignalementProgressDTO.class))),
+        @ApiResponse(responseCode = "401", description = "Non authentifié ou token invalide"),
+        @ApiResponse(responseCode = "404", description = "Signalement non trouvé")
+    })
+    @GetMapping("/signalements/{id}/progress")
+    public ResponseEntity<com.signalement.dto.ApiResponse> getSignalementProgress(
+            @PathVariable Integer id,
+            @Parameter(description = "Date au format ISO-8601 (ex: 2026-02-01T10:30:00) pour vérifier l'avancement à cette date. Si absent, utilise la date actuelle.")
+            @RequestParam(required = false) String date,
+            @Parameter(hidden = true) HttpServletRequest httpRequest) {
+        
+        String auth = httpRequest.getHeader("Authorization");
+        if (auth == null || !auth.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Authentification requise"));
+        }
+
+        String token = auth.substring(7).trim();
+        return sessionService.getUtilisateurByToken(token)
+            .map(utilisateur -> {
+                try {
+                    // Parser la date si fournie
+                    LocalDateTime dateRef = null;
+                    if (date != null && !date.isEmpty()) {
+                        try {
+                            dateRef = LocalDateTime.parse(date);
+                        } catch (Exception e) {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(new com.signalement.dto.ApiResponse(false, 
+                                    "Format de date invalide. Utilisez le format ISO-8601 (ex: 2026-02-01T10:30:00)"));
+                        }
+                    }
+
+                    com.signalement.dto.SignalementProgressDTO progress = signalementService.getSignalementProgress(id, dateRef);
+                    return ResponseEntity.ok(
+                        new com.signalement.dto.ApiResponse(true, "Avancement récupéré avec succès", progress));
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+                }
+            })
+            .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new com.signalement.dto.ApiResponse(false, "Token invalide")));
+    }
 }
+

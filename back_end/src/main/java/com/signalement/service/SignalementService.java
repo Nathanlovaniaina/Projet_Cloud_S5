@@ -5,6 +5,7 @@ import com.google.cloud.firestore.*;
 import com.signalement.dto.AssignEnterpriseRequest;
 import com.signalement.dto.CreateSignalementRequest;
 import com.signalement.dto.EntrepriseConcernerDTO;
+import com.signalement.dto.SignalementProgressDTO;
 import com.signalement.dto.UpdateAssignmentStatusRequest;
 import com.signalement.dto.UpdateSignalementRequest;
 import com.signalement.entity.Entreprise;
@@ -287,6 +288,11 @@ public class SignalementService {
     @Transactional
     public Signalement updateSignalementStatus(Integer id, Integer etatId, Utilisateur utilisateur) 
             throws IllegalAccessException {
+        return updateSignalementStatus(id, etatId, null, utilisateur);
+    }
+    
+    public Signalement updateSignalementStatus(Integer id, Integer etatId, LocalDateTime dateChangement, Utilisateur utilisateur) 
+            throws IllegalAccessException {
         // Vérifier que l'utilisateur est manager
         if (!isManager(utilisateur)) {
             throw new IllegalAccessException("Seuls les managers peuvent modifier le statut");
@@ -302,7 +308,7 @@ public class SignalementService {
         canTransitionToState(id, etatId);
         
         // Create historique entry instead of setting direct FK
-        createHistoriqueEtat(signalement, etat);
+        createHistoriqueEtat(signalement, etat, dateChangement);
         
         // Reload signalement to ensure fresh state for DTO conversion
         return signalementRepository.findById(id)
@@ -425,10 +431,15 @@ public class SignalementService {
     // Helper methods for historique-based état management
     
     private void createHistoriqueEtat(Signalement signalement, EtatSignalement etat) {
+        createHistoriqueEtat(signalement, etat, null);
+    }
+    
+    private void createHistoriqueEtat(Signalement signalement, EtatSignalement etat, LocalDateTime dateChangement) {
         HistoriqueEtatSignalement historique = new HistoriqueEtatSignalement();
         historique.setSignalement(signalement);
         historique.setEtatSignalement(etat);
-        historique.setDateChangement(LocalDateTime.now());
+        // Utiliser la date fournie, ou LocalDateTime.now() si null
+        historique.setDateChangement(dateChangement != null ? dateChangement : LocalDateTime.now());
         historiqueEtatSignalementRepository.save(historique);
     }
     
@@ -690,6 +701,74 @@ public class SignalementService {
         }
         log.info("{} signalements recréés", signalements.size());
         return signalements.size();
+    }
+
+    /**
+     * Récupère l'avancement (pourcentage) d'un signalement à une date donnée
+     * @param signalementId ID du signalement
+     * @param atDate Date à laquelle vérifier l'état (null = maintenant)
+     * @return DTO avec l'état et le pourcentage d'avancement
+     */
+    public com.signalement.dto.SignalementProgressDTO getSignalementProgress(Integer signalementId, LocalDateTime atDate) {
+        Signalement signalement = signalementRepository.findById(signalementId)
+            .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé avec l'ID: " + signalementId));
+
+        // Si pas de date fournie, utiliser maintenant
+        LocalDateTime dateRef = atDate != null ? atDate : LocalDateTime.now();
+
+        // Récupérer tous les changements d'état du signalement, triés chronologiquement
+        List<HistoriqueEtatSignalement> historiques = historiqueEtatSignalementRepository
+                .findBySignalement_IdSignalementOrderByDateChangementDesc(signalementId);
+
+        // Trouver l'état valide à la date donnée
+        EtatSignalement etatAlaDate = null;
+        for (HistoriqueEtatSignalement historique : historiques) {
+            // Si le changement s'est produit avant ou à la date référence
+            if (historique.getDateChangement().isBefore(dateRef) || historique.getDateChangement().isEqual(dateRef)) {
+                etatAlaDate = historique.getEtatSignalement();
+                break;
+            }
+        }
+
+        // Si aucun historique trouvé, utiliser l'état de création (en attente par défaut)
+        if (etatAlaDate == null) {
+            etatAlaDate = etatSignalementRepository.findById(1)
+                .orElseThrow(() -> new IllegalArgumentException("État 'En attente' non trouvé"));
+        }
+
+        // Calculer le pourcentage d'avancement selon l'état
+        Integer pourcentage = calculateProgress(etatAlaDate.getLibelle());
+
+        return SignalementProgressDTO.builder()
+                .idSignalement(signalementId)
+                .etatId(etatAlaDate.getIdEtatSignalement())
+                .etatLibelle(etatAlaDate.getLibelle())
+                .pourcentageAvancement(pourcentage)
+                .build();
+    }
+
+    /**
+     * Calcule le pourcentage d'avancement selon l'état du signalement
+     */
+    private Integer calculateProgress(String etatLibelle) {
+        if (etatLibelle == null) {
+            return 0;
+        }
+
+        String etat = etatLibelle.toLowerCase().trim();
+
+        if (etat.contains("en attente") || etat.contains("attente")) {
+            return 0;
+        } else if (etat.contains("en cours") || etat.contains("cours")) {
+            return 50;
+        } else if (etat.contains("résolu") || etat.contains("resolu")) {
+            return 100;
+        } else if (etat.contains("rejeté") || etat.contains("rejete")) {
+            return 0;
+        }
+
+        // Par défaut
+        return 0;
     }
 }
 
