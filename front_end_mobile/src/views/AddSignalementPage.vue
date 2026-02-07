@@ -63,16 +63,34 @@
             ></ion-input>
           </div>
 
-          <!-- URL Photo -->
+          <!-- Upload Photos -->
           <div class="input-group">
-            <label class="input-label">Photo (optionnel)</label>
-            <ion-input
-              v-model="form.url_photo"
-              type="text"
-              placeholder="https://example.com/photo.jpg"
-              class="modern-input"
-              :class="{ 'input-filled': form.url_photo }"
-            ></ion-input>
+            <label class="input-label">Photos (optionnel)</label>
+            <ion-button
+              expand="block"
+              fill="outline"
+              @click="uploadPhoto"
+              :disabled="loadingPhoto"
+              class="action-btn"
+            >
+              <ion-icon slot="start" :icon="cameraIcon"></ion-icon>
+              {{ loadingPhoto ? 'Upload en cours...' : 'Ajouter une photo' }}
+            </ion-button>
+            
+            <!-- Galerie de photos -->
+            <div v-if="photos.length > 0" class="photos-gallery">
+              <div v-for="(photo, index) in photos" :key="index" class="photo-item">
+                <img :src="photo.preview" alt="Photo" class="photo-preview" />
+                <ion-button 
+                  size="small" 
+                  color="danger" 
+                  @click="removePhoto(index)"
+                  class="remove-photo-btn"
+                >
+                  <ion-icon :icon="closeIcon"></ion-icon>
+                </ion-button>
+              </div>
+            </div>
           </div>
 
           <!-- Affichage de la localisation -->
@@ -168,13 +186,17 @@ import {
   checkmark as checkmarkIcon,
   navigate as navigateIcon,
   map as mapIcon,
-  location as locationIcon
+  location as locationIcon,
+  camera as cameraIcon,
+  close as closeIcon
 } from 'ionicons/icons';
 import { getCurrentPosition } from '@/composables/useGeolocation';
-import { createSignalement, getTypesTravail } from '@/services/signalementService';
+import { createSignalement, getTypesTravail, createPhotoSignalement } from '@/services/signalementService';
 import type { TypeTravail } from '@/services/signalementService';
 import { currentUser, loadUserFromStorage } from '@/composables/useAuth';
 import MapSelector from '@/components/MapSelector.vue';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { toastController } from '@ionic/vue';
 
 const router = useRouter();
 
@@ -186,6 +208,19 @@ const form = ref({
   surface_metre_carree: 0,
   url_photo: ''
 });
+
+// Configuration Cloudinary
+const CLOUD_NAME = 'dz73oiwfz';
+const UPLOAD_PRESET = 'cloud_projet_s5';
+
+// Photos
+interface Photo {
+  preview: string; // URL locale pour affichage
+  cloudinaryUrl: string; // URL Cloudinary après upload
+}
+
+const photos = ref<Photo[]>([]);
+const loadingPhoto = ref(false);
 
 const typesTravail = ref<TypeTravail[]>([]);
 const selectedLocation = ref<{ lat: number; lng: number } | null>(null);
@@ -236,6 +271,99 @@ function onLocationFromMap(location: { lat: number; lng: number }) {
   closeMapModal();
 }
 
+/**
+ * Upload une photo vers Cloudinary avec transformation
+ */
+async function uploadToCloudinary(base64String: string, format: string): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', `data:image/${format};base64,${base64String}`);
+  formData.append('upload_preset', UPLOAD_PRESET);
+  formData.append('cloud_name', CLOUD_NAME);
+  formData.append('folder', 'rojo/image'); // Dossier dans Cloudinary
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+    {
+      method: 'POST',
+      body: formData,
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error?.message || 'Erreur lors de l\'upload');
+  }
+
+  const data = await response.json();
+  
+  // Transformer l'URL pour ajouter les paramètres de redimensionnement et compression
+  // Format: https://res.cloudinary.com/<CLOUD_NAME>/image/upload/w_600,h_600,c_fill,q_auto/<path>
+  const urlParts = data.secure_url.split('/upload/');
+  const transformedUrl = `${urlParts[0]}/upload/w_600,h_600,c_fill,q_auto/${urlParts[1]}`;
+  
+  return transformedUrl;
+}
+
+/**
+ * Sélectionne et upload une photo
+ */
+async function uploadPhoto() {
+  loadingPhoto.value = true;
+  error.value = null;
+
+  try {
+    // Sélectionner la photo
+    const image = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Base64,
+      source: CameraSource.Prompt,
+    });
+
+    if (!image.base64String) {
+      throw new Error('Aucune image sélectionnée');
+    }
+
+    // Preview locale
+    const preview = `data:image/${image.format};base64,${image.base64String}`;
+
+    // Upload vers Cloudinary
+    const cloudinaryUrl = await uploadToCloudinary(image.base64String, image.format || 'jpeg');
+
+    // Ajouter à la liste
+    photos.value.push({ preview, cloudinaryUrl });
+
+    const toast = await toastController.create({
+      message: 'Photo ajoutée avec succès!',
+      duration: 2000,
+      color: 'success',
+      position: 'top'
+    });
+    await toast.present();
+
+  } catch (err: any) {
+    console.error('Erreur upload photo:', err);
+    error.value = err.message || 'Erreur lors de l\'upload';
+    
+    const toast = await toastController.create({
+      message: 'Erreur lors de l\'upload de la photo',
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+  } finally {
+    loadingPhoto.value = false;
+  }
+}
+
+/**
+ * Retire une photo de la liste
+ */
+function removePhoto(index: number) {
+  photos.value.splice(index, 1);
+}
+
 async function submit() {
   if (!selectedLocation.value || form.value.id_type_travail === null) {
     error.value = 'Localisation et type de travail requis';
@@ -251,7 +379,8 @@ async function submit() {
   error.value = null;
 
   try {
-    await createSignalement({
+    // 1. Créer le signalement
+    const signalementIdNumber = await createSignalement({
       latitude: selectedLocation.value.lat,
       longitude: selectedLocation.value.lng,
       description: form.value.description,
@@ -263,6 +392,25 @@ async function submit() {
       date_creation: Date.now()
     });
 
+    // 2. Créer les documents photo_signalement pour chaque photo
+    if (photos.value.length > 0) {
+      for (const photo of photos.value) {
+        await createPhotoSignalement({
+          id_signalement: signalementIdNumber,
+          url_photo: photo.cloudinaryUrl
+        });
+      }
+    }
+
+    // Afficher un toast de succès
+    const toast = await toastController.create({
+      message: `Signalement créé avec ${photos.value.length} photo(s)!`,
+      duration: 2000,
+      color: 'success',
+      position: 'top'
+    });
+    await toast.present();
+
     // Réinitialiser le formulaire
     form.value = {
       titre: '',
@@ -272,6 +420,7 @@ async function submit() {
       url_photo: ''
     };
     selectedLocation.value = null;
+    photos.value = [];
     
     // Rediriger vers la carte
     router.push('/tabs/map');
@@ -460,5 +609,41 @@ async function submit() {
   font-size: 14px;
   font-weight: 500;
   color: #DC2626;
+}
+
+.photos-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.photo-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #E5E7EB;
+}
+
+.photo-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-photo-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  --padding-start: 0;
+  --padding-end: 0;
+  --border-radius: 50%;
+}
+
+.remove-photo-btn ion-icon {
+  font-size: 16px;
 }
 </style>

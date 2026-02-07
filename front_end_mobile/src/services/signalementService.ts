@@ -19,6 +19,11 @@ export interface NewSignalement {
   date_creation?: number;
 }
 
+export interface NewPhotoSignalement {
+  id_signalement: number;
+  url_photo: string;
+}
+
 // Récupérer tous les types de travail depuis Firestore
 export async function getTypesTravail(): Promise<TypeTravail[]> {
   try {
@@ -63,6 +68,21 @@ async function getNextHistoriqueId(): Promise<number> {
   }
 }
 
+// Obtenir le prochain ID pour photo_signalement
+async function getNextPhotoSignalementId(): Promise<number> {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, 'photo_signalement'), orderBy('id', 'desc'), limit(1)));
+    if (querySnapshot.docs.length === 0) {
+      return 1;
+    }
+    const lastDoc = querySnapshot.docs[0];
+    return (lastDoc.data().id || 0) + 1;
+  } catch (error) {
+    console.error('Erreur récupération ID photo_signalement:', error);
+    return 1;
+  }
+}
+
 // Créer un signalement dans Firestore avec historique
 export async function createSignalement(data: NewSignalement) {
   try {
@@ -96,9 +116,31 @@ export async function createSignalement(data: NewSignalement) {
       last_update: now
     });
     
-    return signalementId;
+    return nextId; // Retourner l'ID numérique
   } catch (error) {
     console.error('Erreur création signalement:', error);
     throw new Error('Erreur création signalement');
+  }
+}
+
+// Créer un document photo_signalement
+export async function createPhotoSignalement(data: NewPhotoSignalement) {
+  try {
+    const now = Date.now();
+    const nextId = await getNextPhotoSignalementId();
+    const photoId = nextId.toString();
+    
+    await setDoc(doc(db, 'photo_signalement', photoId), {
+      id: nextId,
+      id_signalement: data.id_signalement,
+      url_photo: data.url_photo,
+      date_ajout: now,
+      last_update: now
+    });
+    
+    return photoId;
+  } catch (error) {
+    console.error('Erreur création photo_signalement:', error);
+    throw new Error('Erreur création photo_signalement');
   }
 }

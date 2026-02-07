@@ -30,7 +30,29 @@
             <strong>Statut:</strong> 
             <span style="color: #4CAF50; font-weight: bold;">{{ selectedSignalement.etat }}</span>
           </div>
+          
+          <!-- Galerie de photos -->
+          <div v-if="selectedSignalement.photos && selectedSignalement.photos.length > 0" style="margin-top: 20px;">
+            <hr style="margin: 15px 0; border: none; border-top: 1px solid #ddd;">
+            <strong style="display: block; margin-bottom: 12px;">Photos ({{ selectedSignalement.photos.length }}):</strong>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px;">
+              <div v-for="(photo, index) in selectedSignalement.photos" :key="index" 
+                   style="aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 2px solid #E5E7EB; cursor: pointer;"
+                   @click="openPhotoPreview(photo.url_photo)">
+                <img :src="photo.url_photo" alt="Photo" 
+                     style="width: 100%; height: 100%; object-fit: cover;" />
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+    </div>
+    
+    <!-- Modal de preview photo -->
+    <div v-if="showPhotoPreview" class="photo-preview-overlay" @click="closePhotoPreview">
+      <div class="photo-preview-content" @click.stop>
+        <button type="button" class="popup-close" @click.stop="closePhotoPreview">×</button>
+        <img :src="previewPhotoUrl" alt="Photo preview" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
       </div>
     </div>
   </div>
@@ -69,6 +91,16 @@ const emit = defineEmits<{
 const showPopup = ref(false);
 const selectedSignalement = ref<any>(null);
 
+// Preview photo
+const showPhotoPreview = ref(false);
+const previewPhotoUrl = ref('');
+
+interface PhotoSignalement {
+  id: number;
+  url_photo: string;
+  date_ajout: number;
+}
+
 interface SignalementData {
   id: number;
   titre: string;
@@ -76,6 +108,7 @@ interface SignalementData {
   surface: number;
   typeTravail: string;
   etat: string;
+  photos?: PhotoSignalement[];
 }
 
 let temporaryMarker: any = null;
@@ -187,6 +220,40 @@ function closePopup() {
   selectedSignalement.value = null;
 }
 
+function openPhotoPreview(url: string) {
+  previewPhotoUrl.value = url;
+  showPhotoPreview.value = true;
+}
+
+function closePhotoPreview() {
+  showPhotoPreview.value = false;
+  previewPhotoUrl.value = '';
+}
+
+// Récupérer toutes les photos d'un signalement
+async function getPhotosSignalement(idSignalement: number): Promise<PhotoSignalement[]> {
+  try {
+    const photosQuery = query(
+      collection(db, 'photo_signalement'),
+      where('id_signalement', '==', idSignalement)
+    );
+    
+    const photosDoc = await getDocs(photosQuery);
+    
+    return photosDoc.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: data.id || 0,
+        url_photo: data.url_photo || '',
+        date_ajout: data.date_ajout || 0
+      } as PhotoSignalement;
+    });
+  } catch (error) {
+    console.error(`Erreur récupération photos signalement ${idSignalement}:`, error);
+    return [];
+  }
+}
+
 async function loadSignalements() {
   try {
     const querySnapshot = await getDocs(query(collection(db, 'signalements')));
@@ -221,14 +288,18 @@ async function loadSignalements() {
       }).addTo(map!);
       
       // Ajouter un event listener pour afficher le popup personnalisé
-      marker.on('click', () => {
+      marker.on('click', async () => {
+        // Récupérer les photos du signalement
+        const photos = await getPhotosSignalement(id);
+        
         selectedSignalement.value = {
           id,
           titre: titre || 'Signalement',
           description,
           surface: surface_metre_carree || 0,
           typeTravail,
-          etat
+          etat,
+          photos
         } as SignalementData;
         showPopup.value = true;
       });
@@ -487,5 +558,39 @@ defineExpose({
   .popup-close:hover {
     color: #F3F4F6;
   }
+}
+
+/* Photo Preview Modal */
+.photo-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  animation: fadeIn 0.3s ease;
+}
+
+.photo-preview-content {
+  position: relative;
+  max-width: 95%;
+  max-height: 95%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-preview-content .popup-close {
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  border-radius: 50%;
+}
+
+.photo-preview-content .popup-close:hover {
+  background: rgba(255, 255, 255, 1);
 }
 </style>
