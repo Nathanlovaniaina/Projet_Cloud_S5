@@ -49,7 +49,7 @@ public class PhotoSignalementService {
                 Instant.ofEpochMilli(lastUpdateMs), ZoneId.systemDefault());
 
             if (firebaseLastUpdate.isAfter(lastSyncDate)) {
-                Integer id = firebaseConversionService.getLongAsInteger(doc, "id_photo_signalement");
+                Integer id = firebaseConversionService.getLongAsInteger(doc, "id");
                 var existing = photoSignalementRepository.findById(id);
                 
                 if (existing.isEmpty() || firebaseLastUpdate.isAfter(existing.get().getLastUpdate())) {
@@ -92,7 +92,7 @@ public class PhotoSignalementService {
         List<PhotoSignalement> photos = photoSignalementRepository.findAll();
         for (PhotoSignalement photo : photos) {
             Map<String, Object> data = new HashMap<>();
-            data.put("id_photo_signalement", photo.getIdPhotoSignalement());
+            data.put("id", photo.getIdPhotoSignalement());
             data.put("url_photo", photo.getUrlPhoto());
             
             if (photo.getDateAjout() != null) {
