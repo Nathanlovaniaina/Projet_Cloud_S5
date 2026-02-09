@@ -14,6 +14,7 @@ const ManagerSignalementDetail = lazy(() => import('./components/ManagerSignalem
 const ManagerUsersPage = lazy(() => import('./components/ManagerUsersPage'))
 const CreateVisitorForm = lazy(() => import('./components/CreateVisitorForm'))
 const MapOnlyPage = lazy(() => import('./components/MapOnlyPage'))
+const StatisticsPage = lazy(() => import('./components/StatisticsPage'))
 
 function NavbarLink({ to, children, isManager = false }: { to: string, children: React.ReactNode, isManager?: boolean }) {
   const location = useLocation()
@@ -146,12 +147,17 @@ function App() {
               
               {isManager && (
                 <NavbarLink to="/manager/signalements" isManager>
-                  🔑 Manager
+                   Manager
                 </NavbarLink>
               )}
               {isManager && (
                 <NavbarLink to="/manager/utilisateurs" isManager>
-                  👥 Utilisateurs
+                   Utilisateurs
+                </NavbarLink>
+              )}
+              {isManager && (
+                <NavbarLink to="/manager/statistics" isManager>
+                   Statistiques
                 </NavbarLink>
               )}
               
@@ -191,6 +197,7 @@ function App() {
                 <Route path="/manager/signalements/:id" element={<ManagerSignalementDetail />} />
                 <Route path="/manager/utilisateurs" element={<ManagerUsersPage />} />
                 <Route path="/manager/utilisateurs/creer" element={<CreateVisitorForm />} />
+                <Route path="/manager/statistics" element={<StatisticsPage />} />
                 <Route path="/visiteur" element={<VisitorPage />} />
                 <Route path="/map" element={<MapOnlyPage />} />
                 <Route path="/" element={<VisitorPage />} />
