@@ -56,8 +56,6 @@ INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, firebase_uid, is_bloc
 VALUES 
     ('Andriamampianina', 'Hery', 'hery.andria@gmail.com', 'visiteur123', 'YHNsPqAcw7fUE8Reb7HOFMHYoQm2', false, NOW(),
      (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Visiteur')),
-    ('Andriamampianina', 'Hery', 'hery.andria@gmail.com', 'visiteur123', 'qZo7wYrxotPPEIRbA9BLcMIQOZk1', false, NOW(),
-     (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Visiteur')),
     ('Raharison', 'Toky', 'toky.raharison@gmail.com', 'visiteur234', 'USR1Ab1VdrYFjh0gCnlkgwvwnQ796', false, NOW(),
      (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Visiteur')),
     ('Ramanantoanina', 'Feno', 'feno.rama@yahoo.fr', 'visiteur345', 'USR2Bc2WesZGki1hDomhlxwxoR807', false, NOW(),
@@ -138,6 +136,7 @@ VALUES
 (-18.8875, 47.5100, 'Détérioration voie publique secteur Isotry', 'Dégradation générale de la voie publique nécessitant une intervention de maintenance. Surface affectée d''environ 22 m². Nombreuses plaintes des riverains.', 22.00, '2024-12-20 16:30:00', ST_SetSRID(ST_MakePoint(47.5100, -18.8875), 4326)::geography, NOW(), 5, 15),
 (-18.8800, 47.5145, 'Demande éclairage supplémentaire Rue Andrianary', 'Demande d''installation de lampadaires supplémentaires. Zone déjà couverte par éclairage municipal suffisant selon normes en vigueur.', 0.00, '2024-12-15 08:00:00', ST_SetSRID(ST_MakePoint(47.5145, -18.8800), 4326)::geography, NOW(), 4, 1),
 (-18.8785, 47.5080, 'Signalement duplicata Avenue Rakotomavo', 'Signalement en doublon, déjà traité sous référence antérieure. Aucune action supplémentaire nécessaire.', 0.00, '2024-12-10 12:30:00', ST_SetSRID(ST_MakePoint(47.5080, -18.8785), 4326)::geography, NOW(), 1, 2);
+
 
 -- ==========================================
 -- TENTATIVES DE CONNEXION
@@ -374,5 +373,10 @@ SELECT pg_catalog.setval(
 SELECT pg_catalog.setval(pg_get_serial_sequence('tentative_connexion','id_tentative'), COALESCE((SELECT MAX(id_tentative) FROM tentative_connexion), 1));
 SELECT pg_catalog.setval(pg_get_serial_sequence('entreprise_concerner','id_entreprise_concerner'), COALESCE((SELECT MAX(id_entreprise_concerner) FROM entreprise_concerner), 1));
 SELECT pg_catalog.setval(pg_get_serial_sequence('historique_statut_assignation','id_historique'), COALESCE((SELECT MAX(id_historique) FROM historique_statut_assignation), 1));
+
+
+alter table signalement
+add column etat_actuel integer not null default 1;
+
 
 COMMIT;

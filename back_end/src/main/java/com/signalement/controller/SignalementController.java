@@ -9,10 +9,12 @@ import com.signalement.dto.UpdateSignalementRequest;
 import com.signalement.dto.UpdateSignalementStatusRequest;
 import com.signalement.entity.EntrepriseConcerner;
 import com.signalement.entity.EtatSignalement;
+import com.signalement.entity.PhotoSignalement;
 import com.signalement.entity.Signalement;
 import com.signalement.entity.TypeTravail;
 import com.signalement.entity.Utilisateur;
 import com.signalement.repository.EtatSignalementRepository;
+import com.signalement.repository.PhotoSignalementRepository;
 import com.signalement.repository.TypeTravailRepository;
 import com.signalement.service.SessionService;
 import com.signalement.service.SignalementService;
@@ -33,6 +35,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -45,6 +48,7 @@ public class SignalementController {
     private final StatisticsService statisticsService;
     private final EtatSignalementRepository etatSignalementRepository;
     private final TypeTravailRepository typeTravailRepository;
+    private final PhotoSignalementRepository photoSignalementRepository;
 
     @Operation(
         summary = "Créer un signalement",
@@ -254,6 +258,28 @@ public class SignalementController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    @Operation(
+        summary = "Récupérer les photos d'un signalement",
+        description = "Retourne la liste des URLs des photos associées à un signalement (public)"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Liste des photos retournée avec succès"),
+        @ApiResponse(responseCode = "404", description = "Signalement non trouvé")
+    })
+    @GetMapping("/signalements/{id}/photos")
+    public ResponseEntity<List<String>> getSignalementPhotos(@PathVariable Integer id) {
+        try {
+            List<String> photoUrls = photoSignalementRepository
+                .findBySignalement_IdSignalement(id)
+                .stream()
+                .map(PhotoSignalement::getUrlPhoto)
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(photoUrls);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of());
         }
     }
 

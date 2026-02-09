@@ -35,6 +35,10 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
   const popupRef = useRef<maplibregl.Popup | null>(null)
   const [status, setStatus] = useState<'loading' | 'local' | 'fallback'>('loading')
   const [etatOptions, setEtatOptions] = useState<{idEtatSignalement: number, libelle: string}[]>([])
+  const [showPhotosModal, setShowPhotosModal] = useState(false)
+  const [currentPhotos, setCurrentPhotos] = useState<string[]>([])
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
+  const [loadingPhotos, setLoadingPhotos] = useState(false)
 
   const CENTER: [number, number] = [47.5079, -18.8792] // [lng, lat] Antananarivo
   const ZOOM = 13
@@ -137,6 +141,40 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
       return '🏁'
     }
     return '❓'
+  }
+
+  // Fonction pour charger les photos d'un signalement
+  async function loadPhotos(idSignalement: number) {
+    setLoadingPhotos(true)
+    try {
+      const res = await fetch(`/api/signalements/${idSignalement}/photos`)
+      if (!res.ok) throw new Error('Erreur chargement photos')
+      const photos = await res.json()
+      setCurrentPhotos(photos)
+      setCurrentPhotoIndex(0)
+      setShowPhotosModal(true)
+    } catch (err) {
+      console.error('Erreur chargement photos:', err)
+      alert('Impossible de charger les photos')
+    } finally {
+      setLoadingPhotos(false)
+    }
+  }
+
+  // Navigation entre les photos
+  const goToPreviousPhoto = () => {
+    setCurrentPhotoIndex(prev => prev === 0 ? currentPhotos.length - 1 : prev - 1)
+  }
+
+  const goToNextPhoto = () => {
+    setCurrentPhotoIndex(prev => prev === currentPhotos.length - 1 ? 0 : prev + 1)
+  }
+
+  // Gestion des touches clavier
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') goToPreviousPhoto()
+    if (e.key === 'ArrowRight') goToNextPhoto()
+    if (e.key === 'Escape') setShowPhotosModal(false)
   }
 
   // Init map
@@ -372,6 +410,10 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
                   </div>
                 </div>
                 
+                <button class="popup-photos-btn" data-id="${sig.idSignalement}">
+                   Voir les images
+                </button>
+                
                 <div class="popup-content">
                   <div class="popup-section">
                     <div class="section-title">Description</div>
@@ -412,6 +454,19 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
 
             loadingPopup.setHTML(html)
             popupRef.current = loadingPopup
+            
+            // Ajouter l'event listener sur le bouton photos
+            setTimeout(() => {
+              const photoBtn = document.querySelector('.popup-photos-btn')
+              if (photoBtn) {
+                photoBtn.addEventListener('click', () => {
+                  const idStr = photoBtn.getAttribute('data-id')
+                  if (idStr) {
+                    loadPhotos(parseInt(idStr))
+                  }
+                })
+              }
+            }, 100)
           } catch (err) {
             try { 
               loadingPopup.setHTML(`
@@ -499,6 +554,61 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
           ))}
         </div>
       </div>
+      
+      {/* Modal des photos */}
+      {showPhotosModal && (
+        <div className="photos-modal-overlay" onClick={() => setShowPhotosModal(false)} onKeyDown={handleKeyDown} tabIndex={0}>
+          <div className="photos-modal-content" onClick={e => e.stopPropagation()}>
+            <div className="photos-modal-header">
+              <h3>Photos du signalement</h3>
+              <button className="modal-close-btn" onClick={() => setShowPhotosModal(false)}>✕</button>
+            </div>
+            <div className="photos-modal-body">
+              {loadingPhotos ? (
+                <div className="loading-spinner">Chargement...</div>
+              ) : currentPhotos.length === 0 ? (
+                <p className="no-photos-message">Aucune photo disponible</p>
+              ) : (
+                <div className="photo-carousel">
+                  <div className="photo-carousel-main">
+                    <img 
+                      src={currentPhotos[currentPhotoIndex]} 
+                      alt={`Photo ${currentPhotoIndex + 1}`} 
+                      className="photo-main-image" 
+                    />
+                    {currentPhotos.length > 1 && (
+                      <>
+                        <button className="photo-nav-btn photo-nav-prev" onClick={goToPreviousPhoto}>
+                          <span>‹</span>
+                        </button>
+                        <button className="photo-nav-btn photo-nav-next" onClick={goToNextPhoto}>
+                          <span>›</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  <div className="photo-counter">
+                    {currentPhotoIndex + 1} / {currentPhotos.length}
+                  </div>
+                  {currentPhotos.length > 1 && (
+                    <div className="photo-thumbnails">
+                      {currentPhotos.map((url, idx) => (
+                        <img 
+                          key={idx} 
+                          src={url} 
+                          alt={`Miniature ${idx + 1}`} 
+                          className={`photo-thumbnail ${idx === currentPhotoIndex ? 'active' : ''}`}
+                          onClick={() => setCurrentPhotoIndex(idx)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
