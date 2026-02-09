@@ -49,6 +49,8 @@ export default function ManagerSignalementDetail() {
   const [entreprises, setEntreprises] = useState<{idEntreprise: number, nomEntreprise: string}[]>([])
 
   const [statusOptions, setStatusOptions] = useState<{idEtatSignalement: number, libelle: string}[]>([])
+  const [dateChangement, setDateChangement] = useState<string>('')
+  const [progress, setProgress] = useState<number>(0)
   const [assignStatusOptions] = useState([
     { id: 1, libelle: 'En attente' },
     { id: 2, libelle: 'Acceptée' },
@@ -61,6 +63,7 @@ export default function ManagerSignalementDetail() {
     loadDetails()
     loadStatusOptions()
     loadEntrepriseOptions()
+    loadProgress()
   }, [id])
 
   async function loadEntrepriseOptions() {
@@ -75,6 +78,21 @@ export default function ManagerSignalementDetail() {
       setEntreprises(items)
     } catch (err) {
       console.warn('Erreur chargement entreprises:', err)
+    }
+  }
+
+  async function loadProgress() {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`/api/signalements/${id}/progress`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setProgress(data.progress || 0)
+      }
+    } catch (err) {
+      console.warn('Erreur chargement progression:', err)
     }
   }
 
@@ -113,7 +131,7 @@ export default function ManagerSignalementDetail() {
     }
   }
 
-  async function handleChangeStatus(newEtatId: number) {
+  async function handleChangeStatus(newEtatId: number, dateChangement: string) {
     try {
       if (!confirm(`Confirmer le changement d'état du signalement #${details?.idSignalement} ?`)) return
       const token = localStorage.getItem('token')
@@ -123,13 +141,14 @@ export default function ManagerSignalementDetail() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ etatId: newEtatId })
+        body: JSON.stringify({ etatId: newEtatId, dateChangement })
       })
 
       const result = await response.json()
       if (response.ok) {
         alert('État modifié avec succès')
         loadDetails()
+        loadProgress()
         setShowStatusModal(false)
       } else {
         alert('Erreur: ' + result.message)
@@ -326,7 +345,7 @@ export default function ManagerSignalementDetail() {
           </div>
           <div className="header-actions">
             <button 
-              onClick={() => setShowStatusModal(true)} 
+              onClick={() => { setDateChangement(new Date().toISOString().slice(0,16)); setShowStatusModal(true) }} 
               className="action-button action-change-status"
             >
               Changer l'état
@@ -342,7 +361,7 @@ export default function ManagerSignalementDetail() {
             <div className="card-header">
               <h2 className="card-title">Informations Générales</h2>
               <span className={`status-badge ${getStatusBadgeClass(details.currentEtatLibelle, details.currentEtatId)}`}>
-                {details.currentEtatLibelle} • {details.progressionPercent || 0}%
+                {details.currentEtatLibelle} • {progress}%
               </span>
             </div>
             
@@ -527,11 +546,21 @@ export default function ManagerSignalementDetail() {
                 Sélectionnez le nouvel état pour le signalement #{details.idSignalement}
               </p>
               
+              <div className="form-group">
+                <label className="form-label">Date de changement</label>
+                <input
+                  type="datetime-local"
+                  className="form-input"
+                  value={dateChangement}
+                  onChange={(e) => setDateChangement(e.target.value)}
+                />
+              </div>
+              
               <div className="options-grid">
                 {statusOptions.map(opt => (
                   <button
                     key={opt.idEtatSignalement}
-                    onClick={() => handleChangeStatus(opt.idEtatSignalement)}
+                    onClick={() => handleChangeStatus(opt.idEtatSignalement, dateChangement)}
                     className={`option-button ${getStatusBadgeClass(opt.libelle, opt.idEtatSignalement)}`}
                   >
                     {opt.libelle}
