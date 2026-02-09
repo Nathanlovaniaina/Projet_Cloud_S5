@@ -7,12 +7,12 @@ import { isAuthenticated, logout, getCurrentUser } from './services/authService'
 
 const MapLibreMap = lazy(() => import('./components/MapLibreMap'))
 const LoginForm = lazy(() => import('./components/LoginForm'))
-const RegisterForm = lazy(() => import('./components/RegisterForm'))
 const ProfileForm = lazy(() => import('./components/ProfileForm'))
 const VisitorPage = lazy(() => import('./components/VisitorPage'))
 const ManagerSignalementsPage = lazy(() => import('./components/ManagerSignalementsPage'))
 const ManagerSignalementDetail = lazy(() => import('./components/ManagerSignalementDetail'))
 const ManagerUsersPage = lazy(() => import('./components/ManagerUsersPage'))
+const CreateVisitorForm = lazy(() => import('./components/CreateVisitorForm'))
 const MapOnlyPage = lazy(() => import('./components/MapOnlyPage'))
 
 function NavbarLink({ to, children, isManager = false }: { to: string, children: React.ReactNode, isManager?: boolean }) {
@@ -174,9 +174,6 @@ function App() {
               ) : (
                 <div className="auth-links">
                   <NavbarLink to="/login">Se connecter</NavbarLink>
-                  <Link to="/register" className="register-button">
-                    S'inscrire
-                  </Link>
                 </div>
               )}
             </nav>
@@ -188,12 +185,12 @@ function App() {
             <ErrorBoundary>
               <Routes>
                 <Route path="/login" element={<LoginForm />} />
-                <Route path="/register" element={<RegisterForm />} />
                 <Route path="/profile" element={<ProfileForm />} />
                 <Route path="/visiteur" element={<VisitorPage />} />
                 <Route path="/manager/signalements" element={<ManagerSignalementsPage />} />
                 <Route path="/manager/signalements/:id" element={<ManagerSignalementDetail />} />
                 <Route path="/manager/utilisateurs" element={<ManagerUsersPage />} />
+                <Route path="/manager/utilisateurs/creer" element={<CreateVisitorForm />} />
                 <Route path="/visiteur" element={<VisitorPage />} />
                 <Route path="/map" element={<MapOnlyPage />} />
                 <Route path="/" element={<VisitorPage />} />
