@@ -298,6 +298,19 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
             const api = await res.json()
             const data = api?.data || api
 
+            // récupération de la progression via l'endpoint /progress
+            let progression: number | null = data.pourcentageAvancement ?? data.progressionPercent ?? null
+            try {
+              const progRes = await fetch(`/api/signalements/${sig.idSignalement}/progress?date=${encodeURIComponent(new Date().toISOString())}`)
+              if (progRes.ok) {
+                const progApi = await progRes.json()
+                const progData = progApi?.data || progApi
+                progression = progData.pourcentageAvancement ?? progData.progressionPercent ?? progression
+              }
+            } catch (e) {
+              // ignore, on garde la valeur existante
+            }
+
             // format creation date
             let createdAt = ''
             try { 
@@ -348,7 +361,7 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
                   <h3 class="popup-title-large">${data.titre || sig.titre || 'Sans titre'}</h3>
                   <div class="popup-meta-large">
                     <span class="popup-date">Créé le ${createdAt}</span>
-                    <span class="popup-progress">Progression: ${data.progressionPercent ?? '-'}%</span>
+                    <span class="popup-progress">Progression: ${progression != null ? progression : '-'}%</span>
                   </div>
                 </div>
                 
