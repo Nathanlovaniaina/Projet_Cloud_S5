@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import '../styles/managerSignalementDetail.css'
+import CreateAssignmentForm from './CreateAssignmentForm'
 
 interface SignalementDetails {
   idSignalement: number
@@ -42,12 +43,6 @@ export default function ManagerSignalementDetail() {
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [selectedAssignId, setSelectedAssignId] = useState<number | null>(null)
 
-  const [newEntrepriseId, setNewEntrepriseId] = useState<string>('')
-  const [newDateDebut, setNewDateDebut] = useState<string>('')
-  const [newDateFin, setNewDateFin] = useState<string>('')
-  const [newMontant, setNewMontant] = useState<string>('')
-  const [entreprises, setEntreprises] = useState<{idEntreprise: number, nomEntreprise: string}[]>([])
-
   const [statusOptions, setStatusOptions] = useState<{idEtatSignalement: number, libelle: string}[]>([])
   const [dateChangement, setDateChangement] = useState<string>('')
   const [progress, setProgress] = useState<number>(0)
@@ -62,24 +57,8 @@ export default function ManagerSignalementDetail() {
   useEffect(() => {
     loadDetails()
     loadStatusOptions()
-    loadEntrepriseOptions()
     loadProgress()
   }, [id])
-
-  async function loadEntrepriseOptions() {
-    try {
-      const token = localStorage.getItem('token')
-      if (!token) return
-      const res = await fetch('/api/statistics/by-enterprise', { headers: { 'Authorization': `Bearer ${token}` } })
-      if (!res.ok) return
-      const body = await res.json()
-      const data = body?.data || []
-      const items = data.map((d: any) => ({ idEntreprise: d.idEntreprise, nomEntreprise: d.nomEntreprise }))
-      setEntreprises(items)
-    } catch (err) {
-      console.warn('Erreur chargement entreprises:', err)
-    }
-  }
 
   async function loadProgress() {
     try {
@@ -191,41 +170,9 @@ export default function ManagerSignalementDetail() {
     }
   }
 
-  async function handleCreateAssign() {
-    try {
-      const token = localStorage.getItem('token')
-      if (!newEntrepriseId) {
-        alert('Veuillez sélectionner une entreprise')
-        return
-      }
-      const body = {
-        idEntreprise: parseInt(newEntrepriseId),
-        dateDebut: newDateDebut,
-        dateFin: newDateFin,
-        montant: newMontant ? parseFloat(newMontant) : 0
-      }
-      if (!confirm(`Confirmer la création de l'assignation pour l'entreprise sélectionnée ?`)) return
-
-      const response = await fetch(`/api/manager/signalements/${id}/assign-enterprise`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      })
-
-      const result = await response.json().catch(() => ({}))
-      if (response.ok) {
-        alert('Assignation créée')
-        setShowAssignModal(false)
-        loadDetails()
-      } else {
-        alert('Erreur création assignation: ' + (result.message || response.status))
-      }
-    } catch (err) {
-      alert('Erreur lors de la création d\'assignation')
-    }
+  function handleAssignSuccess() {
+    setShowAssignModal(false)
+    loadDetails()
   }
 
   // Fonction pour obtenir la classe CSS du badge selon l'état
@@ -419,14 +366,7 @@ export default function ManagerSignalementDetail() {
                   {details.assignations.length} assignation{details.assignations.length !== 1 ? 's' : ''}
                 </span>
                 <button
-                  onClick={() => {
-                    setSelectedAssignId(null)
-                    setNewEntrepriseId('')
-                    setNewDateDebut('')
-                    setNewDateFin('')
-                    setNewMontant('')
-                    setShowAssignModal(true)
-                  }}
+                  onClick={() => setShowAssignModal(true)}
                   className="action-button action-primary"
                 >
                   + Assigner une entreprise
@@ -628,71 +568,11 @@ export default function ManagerSignalementDetail() {
                 </div>
                 
                 <div className="modal-body">
-                  <div className="modal-form">
-                    <div className="form-group">
-                      <label className="form-label">Entreprise</label>
-                      <select 
-                        className="form-select"
-                        value={newEntrepriseId} 
-                        onChange={(e) => { setNewEntrepriseId(e.target.value) }}
-                      >
-                        <option value="">-- Sélectionner une entreprise --</option>
-                        {entreprises.map(ent => (
-                          <option key={ent.idEntreprise} value={String(ent.idEntreprise)}>
-                            {ent.nomEntreprise}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label className="form-label">Date début</label>
-                        <input 
-                          type="date" 
-                          className="form-input"
-                          value={newDateDebut} 
-                          onChange={(e) => setNewDateDebut(e.target.value)} 
-                        />
-                      </div>
-                      
-                      <div className="form-group">
-                        <label className="form-label">Date fin</label>
-                        <input 
-                          type="date" 
-                          className="form-input"
-                          value={newDateFin} 
-                          onChange={(e) => setNewDateFin(e.target.value)} 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Montant (Ar)</label>
-                      <input 
-                        type="number" 
-                        className="form-input"
-                        value={newMontant} 
-                        onChange={(e) => setNewMontant(e.target.value)}
-                        placeholder="0.00"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="modal-footer">
-                  <button 
-                    onClick={() => { setShowAssignModal(false); setSelectedAssignId(null) }} 
-                    className="action-button action-secondary"
-                  >
-                    Annuler
-                  </button>
-                  <button 
-                    onClick={handleCreateAssign} 
-                    className="action-button action-primary"
-                  >
-                    Créer l'assignation
-                  </button>
+                  <CreateAssignmentForm
+                    signalementId={id!}
+                    onSuccess={handleAssignSuccess}
+                    onCancel={() => { setShowAssignModal(false); setSelectedAssignId(null) }}
+                  />
                 </div>
               </>
             )}
