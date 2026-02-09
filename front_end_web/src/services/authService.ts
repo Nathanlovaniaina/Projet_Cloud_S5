@@ -120,9 +120,8 @@ export async function register(
     nom: string
     prenom: string
     email: string
-    password: string
-    telephone?: string
     typeUtilisateur: string
+    password: string
   }
 ) {
   // Persist the registration info locally first so we can retry/complete insertion
@@ -132,7 +131,6 @@ export async function register(
       prenom: userData.prenom,
       email: userData.email,
       motDePasse: userData.password,
-      telephone: userData.telephone || null,
       typeUtilisateur: userData.typeUtilisateur
     }))
   } catch (e) {
@@ -146,7 +144,6 @@ export async function register(
       prenom: userData.prenom,
       email: userData.email,
       motDePasse: userData.password,
-      telephone: userData.telephone,
       typeUtilisateur: userData.typeUtilisateur
     })
 
@@ -192,7 +189,6 @@ export async function updateProfile(
   updateData: {
     nom?: string
     prenom?: string
-    telephone?: string
     currentPassword?: string
     newPassword?: string
   }

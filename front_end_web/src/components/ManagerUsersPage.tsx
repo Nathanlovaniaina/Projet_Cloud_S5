@@ -46,7 +46,12 @@ export default function ManagerUsersPage() {
       
       setUsers(data.items || [])
       setTotal(data.total || 0)
-      setTotalPages(data.totalPages || 1)
+      // Backend may not provide totalPages yet; compute fallback from total and page size (20)
+      const pageSize = 20
+      const totalNum = Number(data.total || 0)
+      const totalPagesFromServer = data.totalPages !== undefined ? Number(data.totalPages) : undefined
+      const computedTotalPages = totalPagesFromServer ?? Math.max(1, Math.ceil(totalNum / pageSize))
+      setTotalPages(computedTotalPages)
     } catch (err) {
       console.error(err)
       alert('Erreur lors du chargement des utilisateurs')
@@ -141,6 +146,12 @@ export default function ManagerUsersPage() {
             </p>
           </div>
           <div className="header-actions">
+            <button
+              className="action-button action-create"
+              onClick={() => navigate('/manager/utilisateurs/creer')}
+            >
+              + Créer un visiteur
+            </button>
             <button 
               className="action-button action-refresh" 
               onClick={() => loadUsers()}

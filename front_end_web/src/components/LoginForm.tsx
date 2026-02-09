@@ -123,16 +123,6 @@ export default function LoginForm() {
           {status && <div className={statusClass}>{status}</div>}
           
           <div className="auth-footer">
-            <a 
-              href="#" 
-              onClick={(e) => { 
-                e.preventDefault(); 
-                alert('Fonctionnalité non implémentée'); 
-              }} 
-              className="auth-forgot"
-            >
-              Pas encore de compte ? S'inscrire
-            </a>
             <p>SIGNALEMENT ROUE - Plateforme de signalement de roues abîmées</p>
           </div>
         </form>
