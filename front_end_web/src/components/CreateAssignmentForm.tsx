@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import './CreateAssignmentForm.css'
+import '../styles/CreateAssignmentForm.css'
 
 interface Entreprise {
   idEntreprise: number
