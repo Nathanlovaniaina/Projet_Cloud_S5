@@ -1,0 +1,18 @@
+###
+# Test de récupération des photos d'un signalement
+# Endpoint: GET /api/signalements/{id}/photos
+# Description: Retourne la liste des URLs des photos associées à un signalement
+# Statut: Public (pas d'authentification requise)
+###
+
+GET http://localhost:8080/api/signalements/1/photos
+
+###
+
+# Exemple avec un autre ID de signalement
+GET http://localhost:8080/api/signalements/2/photos
+
+###
+
+# Exemple avec un ID qui n'existe pas (devrait retourner 404)
+GET http://localhost:8080/api/signalements/999/photos

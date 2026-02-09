@@ -13,7 +13,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./base_de_donnee/script.sql:/docker-entrypoint-initdb.d/1-script.sql
-      - ./base_de_donnee/data-reel.sql:/docker-entrypoint-initdb.d/2-data-reel.sql
+      - ./base_de_donnee/data-reel-rectification.sql:/docker-entrypoint-initdb.d/2-data-reel-rectification.sql
     networks:
       - signalement_network
 
