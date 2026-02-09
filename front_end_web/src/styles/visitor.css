@@ -101,9 +101,10 @@
 }
 
 .visitor-main-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  margin-bottom: 32px;
+}
+
+.table-section {
   margin-bottom: 48px;
 }
 
@@ -142,7 +143,7 @@
 }
 
 .map-wrapper {
-  height: 500px;
+  height: 600px;
   position: relative;
 }
 

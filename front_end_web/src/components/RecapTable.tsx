@@ -14,6 +14,13 @@ interface Signalement {
   etatLibelle?: string
   idTypeTravail?: number
   typeTravauxLibelle?: string
+  assignations?: Array<{
+    nomEntreprise: string
+    montant?: number
+    statutLibelle?: string
+  }>
+  budgetTotal?: number
+  entrepriseConcernee?: string
 }
 
 interface RecapTableProps {
@@ -178,12 +185,14 @@ export default function RecapTable({
               <th>Statut</th>
               <th>Type</th>
               <th>Surface (m²)</th>
+              <th>Entreprise</th>
+              <th>Budget</th>
             </tr>
           </thead>
           <tbody>
             {sortedSignalements.length === 0 ? (
               <tr>
-                <td colSpan={6} className="empty-message">
+                <td colSpan={8} className="empty-message">
                   <div className="empty-state">
                     <div className="empty-icon">📋</div>
                     <p>Aucun signalement trouvé</p>
@@ -233,6 +242,30 @@ export default function RecapTable({
                     <div className="surface-value">
                       {sig.surfaceMetreCarree?.toFixed(2) || '0.00'}
                     </div>
+                  </td>
+                  <td className="cell-entreprise">
+                    {sig.assignations && sig.assignations.length > 0 ? (
+                      <div className="entreprise-content">
+                        <div className="entreprise-name">{sig.assignations[0].nomEntreprise}</div>
+                        {sig.assignations.length > 1 && (
+                          <div className="entreprise-count">+{sig.assignations.length - 1} autre{sig.assignations.length > 2 ? 's' : ''}</div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="no-data">Non assigné</span>
+                    )}
+                  </td>
+                  <td className="cell-budget">
+                    {sig.assignations && sig.assignations.length > 0 ? (
+                      <div className="budget-value">
+                        {sig.assignations.reduce((sum, a) => sum + (a.montant || 0), 0).toLocaleString('fr-FR', { 
+                          style: 'currency', 
+                          currency: 'MGA' 
+                        })}
+                      </div>
+                    ) : (
+                      <span className="no-data">-</span>
+                    )}
                   </td>
                 </tr>
               ))
