@@ -56,70 +56,8 @@ async function ensureFirebaseInitialized() {
 
 const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL as string) || 'http://localhost:8080/api/auth'
 
-export async function login(email: string, password: string, online: boolean) {
-  // Ensure Firebase is initialized (try local config.js first, then Vite env)
-  if (online) {
-    await ensureFirebaseInitialized()
-  }
-
-  // If online and Firebase is configured, prefer Firebase
-  if (online && auth) {
-    try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password)
-      const idToken = await userCred.user.getIdToken()
-      // Exchange idToken with backend to get a backend session token + user info
-      try {
-        const res = await axios.post(`${BACKEND_URL}/firebase-login`, { idToken })
-        // If backend explicitly reports user blocked, surface that as an error
-        const backendMessage: string | undefined = res.data?.message
-        if (backendMessage && /bloqu/i.test(backendMessage)) {
-          throw new Error(backendMessage)
-        }
-
-        // Persist token/user for frontend state
-        try {
-          if (res.data?.token) localStorage.setItem('token', res.data.token)
-          if (res.data?.user) localStorage.setItem('user', JSON.stringify(res.data.user))
-          // notify app of auth change in this tab
-          window.dispatchEvent(new Event('authchange'))
-        } catch (e) {
-          console.warn('Unable to persist auth data locally', e)
-        }
-
-        return { success: true, source: 'firebase', ...res.data }
-      } catch (be: any) {
-        // If backend exchange fails, check if backend responded with a blocked message
-        const respData = be?.response?.data
-        const backendMsg = respData?.message || respData?.error
-        if (backendMsg && /bloqu/i.test(backendMsg)) {
-          throw new Error(backendMsg)
-        }
-
-        // Otherwise fall back to returning Firebase token information
-        console.warn('Échange idToken → backend échoué, utilisation du token Firebase localement:', be?.message)
-        try {
-          const userObj = { uid: userCred.user.uid, email: userCred.user.email, displayName: userCred.user.displayName }
-          localStorage.setItem('token', idToken)
-          localStorage.setItem('user', JSON.stringify(userObj))
-          window.dispatchEvent(new Event('authchange'))
-        } catch (e) {
-          console.warn('Unable to persist firebase token locally', e)
-        }
-
-        return {
-          success: true,
-          source: 'firebase',
-          user: { uid: userCred.user.uid, email: userCred.user.email, displayName: userCred.user.displayName },
-          token: idToken
-        }
-      }
-    } catch (error: any) {
-      // If Firebase fails, fall back to backend if possible
-      console.warn('Firebase login failed, will try backend if available:', error?.message)
-    }
-  }
-
-  // Try backend (either offline mode or Firebase unavailable/failed)
+export async function login(email: string, password: string) {
+  // Try backend
   try {
     const res = await axios.post(`${BACKEND_URL}/login`, { email, motDePasse: password })
     // persist token/user locally
@@ -185,8 +123,7 @@ export async function register(
     password: string
     telephone?: string
     typeUtilisateur: string
-  },
-  online: boolean
+  }
 ) {
   // Persist the registration info locally first so we can retry/complete insertion
   try {
@@ -202,61 +139,7 @@ export async function register(
     console.warn('Unable to persist pending registration locally', e)
   }
 
-  // Ensure Firebase is initialized if online
-  if (online) {
-    await ensureFirebaseInitialized()
-  }
-
-  // If online and Firebase is configured, prefer Firebase flow
-  if (online && auth) {
-    try {
-      // Create the user in Firebase Auth
-      const userCred = await createUserWithEmailAndPassword(auth, userData.email, userData.password)
-
-      // Update the displayName in Firebase (best-effort)
-      try {
-        await firebaseUpdateProfile(userCred.user, { displayName: `${userData.prenom} ${userData.nom}` })
-      } catch (e) {
-        console.warn('Could not update firebase displayName', e)
-      }
-
-      // Retrieve the Firebase idToken
-      const idToken = await userCred.user.getIdToken()
-
-      // Read the persisted info to send to backend (fallback to current data)
-      let stored = null
-      try {
-        const raw = localStorage.getItem('pendingRegister')
-        stored = raw ? JSON.parse(raw) : null
-      } catch (e) {
-        stored = null
-      }
-
-      const payload = {
-        idToken,
-        nom: stored?.nom || userData.nom,
-        prenom: stored?.prenom || userData.prenom,
-        email: userData.email,
-        motDePasse: stored?.motDePasse || userData.password,
-        telephone: stored?.telephone || userData.telephone || null,
-        typeUtilisateur: stored?.typeUtilisateur || userData.typeUtilisateur
-      }
-
-      // Send to backend to create user record (backend should verify idToken and persist firebase_uid)
-      const res = await axios.post(`${BACKEND_URL}/register`, payload)
-
-      // Clear pending register on success
-      try { localStorage.removeItem('pendingRegister') } catch (e) { /* ignore */ }
-
-      return { success: true, source: 'firebase', ...res.data }
-    } catch (error: any) {
-      // Keep pendingRegister for retry and surface error
-      console.error('Firebase registration flow failed', error)
-      throw new Error(error?.message || 'Inscription Firebase échouée. Réessayez plus tard.')
-    }
-  }
-
-  // Fallback: Try backend only (offline mode or Firebase unavailable)
+  // Fallback: Try backend only
   try {
     const res = await axios.post(`${BACKEND_URL}/inscription`, {
       nom: userData.nom,
@@ -312,8 +195,7 @@ export async function updateProfile(
     telephone?: string
     currentPassword?: string
     newPassword?: string
-  },
-  online: boolean
+  }
 ) {
   const token = localStorage.getItem('token')
   if (!token) {
@@ -479,12 +361,14 @@ export async function updateProfile(
 
 // Fonction pour se déconnecter
 export async function logout() {
-  // Déconnexion Firebase si initialisé
-  if (auth && auth.currentUser) {
+  const token = localStorage.getItem('token')
+  if (token) {
     try {
-      await signOut(auth)
-    } catch (err) {
-      console.warn('Firebase signOut failed:', err)
+      await axios.post(`${BACKEND_URL}/logout`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+    } catch (error) {
+      console.warn('Erreur lors de la déconnexion côté serveur:', error)
     }
   }
   

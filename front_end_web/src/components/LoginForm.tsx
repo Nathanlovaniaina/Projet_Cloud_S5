@@ -23,17 +23,10 @@ export default function LoginForm() {
     setLoading(true)
     setStatus('En cours...')
     try {
-      // If the browser reports offline, avoid attempting Firebase and use backend API only
-      const canUseFirebase = !!(isOnline && window.navigator.onLine)
-      const result = await login(email, password, canUseFirebase)
-      if (result.source === 'firebase') {
-        setStatus('✅ Connecté via Firebase (cloud)')
-        if (result.token) localStorage.setItem('token', result.token)
-      } else if (result.source === 'postgres') {
-        setStatus('✅ Connecté via PostgreSQL (local)')
-        if (result.token) localStorage.setItem('token', result.token)
-        if (result.user) localStorage.setItem('user', JSON.stringify(result.user))
-      }
+      const result = await login(email, password)
+      setStatus('✅ Connecté via PostgreSQL (local)')
+      if (result.token) localStorage.setItem('token', result.token)
+      if (result.user) localStorage.setItem('user', JSON.stringify(result.user))
       // redirect to map on successful login
       navigate('/map')
     } catch (err: any) {
