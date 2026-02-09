@@ -13,6 +13,13 @@ interface Signalement {
   etatLibelle?: string
   typeTravauxLibelle?: string
   etatActuelId?: number
+  assignations?: Array<{
+    nomEntreprise: string
+    montant?: number
+    statutLibelle?: string
+  }>
+  budgetTotal?: number
+  entrepriseConcernee?: string
 }
 
 interface Props {

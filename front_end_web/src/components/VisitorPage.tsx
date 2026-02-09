@@ -29,6 +29,13 @@ interface Signalement {
   etatLibelle?: string
   idTypeTravail?: number
   typeTravauxLibelle?: string
+  assignations?: Array<{
+    nomEntreprise: string
+    montant?: number
+    statutLibelle?: string
+  }>
+  budgetTotal?: number
+  entrepriseConcernee?: string
 }
 
 interface PaginatedResponse {
@@ -150,14 +157,40 @@ export default function VisitorPage() {
       
       const data: PaginatedResponse = await response.json()
       
-      setSignalements(data.items || [])
+      // Enrichir les signalements avec les données d'assignation
+      const enrichedSignalements = await Promise.all(
+        (data.items || []).map(async (sig) => {
+          try {
+            const detailRes = await fetch(`/api/signalements/${sig.idSignalement}/details`)
+            if (detailRes.ok) {
+              const detailApi = await detailRes.json()
+              const detailData = detailApi?.data || detailApi
+              
+              return {
+                ...sig,
+                assignations: detailData.assignations || [],
+                budgetTotal: (detailData.assignations || []).reduce(
+                  (sum: number, a: any) => sum + (a.montant || 0), 
+                  0
+                ),
+                entrepriseConcernee: detailData.assignations?.[0]?.nomEntreprise || undefined
+              }
+            }
+          } catch (e) {
+            console.warn(`Erreur chargement détails signalement ${sig.idSignalement}:`, e)
+          }
+          return sig
+        })
+      )
+      
+      setSignalements(enrichedSignalements)
       setTotal(data.total || 0)
       setTotalPages(data.totalPages || 1)
       setCurrentPage(data.page || 1)
       
       // Cache pour mode hors ligne
       try {
-        localStorage.setItem('cachedSignalements', JSON.stringify(data.items))
+        localStorage.setItem('cachedSignalements', JSON.stringify(enrichedSignalements))
       } catch (e) {
         console.warn('Impossible de mettre en cache les signalements', e)
       }
@@ -274,24 +307,22 @@ export default function VisitorPage() {
               />
             </div>
           </div>
+        </div>
 
-          <div className="table-container">
-            <div className="table-wrapper">
-              <RecapTable
-                signalements={signalements}
-                selectedId={selectedId}
-                onRowClick={handleRowClick}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                total={total}
-                onPageChange={handlePageChange}
-                onStatusFilter={setStatusFilter}
-                onTypeFilter={setTypeFilter}
-                statusOptions={statusOptions}
-                typeOptions={typeOptions}
-              />
-            </div>
-          </div>
+        <div className="table-section">
+          <RecapTable
+            signalements={signalements}
+            selectedId={selectedId}
+            onRowClick={handleRowClick}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            total={total}
+            onPageChange={handlePageChange}
+            onStatusFilter={setStatusFilter}
+            onTypeFilter={setTypeFilter}
+            statusOptions={statusOptions}
+            typeOptions={typeOptions}
+          />
         </div>
 
         {(summary || byType.length > 0 || byState.length > 0) && (
@@ -300,17 +331,6 @@ export default function VisitorPage() {
 
             {summary && (
               <div className="stats-section">
-                <h3>Résumé détaillé</h3>
-                <div className="stats-grid">
-                  <div className="advanced-stat-card">
-                    <div className="advanced-stat-value">{(summary.tauxCompletionMoyen ?? 0).toFixed ? (summary.tauxCompletionMoyen ?? 0).toFixed(1) : summary.tauxCompletionMoyen}</div>
-                    <div className="advanced-stat-label">Taux compl. moyen (%)</div>
-                  </div>
-                  <div className="advanced-stat-card">
-                    <div className="advanced-stat-value">{(summary.tauxPonctualiteMoyen ?? 0).toFixed ? (summary.tauxPonctualiteMoyen ?? 0).toFixed(1) : summary.tauxPonctualiteMoyen}</div>
-                    <div className="advanced-stat-label">Taux ponct. moyen (%)</div>
-                  </div>
-                </div>
 
                 <div style={{ display: 'flex', gap: 16, marginTop: 16, flexWrap: 'wrap' }}>
                   <div style={{ flex: '1 1 320px', minWidth: 280, height: 240 }}>
@@ -355,43 +375,6 @@ export default function VisitorPage() {
                     </ResponsiveContainer>
                   </div>
                 </div>
-
-                {summary.top5Entreprises && summary.top5Entreprises.length > 0 && (
-                  <div className="top-enterprises" style={{ marginTop: 16 }}>
-                    <h4 className="section-subtitle">Top entreprises</h4>
-                    <div className="enterprise-grid">
-                      {summary.top5Entreprises.map((ent: any, i: number) => {
-                        const assigned = Number(ent.tachesAssignees ?? 0)
-                        const finished = Number(ent.tachesTerminees ?? 0)
-                        const pct = assigned > 0 ? Math.round((finished / assigned) * 100) : 0
-                        return (
-                          <div key={i} className="enterprise-card">
-                            <div className="enterprise-left">
-                              <div className="enterprise-name">{ent.nomEntreprise}</div>
-                              <div className="enterprise-metrics">{assigned} assignées • {finished} terminées</div>
-                            </div>
-                            <div className="enterprise-right">
-                              <div className="enterprise-stats">
-                                <div className="enterprise-stat">
-                                  <div className="enterprise-stat-value">{assigned}</div>
-                                  <div className="enterprise-stat-label">Assignées</div>
-                                </div>
-                                <div className="enterprise-stat">
-                                  <div className="enterprise-stat-value">{finished}</div>
-                                  <div className="enterprise-stat-label">Terminées</div>
-                                </div>
-                              </div>
-                              <div className="enterprise-progress" aria-hidden>
-                                <div className="enterprise-progress-bar" style={{ width: `${pct}%` }} />
-                              </div>
-                              <div className="enterprise-progress-label">{pct}%</div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
