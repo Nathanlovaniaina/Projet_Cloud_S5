@@ -1,0 +1,1444 @@
+{
+	"info": {
+		"_postman_id": "signalement-api-collection-2026",
+		"name": "Signalement API - Collection Complète",
+		"description": "Collection complète de l'API de gestion des signalements de travaux routiers.\n\nURL de base : http://localhost:8080\n\nAuthentification : Bearer Token dans le header Authorization\n\nDernière mise à jour : Février 2026",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentification",
+			"description": "Gestion de l'authentification et des utilisateurs",
+			"item": [
+				{
+					"name": "Inscription (Email/Password)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nom\": \"Doe\",\n  \"prenom\": \"John\",\n  \"email\": \"john.doe@example.com\",\n  \"motDePasse\": \"Password123!\",\n  \"idTypeUtilisateur\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/inscription",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "inscription"]
+						},
+						"description": "Inscription d'un nouvel utilisateur avec email et mot de passe. Type utilisateur : 1=Citoyen, 2=Manager"
+					}
+				},
+				{
+					"name": "Connexion (Email/Password)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set('auth_token', jsonData.token);",
+									"        console.log('Token sauvegardé:', jsonData.token);",
+									"        console.log('Utilisateur:', jsonData.prenom, jsonData.nom);",
+									"        console.log('Type:', jsonData.typeUtilisateur);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@gmail.com\",\n  \"motDePasse\": \"manager123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Authentification avec email et mot de passe. Génère un token de session. Limite à 3 tentatives avant blocage."
+					}
+				},
+				{
+					"name": "Connexion via Firebase",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsocollectionVariables.set('auth_token', jsonData.token);",
+									"        console.log('Token sauvegardé:",
+									"    if (jsonData.token) {",
+									"        pm.environment.set('auth_token', jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idToken\": \"<FIREBASE_ID_TOKEN>\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/firebase-login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "firebase-login"]
+						},
+						"description": "Authentification via Firebase ID Token. Vérifie le token et crée une session backend."
+					}
+				},
+				{
+					"name": "Inscription via Firebase",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idToken\": \"<FIREBASE_ID_TOKEN>\",\n  \"nom\": \"Doe\",\n  \"prenom\": \"Jane\",\n  \"email\": \"jane.doe@example.com\",\n  \"idTypeUtilisateur\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "Inscription via Firebase. Vérifie l'idToken et crée l'utilisateur avec firebase_uid."
+					}
+				},
+				{
+					"name": "Récupérer utilisateur courant",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "me"]
+						},
+						"description": "Retourne les informations de l'utilisateur authentifié via le token."
+					}
+				},
+				{
+					"name": "Déconnexion",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "logout"]
+						},
+						"description": "Invalide la session en cours et supprime le token."
+					}
+				},
+				{
+					"name": "Liste des types utilisateur",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/types",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "types"]
+						},
+						"description": "Retourne les types d'utilisateur disponibles (Citoyen, Manager)."
+					}
+				},
+				{
+					"name": "Modifier un utilisateur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nom\": \"Doe\",\n  \"prenom\": \"John\",\n  \"email\": \"john.doe.updated@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/utilisateur/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "utilisateur", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID de l'utilisateur"
+								}
+							]
+						},
+						"description": "Modifier les informations d'un utilisateur. Authentification requise."
+					}
+				},
+				{
+					"name": "Bloquer un utilisateur (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/bloquer/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "bloquer", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID de l'utilisateur à bloquer"
+								}
+							]
+						},
+						"description": "Bloquer un utilisateur (empêche la connexion). Réservé aux managers."
+					}
+				},
+				{
+					"name": "Débloquer un utilisateur (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/debloquer/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "debloquer", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID de l'utilisateur à débloquer"
+								}
+							]
+						},
+						"description": "Débloquer un utilisateur bloqué après 3 tentatives. Réservé aux managers."
+					}
+				},
+				{
+					"name": "Liste utilisateurs bloqués (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/bloques",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "bloques"]
+						},
+						"description": "Liste de tous les utilisateurs bloqués. Réservé aux managers."
+					}
+				}
+			]
+		},
+		{
+			"name": "📍 Signalements",
+			"description": "Gestion des signalements de travaux routiers (public et authentifié)",
+			"item": [
+				{
+					"name": "Créer un signalement",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titre\": \"Nid de poule avenue de l'Indépendance\",\n  \"description\": \"Nid de poule important causant des dommages aux véhicules\",\n  \"latitude\": -18.8792,\n  \"longitude\": 47.5079,\n  \"surfaceMetreCarree\": 2.5,\n  \"idTypeTravail\": 1,\n  \"urlsPhotos\": [\n    \"https://storage.example.com/photo1.jpg\",\n    \"https://storage.example.com/photo2.jpg\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/signalements",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements"]
+						},
+						"description": "Créer un nouveau signalement. Authentification requise. L'état initial sera 'En attente'."
+					}
+				},
+				{
+					"name": "Liste tous les signalements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/signalements?etat=&typeTravail=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements"],
+							"query": [
+								{
+									"key": "etat",
+									"value": "",
+									"description": "Filtrer par ID d'état (optionnel)"
+								},
+								{
+									"key": "typeTravail",
+									"value": "",
+									"description": "Filtrer par ID de type de travail (optionnel)"
+								}
+							]
+						},
+						"description": "Liste de tous les signalements avec filtres optionnels par état et type de travail."
+					}
+				},
+				{
+					"name": "Signalements pour visiteur (paginé)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/signalements/visiteur?page=1&limit=20&status=&type=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", "visiteur"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Numéro de page (défaut: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Nombre d'éléments par page (défaut: 20, max: 100)"
+								},
+								{
+									"key": "status",
+									"value": "",
+									"description": "ID de l'état pour filtrer (optionnel)"
+								},
+								{
+									"key": "type",
+									"value": "",
+									"description": "ID du type de travail pour filtrer (optionnel)"
+								}
+							]
+						},
+						"description": "Liste paginée des signalements pour affichage visiteur (carte + tableau)."
+					}
+				},
+				{
+					"name": "Mes signalements",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/me/signalements",
+							"host": ["{{base_url}}"],
+							"path": ["api", "me", "signalements"]
+						},
+						"description": "Liste de tous les signalements créés par l'utilisateur authentifié."
+					}
+				},
+				{
+					"name": "Détails d'un signalement",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/signalements/:id/details",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", ":id", "details"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID du signalement"
+								}
+							]
+						},
+						"description": "Détails complets d'un signalement avec historique d'états et assignations."
+					}
+				},
+				{
+					"name": "Photos d'un signalement",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/signalements/:id/photos",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", ":id", "photos"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID du signalement"
+								}
+							]
+						},
+						"description": "Liste des URLs des photos associées à un signalement."
+					}
+				},
+				{
+					"name": "Modifier un signalement",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titre\": \"Nid de poule (mis à jour)\",\n  \"description\": \"Description mise à jour du signalement\",\n  \"latitude\": -18.8792,\n  \"longitude\": 47.5079,\n  \"surfaceMetreCarree\": 3.0,\n  \"idTypeTravail\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/signalements/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID du signalement"
+								}
+							]
+						},
+						"description": "Modifier un signalement. Seul le créateur ou un manager peut le faire."
+					}
+				},
+				{
+					"name": "Modifier le statut d'un signalement",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"etatId\": 2,\n  \"dateChangement\": \"2026-02-10T10:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/signalements/:id/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", ":id", "status"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID du signalement"
+								}
+							]
+						},
+						"description": "Modifier l'état d'un signalement (1=En attente, 2=En cours, 3=Résolu, 4=Rejeté). Réservé aux managers."
+					}
+				},
+				{
+					"name": "Assigner une entreprise",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idEntreprise\": 1,\n  \"dateDebut\": \"2026-02-15\",\n  \"dateFin\": \"2026-03-15\",\n  \"montant\": 50000.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/signalements/:id/assign-enterprise",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", ":id", "assign-enterprise"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID du signalement"
+								}
+							]
+						},
+						"description": "Assigner une entreprise à un signalement. Réservé aux managers."
+					}
+				},
+				{
+					"name": "Modifier statut assignation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idStatutAssignation\": 2,\n  \"dateChangement\": \"2026-02-10T11:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/signalements/:id/enterprise-assignment-status?enterpriseId=1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", ":id", "enterprise-assignment-status"],
+							"query": [
+								{
+									"key": "enterpriseId",
+									"value": "1",
+									"description": "ID de l'entreprise"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID du signalement"
+								}
+							]
+						},
+						"description": "Modifier le statut d'une assignation (1=EN ATTENTE, 2=ACCEPTÉE, 3=REJETÉE, 4=TERMINÉE, 5=EN COURS). Réservé aux managers."
+					}
+				},
+				{
+					"name": "Liste des assignations d'un signalement",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/signalements/:id/assignations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", ":id", "assignations"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID du signalement"
+								}
+							]
+						},
+						"description": "Liste de toutes les entreprises assignées à un signalement avec leur statut actuel."
+					}
+				},
+				{
+					"name": "Avancement d'un signalement",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/signalements/:id/progress?date=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", ":id", "progress"],
+							"query": [
+								{
+									"key": "date",
+									"value": "",
+									"description": "Date au format ISO-8601 pour vérifier l'avancement (optionnel)"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID du signalement"
+								}
+							]
+						},
+						"description": "Retourne le pourcentage d'avancement d'un signalement. Authentification requise."
+					}
+				},
+				{
+					"name": "Liste des états",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/signalements/etats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", "etats"]
+						},
+						"description": "Liste de tous les états possibles pour les signalements."
+					}
+				},
+				{
+					"name": "Liste des types de travail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/signalements/types",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", "types"]
+						},
+						"description": "Liste de tous les types de travail possibles."
+					}
+				},
+				{
+					"name": "Statistiques publiques - Résumé",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/signalements/summary-public",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", "summary-public"]
+						},
+						"description": "Résumé public des statistiques (total, en attente, en cours, terminé)."
+					}
+				},
+				{
+					"name": "Statistiques publiques - Par type",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/signalements/stats-by-type-public",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", "stats-by-type-public"]
+						},
+						"description": "Répartition des signalements par type de travail (public)."
+					}
+				},
+				{
+					"name": "Statistiques publiques - Par état",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/signalements/stats-by-state-public",
+							"host": ["{{base_url}}"],
+							"path": ["api", "signalements", "stats-by-state-public"]
+						},
+						"description": "Répartition des signalements par état (public)."
+					}
+				}
+			]
+		},
+		{
+			"name": "Manager - Signalements",
+			"description": "Gestion avancée des signalements (réservée aux Managers)",
+			"item": [
+				{
+					"name": "Liste signalements (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/manager/signalements?page=1&limit=20&etat=&type=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "manager", "signalements"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Numéro de page"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Nombre par page (max 100)"
+								},
+								{
+									"key": "etat",
+									"value": "",
+									"description": "Filtrer par ID d'état"
+								},
+								{
+									"key": "type",
+									"value": "",
+									"description": "Filtrer par ID de type"
+								}
+							]
+						},
+						"description": "Liste paginée de tous les signalements. Accès réservé aux Managers."
+					}
+				},
+				{
+					"name": "Détails signalement (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/manager/signalements/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "manager", "signalements", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Détails complets d'un signalement avec historique et assignations."
+					}
+				},
+				{
+					"name": "Créer signalement (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titre\": \"Route endommagée\",\n  \"description\": \"Urgence: route principale endommagée\",\n  \"latitude\": -18.8792,\n  \"longitude\": 47.5079,\n  \"surfaceMetreCarree\": 10.0,\n  \"idTypeTravail\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/manager/signalements",
+							"host": ["{{base_url}}"],
+							"path": ["api", "manager", "signalements"]
+						},
+						"description": "Créer un nouveau signalement en tant que Manager."
+					}
+				},
+				{
+					"name": "Modifier signalement (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titre\": \"Route mise à jour\",\n  \"description\": \"Description mise à jour\",\n  \"latitude\": -18.8792,\n  \"longitude\": 47.5079,\n  \"surfaceMetreCarree\": 12.0,\n  \"idTypeTravail\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/manager/signalements/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "manager", "signalements", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Modifier un signalement. Accès Manager."
+					}
+				},
+				{
+					"name": "Supprimer signalement (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/manager/signalements/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "manager", "signalements", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Supprimer définitivement un signalement."
+					}
+				},
+				{
+					"name": "Assigner entreprise (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idEntreprise\": 1,\n  \"dateDebut\": \"2026-02-15\",\n  \"dateFin\": \"2026-03-15\",\n  \"montant\": 75000.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/manager/signalements/:id/assign-enterprise",
+							"host": ["{{base_url}}"],
+							"path": ["api", "manager", "signalements", ":id", "assign-enterprise"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Créer une assignation d'entreprise."
+					}
+				},
+				{
+					"name": "Modifier statut assignation (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"idStatutAssignation\": 2,\n  \"dateChangement\": \"2026-02-10T12:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/manager/signalements/:signalementId/assign-enterprise/:enterpriseId/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "manager", "signalements", ":signalementId", "assign-enterprise", ":enterpriseId", "status"],
+							"variable": [
+								{
+									"key": "signalementId",
+									"value": "1"
+								},
+								{
+									"key": "enterpriseId",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Modifier le statut d'une assignation entreprise."
+					}
+				},
+				{
+					"name": "Modifier état signalement (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"etatId\": 3,\n  \"dateChangement\": \"2026-02-10T14:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/manager/signalements/:id/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "manager", "signalements", ":id", "status"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Modifier l'état global du signalement avec notification."
+					}
+				},
+				{
+					"name": "Historique complet (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/manager/signalements/:id/history",
+							"host": ["{{base_url}}"],
+							"path": ["api", "manager", "signalements", ":id", "history"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Historique détaillé des états et assignations."
+					}
+				},
+				{
+					"name": "Assignations d'un signalement (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/manager/signalements/:id/assignations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "manager", "signalements", ":id", "assignations"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Liste des entreprises assignées à un signalement."
+					}
+				}
+			]
+		},
+		{
+			"name": "Manager - Utilisateurs",
+			"description": "Gestion des utilisateurs (réservée aux Managers)",
+			"item": [
+				{
+					"name": "Liste utilisateurs (Manager)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/manager/utilisateurs?page=1&limit=20&search=&etat=&type=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "manager", "utilisateurs"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Numéro de page"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Nombre par page"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Rechercher par nom, prénom ou email"
+								},
+								{
+									"key": "etat",
+									"value": "",
+									"description": "Filtrer par état (blocked, active)"
+								},
+								{
+									"key": "type",
+									"value": "",
+									"description": "Filtrer par type (citoyen, manager)"
+								}
+							]
+						},
+						"description": "Liste paginée des utilisateurs avec recherche et filtres. Réservé aux Managers."
+					}
+				}
+			]
+		},
+		{
+			"name": "Entreprises",
+			"description": "Gestion des entreprises",
+			"item": [
+				{
+					"name": "Liste toutes les entreprises",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/enterprises",
+							"host": ["{{base_url}}"],
+							"path": ["api", "enterprises"]
+						},
+						"description": "Récupère la liste de toutes les entreprises."
+					}
+				}
+			]
+		},
+		{
+			"name": "Statistiques",
+			"description": "Statistiques système (réservé aux Managers)",
+			"item": [
+				{
+					"name": "Statistiques globales",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/statistics/summary",
+							"host": ["{{base_url}}"],
+							"path": ["api", "statistics", "summary"]
+						},
+						"description": "Résumé complet des statistiques système (signalements, utilisateurs, entreprises, taux moyens)."
+					}
+				},
+				{
+					"name": "Statistiques par type de travail",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/statistics/by-work-type",
+							"host": ["{{base_url}}"],
+							"path": ["api", "statistics", "by-work-type"]
+						},
+						"description": "Répartition des signalements par type de travail avec détails par état."
+					}
+				},
+				{
+					"name": "Statistiques par état",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/statistics/by-state",
+							"host": ["{{base_url}}"],
+							"path": ["api", "statistics", "by-state"]
+						},
+						"description": "Répartition des signalements par état avec pourcentages."
+					}
+				},
+				{
+					"name": "Statistiques par entreprise",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/statistics/by-enterprise",
+							"host": ["{{base_url}}"],
+							"path": ["api", "statistics", "by-enterprise"]
+						},
+						"description": "Métriques de performance de toutes les entreprises (tâches assignées, terminées, taux de complétion, ponctualité)."
+					}
+				}
+			]
+		},
+		{
+			"name": "Synchronisation",
+			"description": "Synchronisation avec Firebase (réservé aux Managers)",
+			"item": [
+				{
+					"name": "Sync depuis Firebase",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sync/from-firebase",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sync", "from-firebase"]
+						},
+						"description": "Récupère les données modifiées depuis Firebase et les synchronise avec PostgreSQL."
+					}
+				},
+				{
+					"name": "Sync vers Firebase",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sync/to-firebase",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sync", "to-firebase"]
+						},
+						"description": "Envoie les données depuis PostgreSQL vers Firebase (FULL SYNC)."
+					}
+				},
+				{
+					"name": "Sync bidirectionnelle complète",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sync/full",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sync", "full"]
+						},
+						"description": "Synchronisation complète : Firebase → PostgreSQL puis PostgreSQL → Firebase."
+					}
+				}
+			]
+		},
+		{
+			"name": "Tests",
+			"description": "Endpoints de test pour validation",
+			"item": [
+				{
+					"name": "Endpoint protégé (test)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "11111111-1111-1111-1111-111111111111",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/protected",
+							"host": ["{{base_url}}"],
+							"path": ["api", "protected"]
+						},
+						"description": "Endpoint de test pour validation de l'authentification. Token valide: 11111111-1111-1111-1111-111111111111, Token expiré: 22222222-2222-2222-2222-222222222222"
+					}
+				},
+				{
+					"name": "Endpoint public (test)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/public",
+							"host": ["{{base_url}}"],
+							"path": ["api", "public"]
+						},
+						"description": "Endpoint de test accessible sans authentification."
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
