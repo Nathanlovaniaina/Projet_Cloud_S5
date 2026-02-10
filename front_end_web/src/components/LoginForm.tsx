@@ -12,8 +12,8 @@ export default function LoginForm() {
   }, [isOnline])
   const navigate = useNavigate()
   
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('jean.rakoto@signalement.mg')
+  const [password, setPassword] = useState('manager123')
   const [remember, setRemember] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
