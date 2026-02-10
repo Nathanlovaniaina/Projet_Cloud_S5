@@ -213,14 +213,15 @@
 }
 
 .auth-remember input[type="checkbox"]:checked::after {
-  content: '✓';
+  content: '';
   position: absolute;
-  color: white;
-  font-size: 12px;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 2px;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-weight: bold;
 }
 
 /* Liens "Mot de passe oublié" */
@@ -537,7 +538,7 @@
 }
 
 .requirements-list li.met::before {
-  content: '✓';
+  content: '•';
   color: #10b981;
   font-weight: bold;
 }

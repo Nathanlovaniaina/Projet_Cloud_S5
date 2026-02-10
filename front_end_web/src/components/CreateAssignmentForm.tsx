@@ -8,11 +8,13 @@ interface Entreprise {
 
 interface Props {
   signalementId: string | number
+  budget?: number
+  niveau?: number
   onSuccess: () => void
   onCancel: () => void
 }
 
-export default function CreateAssignmentForm({ signalementId, onSuccess, onCancel }: Props) {
+export default function CreateAssignmentForm({ signalementId, budget, niveau, onSuccess, onCancel }: Props) {
   const [entreprises, setEntreprises] = useState<Entreprise[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -20,11 +22,17 @@ export default function CreateAssignmentForm({ signalementId, onSuccess, onCance
   const [entrepriseId, setEntrepriseId] = useState<string>('')
   const [dateDebut, setDateDebut] = useState<string>('')
   const [dateFin, setDateFin] = useState<string>('')
-  const [montant, setMontant] = useState<string>('')
+  const [montant, setMontant] = useState<string>(budget ? budget.toString() : '')
 
   useEffect(() => {
     loadEntreprises()
   }, [])
+
+  useEffect(() => {
+    if (budget) {
+      setMontant(budget.toString())
+    }
+  }, [budget])
 
   async function loadEntreprises() {
     try {
@@ -60,6 +68,16 @@ export default function CreateAssignmentForm({ signalementId, onSuccess, onCance
   async function handleSubmit() {
     if (!entrepriseId) {
       alert('Veuillez sélectionner une entreprise')
+      return
+    }
+    
+    if (!niveau) {
+      alert('Le signalement doit avoir un niveau défini avant de pouvoir assigner une entreprise')
+      return
+    }
+    
+    if (!budget) {
+      alert('Le signalement doit avoir un budget défini avant de pouvoir assigner une entreprise')
       return
     }
     
@@ -117,6 +135,27 @@ export default function CreateAssignmentForm({ signalementId, onSuccess, onCance
 
   return (
     <div className="create-assignment-form">
+      {(!niveau || !budget) && (
+        <div style={{
+          padding: '12px',
+          background: '#fef3c7',
+          border: '1px solid #f59e0b',
+          borderRadius: '8px',
+          marginBottom: '16px',
+          color: '#92400e',
+          fontSize: '14px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '8px'
+        }}>
+          <div>
+            <strong>Attention :</strong> Ce signalement n'a pas de {!niveau && !budget ? 'niveau ni de budget' : !niveau ? 'niveau' : 'budget'} défini.
+            <br />
+            Veuillez d'abord définir {!niveau && !budget ? 'le niveau et le budget' : !niveau ? 'le niveau' : 'le budget'} avant de créer une assignation.
+          </div>
+        </div>
+      )}
+      
       <div className="form-group">
         <label className="form-label">Entreprise</label>
         <select
@@ -164,10 +203,15 @@ export default function CreateAssignmentForm({ signalementId, onSuccess, onCance
           type="number"
           className="form-input"
           value={montant}
-          onChange={(e) => setMontant(e.target.value)}
+          readOnly
           placeholder="0.00"
           disabled={submitting}
         />
+        {budget && (
+          <div style={{fontSize: '12px', color: '#6b7280', marginTop: '4px'}}>
+            Montant pré-rempli avec le budget du signalement
+          </div>
+        )}
       </div>
 
       <div className="form-actions">
@@ -181,7 +225,11 @@ export default function CreateAssignmentForm({ signalementId, onSuccess, onCance
         <button 
           onClick={handleSubmit} 
           className="action-button action-primary"
-          disabled={submitting}
+          disabled={submitting || !niveau || !budget}
+          style={{
+            opacity: (!niveau || !budget) ? 0.5 : 1,
+            cursor: (!niveau || !budget) ? 'not-allowed' : 'pointer'
+          }}
         >
           {submitting ? 'Création...' : 'Créer l\'assignation'}
         </button>

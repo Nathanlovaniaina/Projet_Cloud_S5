@@ -36,6 +36,8 @@ interface Signalement {
     statutLibelle?: string
   }>
   budgetTotal?: number
+  budget?: number
+  niveau?: number
   entrepriseConcernee?: string
 }
 
@@ -174,10 +176,8 @@ export default function VisitorPage() {
               return {
                 ...sig,
                 assignations: detailData.assignations || [],
-                budgetTotal: (detailData.assignations || []).reduce(
-                  (sum: number, a: any) => sum + (a.montant || 0), 
-                  0
-                ),
+                budget: detailData.budget || 0,
+                niveau: detailData.niveau,
                 entrepriseConcernee: detailData.assignations?.[0]?.nomEntreprise || undefined
               }
             }
@@ -289,7 +289,7 @@ export default function VisitorPage() {
                   fontSize: '14px',
                   border: '1px dashed #d1d5db'
                 }}>
-                  🔒 Connectez-vous pour voir vos signalements
+                  Connectez-vous pour voir vos signalements
                 </div>
               )}
             </div>
@@ -319,7 +319,6 @@ export default function VisitorPage() {
 
       {error && !signalements.length && (
         <div className="visitor-error">
-          <div className="error-icon">⚠️</div>
           <div className="error-content">
             <h3>Erreur de chargement</h3>
             <p>{error}</p>
@@ -332,7 +331,7 @@ export default function VisitorPage() {
 
       {error && signalements.length > 0 && (
         <div className="visitor-warning">
-          <p>⚠️ {error}</p>
+          <p>{error}</p>
         </div>
       )}
 

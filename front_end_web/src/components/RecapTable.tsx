@@ -20,6 +20,8 @@ interface Signalement {
     statutLibelle?: string
   }>
   budgetTotal?: number
+  budget?: number
+  niveau?: number
   entrepriseConcernee?: string
 }
 
@@ -157,7 +159,7 @@ export default function RecapTable({
                   ID
                   {sortColumn === 'idSignalement' && (
                     <span className="sort-indicator">
-                      {sortDirection === 'asc' ? '↑' : '↓'}
+                      {sortDirection === 'asc' ? '▲' : '▼'}
                     </span>
                   )}
                 </div>
@@ -167,7 +169,7 @@ export default function RecapTable({
                   Titre
                   {sortColumn === 'titre' && (
                     <span className="sort-indicator">
-                      {sortDirection === 'asc' ? '↑' : '↓'}
+                      {sortDirection === 'asc' ? '▲' : '▼'}
                     </span>
                   )}
                 </div>
@@ -177,7 +179,7 @@ export default function RecapTable({
                   Date
                   {sortColumn === 'dateCreation' && (
                     <span className="sort-indicator">
-                      {sortDirection === 'asc' ? '↑' : '↓'}
+                      {sortDirection === 'asc' ? '▲' : '▼'}
                     </span>
                   )}
                 </div>
@@ -185,6 +187,7 @@ export default function RecapTable({
               <th>Statut</th>
               <th>Type</th>
               <th>Surface (m²)</th>
+              <th>Niveau</th>
               <th>Entreprise</th>
               <th>Budget</th>
             </tr>
@@ -192,9 +195,8 @@ export default function RecapTable({
           <tbody>
             {sortedSignalements.length === 0 ? (
               <tr>
-                <td colSpan={8} className="empty-message">
+                <td colSpan={9} className="empty-message">
                   <div className="empty-state">
-                    <div className="empty-icon">📋</div>
                     <p>Aucun signalement trouvé</p>
                     {total > 0 && <p className="empty-hint">Essayez de modifier vos filtres</p>}
                   </div>
@@ -243,6 +245,15 @@ export default function RecapTable({
                       {sig.surfaceMetreCarree?.toFixed(2) || '0.00'}
                     </div>
                   </td>
+                  <td className="cell-niveau">
+                    {sig.niveau ? (
+                      <div className="niveau-badge">
+                        <span className="niveau-value">{sig.niveau}</span>/10
+                      </div>
+                    ) : (
+                      <span className="no-data">-</span>
+                    )}
+                  </td>
                   <td className="cell-entreprise">
                     {sig.assignations && sig.assignations.length > 0 ? (
                       <div className="entreprise-content">
@@ -256,9 +267,9 @@ export default function RecapTable({
                     )}
                   </td>
                   <td className="cell-budget">
-                    {sig.assignations && sig.assignations.length > 0 ? (
+                    {sig.budget && sig.budget > 0 ? (
                       <div className="budget-value">
-                        {sig.assignations.reduce((sum, a) => sum + (a.montant || 0), 0).toLocaleString('fr-FR', { 
+                        {sig.budget.toLocaleString('fr-FR', { 
                           style: 'currency', 
                           currency: 'MGA' 
                         })}
@@ -282,7 +293,7 @@ export default function RecapTable({
               disabled={currentPage === 1}
               className="pagination-button prev"
             >
-              ← Précédent
+              Précédent
             </button>
 
             <div className="pagination-pages">
@@ -317,7 +328,7 @@ export default function RecapTable({
               disabled={currentPage === totalPages}
               className="pagination-button next"
             >
-              Suivant →
+              Suivant
             </button>
           </div>
           

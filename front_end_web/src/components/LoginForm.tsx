@@ -24,7 +24,7 @@ export default function LoginForm() {
     setStatus('En cours...')
     try {
       const result = await login(email, password)
-      setStatus('✅ Connecté via PostgreSQL (local)')
+      setStatus('Connecté via PostgreSQL (local)')
       if (result.token) localStorage.setItem('token', result.token)
       if (result.user) localStorage.setItem('user', JSON.stringify(result.user))
       // redirect to map on successful login
@@ -51,13 +51,13 @@ export default function LoginForm() {
         return msg || 'Erreur inconnue lors de la connexion.'
       }
 
-      setStatus(`❌ ${formatError(err)}`)
+      setStatus(`${formatError(err)}`)
     } finally {
       setLoading(false)
     }
   }
   
-  const statusClass = status?.startsWith('✅') ? 'auth-status success' : status?.startsWith('❌') ? 'auth-status error' : 'auth-status'
+  const statusClass = status?.includes('Connecté') ? 'auth-status success' : status?.includes('Erreur') || status?.includes('incorrect') || status?.includes('bloqué') ? 'auth-status error' : 'auth-status'
 
   return (
     <div className="auth-container">

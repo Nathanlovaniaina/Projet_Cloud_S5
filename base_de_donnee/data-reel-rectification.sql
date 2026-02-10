@@ -56,8 +56,6 @@ INSERT INTO utilisateur (nom, prenom, email, mot_de_passe, firebase_uid, is_bloc
 VALUES 
     ('Andriamampianina', 'Hery', 'hery.andria@gmail.com', 'visiteur123', 'YHNsPqAcw7fUE8Reb7HOFMHYoQm2', false, NOW(),
      (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Visiteur')),
-    ('Andriamampianina', 'Hery', 'hery.andria@gmail.com', 'visiteur123', 'qZo7wYrxotPPEIRbA9BLcMIQOZk1', false, NOW(),
-     (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Visiteur')),
     ('Raharison', 'Toky', 'toky.raharison@gmail.com', 'visiteur234', 'USR1Ab1VdrYFjh0gCnlkgwvwnQ796', false, NOW(),
      (SELECT Id_type_utilisateur FROM type_utilisateur WHERE libelle = 'Visiteur')),
     ('Ramanantoanina', 'Feno', 'feno.rama@yahoo.fr', 'visiteur345', 'USR2Bc2WesZGki1hDomhlxwxoR807', false, NOW(),
