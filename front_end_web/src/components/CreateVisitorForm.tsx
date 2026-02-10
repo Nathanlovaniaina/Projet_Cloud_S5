@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import '../styles/createVisitorForm.css'
 import '../styles/manager.css'
 
 const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL as string) || 'http://localhost:8080/api/auth'
