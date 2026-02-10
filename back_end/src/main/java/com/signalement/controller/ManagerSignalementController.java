@@ -205,7 +205,7 @@ public class ManagerSignalementController {
 
     @Operation(
         summary = "Assigner une entreprise à un signalement (Manager)",
-        description = "Créer une nouvelle assignation d'entreprise"
+        description = "Créer une nouvelle assignation d'entreprise. IMPORTANT: Le signalement doit avoir un niveau et un budget définis avant de pouvoir créer une assignation. Le montant de l'assignation sera automatiquement défini avec le budget du signalement."
     )
     @PostMapping("/signalements/{id}/assign-enterprise")
     public ResponseEntity<com.signalement.dto.ApiResponse> assignEnterprise(

@@ -58,17 +58,17 @@ export default function ProfileForm() {
     
     if (formData.newPassword) {
       if (formData.newPassword !== formData.confirmNewPassword) {
-        setStatus('❌ Les nouveaux mots de passe ne correspondent pas')
+        setStatus('Les nouveaux mots de passe ne correspondent pas')
         return
       }
       
       if (formData.newPassword.length < 6) {
-        setStatus('❌ Le nouveau mot de passe doit contenir au moins 6 caractères')
+        setStatus('Le nouveau mot de passe doit contenir au moins 6 caractères')
         return
       }
       
       if (!formData.currentPassword) {
-        setStatus('❌ Veuillez saisir votre mot de passe actuel')
+        setStatus('Veuillez saisir votre mot de passe actuel')
         return
       }
     }
@@ -90,7 +90,7 @@ export default function ProfileForm() {
       const result = await updateUserProfile(updateData, isOnline)
       
       if (result.success) {
-        setStatus('✅ Profil mis à jour avec succès')
+        setStatus('Profil mis à jour avec succès')
         setFormData({
           ...formData,
           currentPassword: '',
@@ -108,7 +108,7 @@ export default function ProfileForm() {
         }
       }
     } catch (err: any) {
-      setStatus(`❌ ${err.message}`)
+      setStatus(`${err.message}`)
     } finally {
       setLoading(false)
     }
@@ -127,9 +127,9 @@ export default function ProfileForm() {
     )
   }
 
-  const statusClass = status?.startsWith('✅') 
+  const statusClass = status?.includes('succès') 
     ? 'auth-status success' 
-    : status?.startsWith('❌') 
+    : status?.includes('pas') || status?.includes('caractères') || status?.includes('actuel') 
     ? 'auth-status error' 
     : 'auth-status'
 
@@ -144,7 +144,7 @@ export default function ProfileForm() {
             <h1 className="profile-name">{formData.prenom} {formData.nom}</h1>
             <p className="profile-email">{formData.email}</p>
             <div className={`profile-status ${isOnline ? 'online' : 'offline'}`}>
-              {isOnline ? '🌐 En ligne' : '📴 Hors ligne'}
+              {isOnline ? 'En ligne' : 'Hors ligne'}
             </div>
           </div>
         </div>
@@ -266,7 +266,7 @@ export default function ProfileForm() {
           <div className="profile-footer">
             <div className="footer-links">
               <a href="/" className="footer-link">
-                ← Retour à l'accueil
+                Retour à l'accueil
               </a>
               <a href="/profile/help" className="footer-link secondary">
                 Besoin d'aide ?

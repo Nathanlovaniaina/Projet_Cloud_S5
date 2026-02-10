@@ -178,7 +178,7 @@
 }
 
 .requirements-list li.met::before {
-  content: '✓';
+  content: '•';
   color: #10b981;
   font-weight: bold;
 }

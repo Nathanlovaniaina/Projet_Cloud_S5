@@ -24,12 +24,12 @@ export default function CreateVisitorForm() {
     
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setStatus('❌ Les mots de passe ne correspondent pas')
+      setStatus('Les mots de passe ne correspondent pas')
       return
     }
     
     if (formData.password.length < 6) {
-      setStatus('❌ Le mot de passe doit contenir au moins 6 caractères')
+      setStatus('Le mot de passe doit contenir au moins 6 caractères')
       return
     }
 
@@ -40,7 +40,7 @@ export default function CreateVisitorForm() {
       // Ensure manager is authenticated locally
       const token = localStorage.getItem('token')
       if (!token) {
-        setStatus('❌ Vous devez être connecté en tant que Manager')
+        setStatus('Vous devez être connecté en tant que Manager')
         setLoading(false)
         return
       }
@@ -48,7 +48,7 @@ export default function CreateVisitorForm() {
       // Initialize Firebase client dynamically using runtime config served at /firebase/config.json
       const cfgRes = await fetch('/firebase/config.json')
       if (!cfgRes.ok) {
-        setStatus('❌ Configuration Firebase introuvable sur /firebase/config.json')
+        setStatus('Configuration Firebase introuvable sur /firebase/config.json')
         setLoading(false)
         return
       }
@@ -70,12 +70,12 @@ export default function CreateVisitorForm() {
           try {
             userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password)
           } catch (signErr: any) {
-            setStatus(`❌ Erreur Firebase: ${signErr?.message || signErr?.code || 'auth error'}`)
+            setStatus(`Erreur Firebase: ${signErr?.message || signErr?.code || 'auth error'}`)
             setLoading(false)
             return
           }
         } else {
-          setStatus(`❌ Erreur Firebase: ${fbErr?.message || fbErr?.code || 'auth error'}`)
+          setStatus(`Erreur Firebase: ${fbErr?.message || fbErr?.code || 'auth error'}`)
           setLoading(false)
           return
         }
@@ -98,21 +98,21 @@ export default function CreateVisitorForm() {
       const result = await res.json().catch(() => ({}))
 
       if (res.ok && result.success) {
-        setStatus('✅ Utilisateur créé avec succès')
+        setStatus('Utilisateur créé avec succès')
         setTimeout(() => navigate('/manager/utilisateurs'), 1500)
       } else {
-        setStatus(`❌ ${result.message || 'Erreur lors de la création'}`)
+        setStatus(`${result.message || 'Erreur lors de la création'}`)
       }
     } catch (err: any) {
-      setStatus(`❌ ${err?.message || 'Erreur réseau'}`)
+      setStatus(`${err?.message || 'Erreur réseau'}`)
     } finally {
       setLoading(false)
     }
   }
 
-  const statusClass = status?.startsWith('✅') 
+  const statusClass = status?.includes('succès') 
     ? 'status-message success' 
-    : status?.startsWith('❌') 
+    : status?.includes('Erreur') || status?.includes('pas') || status?.includes('caractères') || status?.includes('devez') 
     ? 'status-message error' 
     : 'status-message'
 
@@ -132,7 +132,7 @@ export default function CreateVisitorForm() {
               onClick={() => navigate('/manager/utilisateurs')}
               className="btn-secondary"
             >
-              ← Retour
+              Retour
             </button>
           </div>
         </div>

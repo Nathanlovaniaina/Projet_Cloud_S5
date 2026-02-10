@@ -15,6 +15,8 @@ interface SignalementDetails {
   currentEtatId?: number
   currentEtatLibelle?: string
   progressionPercent?: number
+  niveau?: number
+  budget?: number
   assignations: Array<{
     idEntrepriseConcerner: number
     idEntreprise?: number
@@ -41,11 +43,13 @@ export default function ManagerSignalementDetail() {
   
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [showStatusModal, setShowStatusModal] = useState(false)
+  const [showNiveauModal, setShowNiveauModal] = useState(false)
   const [selectedAssignId, setSelectedAssignId] = useState<number | null>(null)
 
-  const [statusOptions, setStatusOptions] = useState<{idEtatSignalement: number, libelle: string}[]>([])
+  const [statusOptions, setStatusOptions] = useState<{idEtatSignalement: number, libelle: string}[]>([]);
   const [dateChangement, setDateChangement] = useState<string>('')
   const [progress, setProgress] = useState<number>(0)
+  const [niveau, setNiveau] = useState<number>(1)
   const [assignStatusOptions] = useState([
     { id: 1, libelle: 'En attente' },
     { id: 2, libelle: 'Acceptée' },
@@ -170,6 +174,38 @@ export default function ManagerSignalementDetail() {
     }
   }
 
+  async function handleSetNiveau(niveauValue: number) {
+    try {
+      if (niveauValue < 1 || niveauValue > 10) {
+        alert('Le niveau doit être entre 1 et 10')
+        return
+      }
+
+      if (!confirm(`Confirmer l'assignation du niveau ${niveauValue} au signalement #${details?.idSignalement} ?`)) return
+      
+      const token = localStorage.getItem('token')
+      const response = await fetch(`/api/manager/signalements/${id}/niveau`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ niveau: niveauValue })
+      })
+
+      const result = await response.json()
+      if (response.ok) {
+        alert('Niveau assigné avec succès')
+        loadDetails()
+        setShowNiveauModal(false)
+      } else {
+        alert('Erreur: ' + result.message)
+      }
+    } catch (err) {
+      alert('Erreur lors de l\'assignation du niveau')
+    }
+  }
+
   function handleAssignSuccess() {
     setShowAssignModal(false)
     loadDetails()
@@ -260,7 +296,6 @@ export default function ManagerSignalementDetail() {
     return (
       <div className="manager-container">
         <div className="error-container">
-          <div className="error-icon">⚠️</div>
           <div className="error-content">
             <h3>Erreur de chargement</h3>
             <p>{error || 'Signalement introuvable'}</p>
@@ -268,7 +303,7 @@ export default function ManagerSignalementDetail() {
               onClick={() => navigate('/manager/signalements')} 
               className="action-button action-view"
             >
-              ← Retour à la liste
+              Retour à la liste
             </button>
           </div>
         </div>
@@ -284,13 +319,19 @@ export default function ManagerSignalementDetail() {
             onClick={() => navigate('/manager/signalements')} 
             className="back-button"
           >
-            ← Retour aux signalements
+            Retour aux signalements
           </button>
           <div className="header-title-section">
             <h1 className="detail-title">Signalement #{details.idSignalement}</h1>
             <p className="detail-subtitle">{details.titre}</p>
           </div>
           <div className="header-actions">
+            <button 
+              onClick={() => { setNiveau(1); setShowNiveauModal(true) }} 
+              className="action-button action-primary"
+            >
+              Définir le niveau
+            </button>
             <button 
               onClick={() => { setDateChangement(new Date().toISOString().slice(0,16)); setShowStatusModal(true) }} 
               className="action-button action-change-status"
@@ -323,6 +364,32 @@ export default function ManagerSignalementDetail() {
                   <div className="info-label">Surface</div>
                   <div className="info-value highlight">
                     {details.surfaceMetreCarree?.toFixed(2)} m²
+                  </div>
+                </div>
+                
+                <div className="info-item">
+                  <div className="info-label">Niveau</div>
+                  <div className="info-value">
+                    {details.niveau ? (
+                      <span className="niveau-badge">
+                        <span className="niveau-value">{details.niveau}</span>/10
+                      </span>
+                    ) : (
+                      <span style={{color: '#9ca3af'}}>Non défini</span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="info-item">
+                  <div className="info-label">Budget</div>
+                  <div className="info-value highlight">
+                    {details.budget ? (
+                      <span style={{fontWeight: 600, color: '#10b981'}}>
+                        {details.budget.toLocaleString('fr-FR', { style: 'currency', currency: 'MGA' })}
+                      </span>
+                    ) : (
+                      <span style={{color: '#9ca3af'}}>Non défini</span>
+                    )}
                   </div>
                 </div>
                 
@@ -377,7 +444,6 @@ export default function ManagerSignalementDetail() {
             <div className="card-body">
               {details.assignations.length === 0 ? (
                 <div className="empty-state-card">
-                  <div className="empty-icon">🏢</div>
                   <p>Aucune entreprise assignée</p>
                   <p className="empty-hint">Cliquez sur "Assigner une entreprise" pour en ajouter une</p>
                 </div>
@@ -396,7 +462,7 @@ export default function ManagerSignalementDetail() {
                         <div className="assignation-row">
                           <span className="assignation-label">Période</span>
                           <span className="assignation-value">
-                            {formatDate(assign.dateDebut)} → {formatDate(assign.dateFin)}
+                            {formatDate(assign.dateDebut)} - {formatDate(assign.dateFin)}
                           </span>
                         </div>
                         <div className="assignation-row">
@@ -441,7 +507,6 @@ export default function ManagerSignalementDetail() {
             <div className="card-body">
               {details.historiqueEtat.length === 0 ? (
                 <div className="empty-state-card">
-                  <div className="empty-icon">📊</div>
                   <p>Aucun historique disponible</p>
                 </div>
               ) : (
@@ -521,6 +586,64 @@ export default function ManagerSignalementDetail() {
         </div>
       )}
 
+      {/* Modal pour définir le niveau */}
+      {showNiveauModal && (
+        <div className="modal-overlay" onClick={() => setShowNiveauModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">Définir le niveau du signalement</h3>
+              <button 
+                onClick={() => setShowNiveauModal(false)} 
+                className="modal-close"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <p className="modal-description">
+                Assignez un niveau de priorité pour le signalement #{details.idSignalement}
+              </p>
+              <p className="modal-hint">
+                Le niveau doit être compris entre 1 (priorité basse) et 10 (priorité maximale)
+              </p>
+              
+              <div className="form-group">
+                <label className="form-label">Niveau (1-10)</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  min={1}
+                  max={10}
+                  value={niveau}
+                  onChange={(e) => setNiveau(parseInt(e.target.value) || 1)}
+                  placeholder="Entrez un niveau entre 1 et 10"
+                />
+                <div className="form-hint">
+                  Niveau actuel sélectionné : <strong>{niveau}</strong>
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button 
+                onClick={() => setShowNiveauModal(false)} 
+                className="action-button action-secondary"
+              >
+                Annuler
+              </button>
+              <button 
+                onClick={() => handleSetNiveau(niveau)} 
+                className="action-button action-primary"
+                disabled={niveau < 1 || niveau > 10}
+              >
+                Valider
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal pour assignations */}
       {showAssignModal && (
         <div className="modal-overlay" onClick={() => { setShowAssignModal(false); setSelectedAssignId(null) }}>
@@ -570,6 +693,8 @@ export default function ManagerSignalementDetail() {
                 <div className="modal-body">
                   <CreateAssignmentForm
                     signalementId={id!}
+                    budget={details.budget}
+                    niveau={details.niveau}
                     onSuccess={handleAssignSuccess}
                     onCancel={() => { setShowAssignModal(false); setSelectedAssignId(null) }}
                   />
