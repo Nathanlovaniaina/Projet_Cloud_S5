@@ -190,6 +190,10 @@ public class SignalementService {
             }
         } catch (Exception ignored) {}
         
+        // Mapper niveau et budget
+        dto.setNiveau(s.getNiveau());
+        dto.setBudget(s.getBudget());
+        
         return dto;
     }
 
@@ -467,6 +471,8 @@ public class SignalementService {
         dto.setLongitude(s.getLongitude());
         dto.setSurfaceMetreCarree(s.getSurfaceMetreCarree());
         dto.setDateCreation(s.getDateCreation());
+        dto.setNiveau(s.getNiveau());
+        dto.setBudget(s.getBudget());
 
         // Current état
         EtatSignalement current = getCurrentEtat(s.getIdSignalement());
@@ -535,6 +541,9 @@ public class SignalementService {
     /**
      * Assigner un signalement à une entreprise (Tâche 27)
      * Seul un manager peut assigner
+     * 
+     * RÈGLE MÉTIER: Le signalement doit avoir un niveau et un budget définis
+     * avant de pouvoir être assigné à une entreprise.
      */
     @Transactional
     public EntrepriseConcerner assignEnterpriseToSignalement(
@@ -552,6 +561,15 @@ public class SignalementService {
         Signalement signalement = signalementRepository.findById(signalementId)
             .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé"));
         
+        // Vérifier que le signalement a un niveau et un budget définis
+        if (signalement.getNiveau() == null) {
+            throw new IllegalArgumentException("Le signalement doit avoir un niveau défini avant de pouvoir assigner une entreprise");
+        }
+        
+        if (signalement.getBudget() == null) {
+            throw new IllegalArgumentException("Le signalement doit avoir un budget défini avant de pouvoir assigner une entreprise");
+        }
+        
         // Récupérer l'entreprise
         Entreprise entreprise = entrepriseRepository.findById(request.getIdEntreprise())
             .orElseThrow(() -> new IllegalArgumentException("Entreprise non trouvée"));
@@ -566,6 +584,7 @@ public class SignalementService {
         }
         
         // Créer l'assignation
+        // Le montant est toujours basé sur le budget du signalement, pas sur la requête
         EntrepriseConcerner assignation = new EntrepriseConcerner();
         assignation.setSignalement(signalement);
         assignation.setEntreprise(entreprise);
@@ -573,7 +592,8 @@ public class SignalementService {
         assignation.setDateCreation(LocalDate.now());
         assignation.setDateDebut(request.getDateDebut());
         assignation.setDateFin(request.getDateFin());
-        assignation.setMontant(request.getMontant());
+        // Utiliser le budget du signalement au lieu du montant de la requête
+        assignation.setMontant(signalement.getBudget() != null ? signalement.getBudget() : request.getMontant());
         assignation.setLastUpdate(LocalDateTime.now());
         
         EntrepriseConcerner saved = entrepriseConcernerRepository.save(assignation);

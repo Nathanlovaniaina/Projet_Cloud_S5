@@ -71,7 +71,7 @@ POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-  "email": "jean.rakoto@signalement.mg",
+  "email": "admin@gmail.com",
   "motDePasse": "manager123"
 }
 

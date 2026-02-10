@@ -19,6 +19,8 @@ interface Signalement {
     statutLibelle?: string
   }>
   budgetTotal?: number
+  budget?: number
+  niveau?: number
   entrepriseConcernee?: string
 }
 
@@ -434,6 +436,30 @@ export default function MapLibreMap({ signalements = [], selectedId = null, onMa
                       <span class="type-tag">${data.typeTravauxLibelle || sig.typeTravauxLibelle || '-'}</span>
                     </div>
                   </div>
+                  
+                  ${data.niveau || data.budget ? `
+                  <div class="popup-section">
+                    <div class="section-title">Informations complémentaires</div>
+                    <div class="section-content" style="display: flex; gap: 16px; flex-wrap: wrap;">
+                      ${data.niveau ? `
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="font-weight: 500;">⚡ Niveau:</span>
+                          <span class="niveau-badge">
+                            <span class="niveau-value">${data.niveau}</span>/10
+                          </span>
+                        </div>
+                      ` : ''}
+                      ${data.budget ? `
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="font-weight: 500;">💰 Budget:</span>
+                          <span style="font-weight: 600; color: #10b981;">
+                            ${data.budget.toLocaleString('fr-FR')} Ar
+                          </span>
+                        </div>
+                      ` : ''}
+                    </div>
+                  </div>
+                  ` : ''}
                   
                   <div class="popup-section">
                     <div class="section-title">Assignations</div>

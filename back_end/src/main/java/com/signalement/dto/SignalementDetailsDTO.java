@@ -25,6 +25,9 @@ public class SignalementDetailsDTO {
     private String currentEtatLibelle;
     private Integer progressionPercent;
 
+    private Short niveau;
+    private BigDecimal budget;
+
     private List<EntrepriseConcernerDTO> assignations;
 
     private List<EtatHistoryEntryDTO> historiqueEtat;

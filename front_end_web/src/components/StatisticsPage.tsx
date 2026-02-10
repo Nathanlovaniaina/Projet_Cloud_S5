@@ -88,7 +88,6 @@ export default function StatisticsPage() {
     return (
       <div className="statistics-container">
         <div className="statistics-error">
-          <div className="error-icon">⚠️</div>
           <div className="error-content">
             <h3>Erreur de chargement</h3>
             <p>{error}</p>
@@ -105,7 +104,6 @@ export default function StatisticsPage() {
     return (
       <div className="statistics-container">
         <div className="statistics-error">
-          <div className="error-icon">📊</div>
           <div className="error-content">
             <h3>Aucune donnée disponible</h3>
             <p>Les statistiques ne sont pas disponibles pour le moment.</p>

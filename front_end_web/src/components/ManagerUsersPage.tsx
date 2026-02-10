@@ -213,7 +213,6 @@ export default function ManagerUsersPage() {
                 <tr>
                   <td colSpan={7} className="empty-message">
                     <div className="empty-state">
-                      <div className="empty-icon">👥</div>
                       <p>Aucun utilisateur trouvé</p>
                       {(search || etatFilter) && (
                         <p className="empty-hint">Essayez de modifier vos filtres</p>
@@ -255,7 +254,7 @@ export default function ManagerUsersPage() {
                     </td>
                     <td className="cell-status">
                       <span className={`status-badge ${u.isBlocked ? 'status-blocked' : 'status-active'}`}>
-                        {u.isBlocked ? '🔒 Bloqué' : '✅ Actif'}
+                        {u.isBlocked ? 'Bloqué' : 'Actif'}
                       </span>
                     </td>
                     <td className="cell-actions">
@@ -264,7 +263,7 @@ export default function ManagerUsersPage() {
                           className={`action-button ${u.isBlocked ? 'action-unblock' : 'action-block'}`}
                           onClick={() => toggleBlock(u.idUtilisateur, !u.isBlocked)}
                         >
-                          {u.isBlocked ? '🔓 Débloquer' : '🚫 Bloquer'}
+                          {u.isBlocked ? 'Débloquer' : 'Bloquer'}
                         </button>
                       </div>
                     </td>
@@ -284,7 +283,7 @@ export default function ManagerUsersPage() {
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              ← Précédent
+              Précédent
             </button>
 
             <div className="pagination-pages">
@@ -319,7 +318,7 @@ export default function ManagerUsersPage() {
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Suivant →
+              Suivant
             </button>
           </div>
           

@@ -48,13 +48,12 @@ export default function RegisterForm() {
     
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setStatus('❌ Les mots de passe ne correspondent pas')
+      setStatus('Les mots de passe ne correspondent pas')
       return
     }
     
     if (formData.password.length < 6) {
-      setStatus('❌ Le mot de passe doit contenir au moins 6 caractères')
-      return
+      setStatus('Le mot de passe doit contenir au moins 6 caractères')
     }
 
     setLoading(true)
@@ -64,26 +63,26 @@ export default function RegisterForm() {
       const result = await register(formData, isOnline)
       
       if (result.source === 'firebase') {
-        setStatus('✅ Inscription réussie via Firebase (cloud)')
+        setStatus('Inscription réussie via Firebase (cloud)')
         if (result.token) localStorage.setItem('token', result.token)
         if (result.user) localStorage.setItem('user', JSON.stringify(result.user))
         setTimeout(() => window.location.href = '/', 1500)
       } else if (result.source === 'postgres') {
-        setStatus('✅ Inscription réussie via PostgreSQL (local)')
+        setStatus('Inscription réussie via PostgreSQL (local)')
         if (result.token) localStorage.setItem('token', result.token)
         if (result.user) localStorage.setItem('user', JSON.stringify(result.user))
         setTimeout(() => window.location.href = '/', 1500)
       }
     } catch (err: any) {
-      setStatus(`❌ ${err.message}`)
+      setStatus(`${err.message}`)
     } finally {
       setLoading(false)
     }
   }
 
-  const statusClass = status?.startsWith('✅') 
+  const statusClass = status?.includes('réussie') 
     ? 'auth-status success' 
-    : status?.startsWith('❌') 
+    : status?.includes('pas') || status?.includes('caractères') 
     ? 'auth-status error' 
     : 'auth-status'
 
@@ -180,8 +179,8 @@ export default function RegisterForm() {
           <div className="auth-info">
             <p className="auth-info-text">
               {isOnline 
-                ? '🌐 Mode en ligne - Inscription sur Firebase et backend' 
-                : '📴 Mode hors ligne - Inscription sur PostgreSQL local'
+                ? 'Mode en ligne - Inscription sur Firebase et backend' 
+                : 'Mode hors ligne - Inscription sur PostgreSQL local'
               }
             </p>
             <p className="auth-hint">

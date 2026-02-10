@@ -25,6 +25,8 @@ public class SignalementDTO {
     private Integer idTypeTravail;
     private String typeTravauxLibelle;
     private Integer idUtilisateur;
+    private Short niveau;
+    private BigDecimal budget;
     
     // Constructor simplifié pour compatibilité
     public SignalementDTO(Integer idSignalement, String titre, String description, 

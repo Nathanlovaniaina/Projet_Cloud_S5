@@ -16,6 +16,8 @@ interface Signalement {
   etatLibelle?: string
   idTypeTravail?: number
   typeTravauxLibelle?: string
+  budget?: number
+  niveau?: number
 }
 
 export default function MapOnlyPage() {
@@ -77,7 +79,7 @@ export default function MapOnlyPage() {
                     onChange={(e) => setMySignalementsOnly(e.target.checked)}
                     style={{ cursor: 'pointer' }}
                   />
-                  📍 Mes signalements
+                  Mes signalements
                 </label>
               ) : (
                 <div style={{
@@ -88,7 +90,7 @@ export default function MapOnlyPage() {
                   fontSize: '14px',
                   border: '1px dashed #d1d5db'
                 }}>
-                  🔒 Connectez-vous
+                  Connectez-vous
                 </div>
               )}
               <button className="retry-button" onClick={loadSignalements} disabled={loading}>
