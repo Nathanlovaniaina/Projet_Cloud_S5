@@ -69,11 +69,6 @@ public class SessionFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        // Allow public photos endpoint: /api/signalements/{id}/photos
-        if ("GET".equalsIgnoreCase(method) && path.startsWith("/api/signalements/") && path.endsWith("/photos")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
         // GET /api/signalements/{id}/assignations is public (no auth required)
         if ("GET".equalsIgnoreCase(method) && path.contains("/assignations")) {
             filterChain.doFilter(request, response);

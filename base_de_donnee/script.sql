@@ -65,6 +65,14 @@ CREATE TABLE utilisateur(
    FOREIGN KEY(Id_type_utilisateur) REFERENCES type_utilisateur(Id_type_utilisateur)
 );
 
+CREATE TABLE prix_m_carree(
+   Id_prix_m_carree SERIAL,
+   valeur NUMERIC(20,2) NOT NULL,
+   date_changement DATE NOT NULL,
+   last_update DATE NOT NULL,
+   PRIMARY KEY(Id_prix_m_carree)
+);
+
 CREATE TABLE signalement(
    Id_signalement SERIAL,
    latitude NUMERIC(15,10) NOT NULL,
@@ -75,6 +83,8 @@ CREATE TABLE signalement(
    date_creation TIMESTAMP NOT NULL,
    geom GEOGRAPHY,
    last_update TIMESTAMP NOT NULL,
+   niveau SMALLINT,
+   budget NUMERIC(20,2),
    Id_type_travail INTEGER NOT NULL,
    Id_utilisateur INTEGER NOT NULL,
    PRIMARY KEY(Id_signalement),
@@ -145,7 +155,7 @@ CREATE TABLE photo_signalement(
    Id_photo_signalement SERIAL,
    url_photo VARCHAR(250) NOT NULL,
    date_ajout DATE NOT NULL,
-   lats_update TIMESTAMP NOT NULL,
+   last_update TIMESTAMP NOT NULL,
    Id_signalement INTEGER NOT NULL,
    PRIMARY KEY(Id_photo_signalement),
    UNIQUE(url_photo),

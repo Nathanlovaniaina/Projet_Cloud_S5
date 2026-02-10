@@ -64,6 +64,7 @@ public class SignalementService {
     private final HistoriqueStatutAssignationRepository historiqueStatutAssignationRepository;
     private final NotificationService notificationService;
     private final Firestore firestore;
+    private final PrixMCarreeService prixMCarreeService;
     private static final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
 
     @Transactional(readOnly = true)
@@ -842,6 +843,51 @@ public class SignalementService {
 
         // Par défaut
         return 0;
+    }
+
+    /**
+     * Définir le niveau d'un signalement et calculer automatiquement le budget
+     * Budget = prix m² actuel * niveau * surface m²
+     */
+    @Transactional
+    public Signalement setNiveauAndCalculateBudget(Integer signalementId, Short niveau) {
+        // Valider le niveau (doit être entre 1 et 10)
+        if (niveau == null) {
+            throw new IllegalArgumentException("Le niveau est requis");
+        }
+        if (niveau < 1 || niveau > 10) {
+            throw new IllegalArgumentException("Le niveau doit être entre 1 et 10 (valeur reçue: " + niveau + ")");
+        }
+        
+        // Récupérer le signalement
+        Signalement signalement = signalementRepository.findById(signalementId)
+                .orElseThrow(() -> new IllegalArgumentException("Signalement non trouvé avec l'ID: " + signalementId));
+
+        // Vérifier si le signalement a déjà un niveau
+        if (signalement.getNiveau() != null) {
+            throw new IllegalStateException("Ce signalement a déjà un niveau défini: " + signalement.getNiveau());
+        }
+
+        // Récupérer le prix m² actuel (à la date actuelle)
+        var prixMCarree = prixMCarreeService.getPrixAtDate(LocalDate.now())
+                .orElseThrow(() -> new IllegalStateException("Aucun prix m² disponible pour la date actuelle"));
+
+        // Calculer le budget: prix m² * niveau * surface m²
+        var budget = prixMCarree.getValeur()
+                .multiply(java.math.BigDecimal.valueOf(niveau))
+                .multiply(signalement.getSurfaceMetreCarree());
+
+        // Vérifier que le budget n'est pas négatif
+        if (budget.compareTo(java.math.BigDecimal.ZERO) < 0) {
+            throw new IllegalStateException("Le budget calculé est négatif: " + budget + ". Vérifiez les données du signalement.");
+        }
+
+        // Mettre à jour le signalement
+        signalement.setNiveau(niveau);
+        signalement.setBudget(budget);
+        signalement.setLastUpdate(LocalDateTime.now());
+
+        return signalementRepository.save(signalement);
     }
 }
 

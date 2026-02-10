@@ -337,4 +337,51 @@ public class ManagerSignalementController {
                     .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
         }
     }
+
+    @Operation(
+        summary = "Définir le niveau d'un signalement (Manager)",
+        description = "Définit le niveau d'un signalement et calcule automatiquement le budget selon la formule: prix m² actuel * niveau * surface m². Le signalement ne doit pas avoir déjà un niveau défini."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Niveau défini avec succès"),
+        @ApiResponse(responseCode = "400", description = "Le signalement a déjà un niveau ou données invalides"),
+        @ApiResponse(responseCode = "401", description = "Non autorisé"),
+        @ApiResponse(responseCode = "403", description = "Accès interdit - Réservé aux Managers"),
+        @ApiResponse(responseCode = "404", description = "Signalement non trouvé")
+    })
+    @PutMapping("/signalements/{id}/niveau")
+    public ResponseEntity<com.signalement.dto.ApiResponse> setNiveau(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Integer id,
+            @Parameter(description = "Niveau à définir pour le signalement", required = true)
+            @RequestBody Map<String, Short> request) {
+        try {
+            validateManagerAccess(token);
+            
+            Short niveau = request.get("niveau");
+            if (niveau == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new com.signalement.dto.ApiResponse(false, "Le niveau est requis"));
+            }
+
+            Signalement signalement = signalementService.setNiveauAndCalculateBudget(id, niveau);
+            
+            Map<String, Object> data = new java.util.HashMap<>();
+            data.put("idSignalement", signalement.getIdSignalement());
+            data.put("niveau", signalement.getNiveau());
+            data.put("budget", signalement.getBudget());
+            data.put("surfaceMetreCarree", signalement.getSurfaceMetreCarree());
+            
+            return ResponseEntity.ok(new com.signalement.dto.ApiResponse(true, "Niveau et budget définis avec succès", data));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new com.signalement.dto.ApiResponse(false, e.getMessage()));
+        }
+    }
 }

@@ -26,7 +26,7 @@ public class PhotoSignalement {
     @Column(name = "date_ajout", nullable = false)
     private LocalDate dateAjout;
 
-    @Column(name = "lats_update", nullable = false)
+    @Column(name = "last_update", nullable = false)
     private LocalDateTime lastUpdate;
 
     @ManyToOne(fetch = FetchType.LAZY)
