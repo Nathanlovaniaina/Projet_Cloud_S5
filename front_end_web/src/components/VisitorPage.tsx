@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import MapLibreMap from './MapLibreMap'
 import RecapTable from './RecapTable'
 import '../styles/visitor.css'
+import { useAuth, getAuthHeaders } from '../hooks/useAuth'
 import {
   ResponsiveContainer,
   PieChart,
@@ -47,6 +48,7 @@ interface PaginatedResponse {
 }
 
 export default function VisitorPage() {
+  const { user, loading: authLoading, isAuthenticated } = useAuth()
   const [signalements, setSignalements] = useState<Signalement[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
@@ -58,12 +60,13 @@ export default function VisitorPage() {
   const [total, setTotal] = useState(0)
   const [statusFilter, setStatusFilter] = useState<number | undefined>()
   const [typeFilter, setTypeFilter] = useState<number | undefined>()
+  const [mySignalementsOnly, setMySignalementsOnly] = useState(false)
   const [statusOptions, setStatusOptions] = useState<{idEtatSignalement: number, libelle: string}[]>([])
   const [typeOptions, setTypeOptions] = useState<{idTypeTravail: number, libelle: string}[]>([])
 
   useEffect(() => {
     loadSignalements()
-  }, [currentPage, statusFilter, typeFilter])
+  }, [currentPage, statusFilter, typeFilter, mySignalementsOnly])
 
   useEffect(() => {
     loadFilterOptions()
@@ -148,8 +151,10 @@ export default function VisitorPage() {
       
       if (statusFilter) params.append('status', statusFilter.toString())
       if (typeFilter) params.append('type', typeFilter.toString())
+      if (mySignalementsOnly) params.append('mySignalements', 'true')
       
-      const response = await fetch(`/api/signalements/visiteur?${params}`)
+      const headers: HeadersInit = mySignalementsOnly ? getAuthHeaders() : {}
+      const response = await fetch(`/api/signalements/visiteur?${params}`, { headers })
       
       if (!response.ok) {
         throw new Error('Erreur lors du chargement des signalements')
@@ -249,6 +254,45 @@ export default function VisitorPage() {
           </div>
           
           <div className="header-stats-section">
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
+              {isAuthenticated ? (
+                <label style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  cursor: 'pointer',
+                  padding: '8px 16px',
+                  background: mySignalementsOnly ? '#3b82f6' : '#f3f4f6',
+                  color: mySignalementsOnly ? 'white' : '#374151',
+                  borderRadius: '8px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s',
+                  boxShadow: mySignalementsOnly ? '0 2px 8px rgba(59, 130, 246, 0.3)' : 'none'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={mySignalementsOnly}
+                    onChange={(e) => {
+                      setMySignalementsOnly(e.target.checked)
+                      setCurrentPage(1)
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  />
+                   Mes signalements uniquement
+                </label>
+              ) : (
+                <div style={{
+                  padding: '8px 16px',
+                  background: '#f9fafb',
+                  color: '#6b7280',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  border: '1px dashed #d1d5db'
+                }}>
+                  🔒 Connectez-vous pour voir vos signalements
+                </div>
+              )}
+            </div>
             {summary && (
               <div className="visitor-stats">
                 <div className="stat-card">

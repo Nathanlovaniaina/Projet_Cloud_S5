@@ -123,6 +123,39 @@ public class SignalementService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<com.signalement.dto.SignalementDTO> getAllSignalementsDtoWithFilters(Integer etatId, Integer typeTravauxId, Utilisateur utilisateur) {
+        List<Signalement> allSignalements = signalementRepository.findAll();
+        
+        // Filter by user if specified (mes signalements)
+        if (utilisateur != null) {
+            allSignalements = allSignalements.stream()
+                    .filter(s -> s.getUtilisateur() != null && s.getUtilisateur().getIdUtilisateur().equals(utilisateur.getIdUtilisateur()))
+                    .toList();
+        }
+        
+        // Filter by état if specified
+        if (etatId != null) {
+            allSignalements = allSignalements.stream()
+                    .filter(s -> {
+                        EtatSignalement currentEtat = getCurrentEtat(s.getIdSignalement());
+                        return currentEtat != null && currentEtat.getIdEtatSignalement().equals(etatId);
+                    })
+                    .toList();
+        }
+        
+        // Filter by type if specified
+        if (typeTravauxId != null) {
+            allSignalements = allSignalements.stream()
+                    .filter(s -> s.getTypeTravail() != null && s.getTypeTravail().getIdTypeTravail().equals(typeTravauxId))
+                    .toList();
+        }
+        
+        return allSignalements.stream()
+                .map(this::convertToEnrichedDTO)
+                .toList();
+    }
+
     public com.signalement.dto.SignalementDTO convertToEnrichedDTO(Signalement s) {
         com.signalement.dto.SignalementDTO dto = new com.signalement.dto.SignalementDTO();
         dto.setIdSignalement(s.getIdSignalement());
