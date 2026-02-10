@@ -153,14 +153,51 @@ public class SignalementController {
             @Parameter(description = "ID de l'état pour filtrer")
             @RequestParam(required = false) Integer status,
             @Parameter(description = "ID du type de travail pour filtrer")
-            @RequestParam(required = false) Integer type) {
+            @RequestParam(required = false) Integer type,
+            @Parameter(description = "Filtrer uniquement mes signalements (nécessite authentification)")
+            @RequestParam(required = false, defaultValue = "false") boolean mySignalements,
+            @Parameter(hidden = true) HttpServletRequest httpRequest) {
         
         // Validation
         if (page < 1) page = 1;
         if (limit < 1 || limit > 100) limit = 20;
         
+        // Récupérer l'utilisateur si mySignalements est activé
+        Utilisateur currentUser = null;
+        if (mySignalements) {
+            String auth = httpRequest.getHeader("Authorization");
+            if (auth == null || !auth.startsWith("Bearer ")) {
+                // Si l'utilisateur n'est pas authentifié mais mySignalements=true, retourner erreur 401
+                java.util.Map<String, Object> errorResponse = new java.util.HashMap<>();
+                errorResponse.put("error", "Authentification requise pour filtrer vos signalements");
+                errorResponse.put("items", java.util.Collections.emptyList());
+                errorResponse.put("total", 0);
+                errorResponse.put("page", page);
+                errorResponse.put("limit", limit);
+                errorResponse.put("totalPages", 0);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            }
+            
+            String token = auth.substring(7).trim();
+            java.util.Optional<Utilisateur> userOpt = sessionService.getUtilisateurByToken(token);
+            if (!userOpt.isPresent()) {
+                // Token invalide ou expiré
+                java.util.Map<String, Object> errorResponse = new java.util.HashMap<>();
+                errorResponse.put("error", "Token invalide ou expiré");
+                errorResponse.put("items", java.util.Collections.emptyList());
+                errorResponse.put("total", 0);
+                errorResponse.put("page", page);
+                errorResponse.put("limit", limit);
+                errorResponse.put("totalPages", 0);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            }
+            currentUser = userOpt.get();
+        }
+        
         // Récupérer tous les signalements avec filtres
-        List<SignalementDTO> allSignalements = signalementService.getAllSignalementsDtoWithFilters(status, type);
+        List<SignalementDTO> allSignalements = mySignalements && currentUser != null
+            ? signalementService.getAllSignalementsDtoWithFilters(status, type, currentUser)
+            : signalementService.getAllSignalementsDtoWithFilters(status, type);
         
         // Calculer pagination
         int total = allSignalements.size();
