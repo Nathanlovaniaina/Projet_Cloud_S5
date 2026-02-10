@@ -1,0 +1,106 @@
+### ============================================================
+### Tests des APIs Prix m² et Niveau - Projet Signalement
+### ============================================================
+### Variables globales
+@baseUrl = http://localhost:8080/api
+@tokenManager = a91f6e9c-c5fd-42c9-b4bf-03df941cccc4
+
+### ============================================================
+### TEST 1: Ajouter un nouveau prix m²
+### ============================================================
+
+### Test 1.1: Ajouter un prix m² avec date actuelle
+POST {{baseUrl}}/prix-m-carree
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "valeur": 450000.00,
+  "dateChangement": "2026-02-10",
+  "lastUpdate": "2026-02-10"
+}
+
+### Test 1.2: Ajouter un prix m² avec date passée
+POST {{baseUrl}}/prix-m-carree
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "valeur": 420000.00,
+  "dateChangement": "2025-01-01",
+  "lastUpdate": "2026-02-10"
+}
+
+### ============================================================
+### TEST 2: Récupérer le prix m² à une date donnée
+### ============================================================
+
+### Test 2.1: Récupérer le prix m² à la date actuelle
+GET {{baseUrl}}/prix-m-carree?date=2026-02-10
+Authorization: Bearer {{tokenManager}}
+
+### Test 2.2: Récupérer le prix m² à une date passée
+GET {{baseUrl}}/prix-m-carree?date=2025-06-15
+Authorization: Bearer {{tokenManager}}
+
+### Test 2.3: Récupérer le prix m² le plus récent (sans paramètre date)
+GET {{baseUrl}}/prix-m-carree
+Authorization: Bearer {{tokenManager}}
+
+### ============================================================
+### TEST 3: Définir le niveau d'un signalement
+### ============================================================
+
+### Test 3.1: Définir le niveau d'un signalement (première fois)
+PUT {{baseUrl}}/manager/signalements/1/niveau
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "niveau": 3
+}
+
+### Test 3.2: Tenter de définir le niveau d'un signalement qui a déjà un niveau (doit échouer)
+PUT {{baseUrl}}/manager/signalements/1/niveau
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "niveau": 2
+}
+
+### Test 3.3: Définir le niveau d'un autre signalement
+PUT {{baseUrl}}/manager/signalements/2/niveau
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "niveau": 5
+}
+
+### Test 3.4: Signalement inexistant (doit échouer)
+PUT {{baseUrl}}/manager/signalements/99999/niveau
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "niveau": 2
+}
+
+### Test 3.5: Niveau inférieur à 1 (doit échouer)
+PUT {{baseUrl}}/manager/signalements/3/niveau
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "niveau": 0
+}
+
+### Test 3.6: Niveau supérieur à 10 (doit échouer)
+PUT {{baseUrl}}/manager/signalements/3/niveau
+Authorization: Bearer {{tokenManager}}
+Content-Type: application/json
+
+{
+  "niveau": 15
+}

@@ -51,6 +51,12 @@ public class Signalement {
     @Column(name = "geom", columnDefinition = "geography")
     private Point geom;
 
+    @Column(name = "niveau")
+    private Short niveau;
+
+    @Column(name = "budget", precision = 20, scale = 2)
+    private BigDecimal budget;
+
     @Column(name = "last_update", nullable = false)
     private LocalDateTime lastUpdate;
 

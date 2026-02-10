@@ -1,7 +1,7 @@
 ### Tests des endpoints Signalements (Tâches 19, 20, 21)
 ### Base URL
 @baseUrl = http://localhost:8080/api
-@token = 149789f2-5d8e-4569-917a-7eed5d857b5d
+@token = a91f6e9c-c5fd-42c9-b4bf-03df941cccc4
 
 ###############################################
 # Tâche 19 : Créer un Signalement
