@@ -16,7 +16,7 @@ const CreateVisitorForm = lazy(() => import('./components/CreateVisitorForm'))
 const MapOnlyPage = lazy(() => import('./components/MapOnlyPage'))
 const StatisticsPage = lazy(() => import('./components/StatisticsPage'))
 
-function NavbarLink({ to, children, isManager = false }: { to: string, children: React.ReactNode, isManager?: boolean }) {
+function NavbarLink({ to, children, isManager = false, onClick }: { to: string, children: React.ReactNode, isManager?: boolean, onClick?: () => void }) {
   const location = useLocation()
   const isActive = location.pathname === to
   
@@ -24,6 +24,7 @@ function NavbarLink({ to, children, isManager = false }: { to: string, children:
     <Link 
       to={to} 
       className={`navbar-link ${isActive ? 'active' : ''} ${isManager ? 'manager-link' : ''}`}
+      onClick={onClick}
     >
       {children}
     </Link>
@@ -35,6 +36,7 @@ function App() {
   const [userName, setUserName] = useState<string>('')
   const [userInitial, setUserInitial] = useState<string>('')
   const [isManager, setIsManager] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     const checkAuth = () => {
@@ -55,7 +57,6 @@ function App() {
             const name = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || ''
             setUserName(name)
             
-            // Initiale pour l'avatar
             const initial = name.charAt(0).toUpperCase()
             setUserInitial(initial)
             
@@ -124,7 +125,16 @@ function App() {
       setIsLoggedIn(false)
       setUserName('')
       setUserInitial('')
+      setMobileMenuOpen(false)
     }
+  }
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen)
+  }
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false)
   }
 
   return (
@@ -141,23 +151,35 @@ function App() {
               </div>
             </div>
             
-            <nav className="navbar-nav">
+            {/* Menu hamburger pour mobile */}
+            <button 
+              className="mobile-menu-toggle"
+              onClick={toggleMobileMenu}
+              aria-label="Toggle menu"
+            >
+              <span className="hamburger-line"></span>
+              <span className="hamburger-line"></span>
+              <span className="hamburger-line"></span>
+            </button>
+            
+            {/* Navigation desktop */}
+            <nav className="navbar-nav desktop-nav">
               <NavbarLink to="/map">Carte</NavbarLink>
-              <NavbarLink to="/visiteur">Recapitulatif</NavbarLink>
+              <NavbarLink to="/visiteur">Récapitulatif</NavbarLink>
               
               {isManager && (
                 <NavbarLink to="/manager/signalements" isManager>
-                   Manager
+                  Manager
                 </NavbarLink>
               )}
               {isManager && (
                 <NavbarLink to="/manager/utilisateurs" isManager>
-                   Utilisateurs
+                  Utilisateurs
                 </NavbarLink>
               )}
               {isManager && (
                 <NavbarLink to="/manager/statistics" isManager>
-                   Statistiques
+                  Statistiques
                 </NavbarLink>
               )}
               
@@ -167,7 +189,7 @@ function App() {
                     <div className="user-avatar">
                       {userInitial}
                     </div>
-                    <span>{userName}</span>
+                    <span className="user-name">{userName}</span>
                   </div>
                   <NavbarLink to="/profile">Profil</NavbarLink>
                   <button
@@ -183,6 +205,59 @@ function App() {
                 </div>
               )}
             </nav>
+          </div>
+
+          {/* Navigation mobile (menu déroulant) */}
+          <div className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`}>
+            <div className="mobile-nav-content">
+              <NavbarLink to="/map" onClick={closeMobileMenu}>Carte</NavbarLink>
+              <NavbarLink to="/visiteur" onClick={closeMobileMenu}>Récapitulatif</NavbarLink>
+              
+              {isManager && (
+                <>
+                  <div className="mobile-section-title">Gestion Manager</div>
+                  <NavbarLink to="/manager/signalements" isManager onClick={closeMobileMenu}>
+                    Signalements
+                  </NavbarLink>
+                  <NavbarLink to="/manager/utilisateurs" isManager onClick={closeMobileMenu}>
+                    Utilisateurs
+                  </NavbarLink>
+                  <NavbarLink to="/manager/statistics" isManager onClick={closeMobileMenu}>
+                    Statistiques
+                  </NavbarLink>
+                </>
+              )}
+              
+              {isLoggedIn ? (
+                <>
+                  <div className="mobile-section-title">Mon Compte</div>
+                  <div className="mobile-user-info">
+                    <div className="mobile-user-avatar">
+                      {userInitial}
+                    </div>
+                    <div className="mobile-user-details">
+                      <div className="mobile-user-name">{userName}</div>
+                      <div className="mobile-user-status">{isManager ? 'Manager' : 'Utilisateur'}</div>
+                    </div>
+                  </div>
+                  <NavbarLink to="/profile" onClick={closeMobileMenu}>Profil</NavbarLink>
+                  <button
+                    onClick={() => {
+                      handleLogout()
+                      closeMobileMenu()
+                    }}
+                    className="mobile-logout-button"
+                  >
+                    Déconnexion
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="mobile-section-title">Connexion</div>
+                  <NavbarLink to="/login" onClick={closeMobileMenu}>Se connecter</NavbarLink>
+                </>
+              )}
+            </div>
           </div>
         </header>
 
